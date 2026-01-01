@@ -1,0 +1,173 @@
+<meta name='viewport' content='width=device-width, initial-scale=1'/><!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Grigorov Pro Chat</title>
+    <style>
+        :root { --p: #6c5ce7; --bg: #0f0c29; --glass: rgba(255,255,255,0.1); --admin: #ffd700; }
+        * { margin:0; padding:0; box-sizing:border-box; font-family: 'Segoe UI', Roboto, sans-serif; }
+        
+        body { background: var(--bg); color: white; height: 100vh; display: flex; overflow: hidden; }
+
+        /* Экраны */
+        .screen { position: fixed; top: 0; left: 0; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; z-index: 100; background: var(--bg); }
+        .card { background: #1a1a2e; padding: 30px; border-radius: 24px; width: 90%; max-width: 360px; text-align: center; border: 1px solid var(--glass); }
+
+        #chat-screen { display: none; width: 100%; height: 100%; flex-direction: column; position: relative; z-index: 1; }
+        
+        /* Чат интерфейс */
+        .header { padding: 15px; background: rgba(255,255,255,0.05); display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--glass); }
+        .msg-box { flex: 1; padding: 15px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; background: #0f0c29; }
+        
+        .message { max-width: 80%; padding: 10px 15px; border-radius: 18px; font-size: 0.95rem; line-height: 1.4; position: relative; }
+        .my-msg { align-self: flex-end; background: var(--p); border-bottom-right-radius: 2px; }
+        .other-msg { align-self: flex-start; background: var(--glass); border-bottom-left-radius: 2px; }
+
+        .u-name { font-size: 0.7rem; font-weight: bold; margin-bottom: 4px; display: block; opacity: 0.8; }
+        .admin-crown { color: var(--admin); }
+
+        .input-bar { padding: 15px 15px 30px 15px; display: flex; gap: 10px; background: #161625; }
+        input { flex: 1; background: rgba(255,255,255,0.1); border: 1px solid transparent; padding: 12px 18px; border-radius: 20px; color: white; outline: none; font-size: 16px; }
+        
+        button.primary { background: var(--p); border: none; color: white; padding: 12px 20px; border-radius: 15px; font-weight: bold; cursor: pointer; }
+        
+        .hidden { display: none !important; }
+        .delete-btn { color: #ff4757; font-size: 1rem; cursor: pointer; margin-left: 8px; vertical-align: middle; }
+    </style>
+</head>
+<body>
+
+    <div id="auth-screen" class="screen">
+        <div class="card">
+            <h2 style="margin-bottom:20px;">Grigorov Chat</h2>
+            <input type="email" id="email" placeholder="Email" style="width:100%; margin-bottom:10px;">
+            <input type="password" id="pass" placeholder="Пароль" style="width:100%; margin-bottom:15px;">
+            <button class="primary" onclick="handleAuth()" style="width:100%;">ВОЙТИ / РЕГИСТРАЦИЯ</button>
+            <p id="auth-error" style="color:#ff4757; font-size:12px; margin-top:10px;"></p>
+        </div>
+    </div>
+
+    <div id="profile-modal" class="screen hidden">
+        <div class="card">
+            <h3>Придумайте ник</h3><br>
+            <input type="text" id="new-name" placeholder="Ваш ник..." style="width:100%; margin-bottom:15px;">
+            <button class="primary" id="save-profile" style="width:100%;">СОХРАНИТЬ</button>
+        </div>
+    </div>
+
+    <div id="chat-screen">
+        <header class="header">
+            <div onclick="document.getElementById('profile-modal').classList.remove('hidden')" style="cursor:pointer">
+                <span id="display-user" style="font-weight:bold;">Загрузка...</span>
+            </div>
+            <button onclick="logout()" style="background:rgba(255,0,0,0.1); border:none; color:#ff4757; padding:8px 12px; border-radius:10px; font-size:12px;">ВЫЙТИ</button>
+        </header>
+        <div class="msg-box" id="msg-box"></div>
+        <div class="input-bar">
+            <input type="text" id="m-input" placeholder="Сообщение..." autocomplete="off">
+            <button class="primary" id="send-btn">➤</button>
+        </div>
+    </div>
+
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+    import { getDatabase, ref, push, onValue, serverTimestamp, remove } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+    import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, updateProfile, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+
+    const firebaseConfig = {
+        apiKey: "AIzaSyBv0usnYrMaGGm7ubItPKgtFNY_0JWlTS8",
+        authDomain: "grigorovchat.firebaseapp.com",
+        databaseURL: "https://grigorovchat-default-rtdb.europe-west1.firebasedatabase.app",
+        projectId: "grigorovchat",
+        storageBucket: "grigorovchat.firebasestorage.app",
+        messagingSenderId: "751125712074",
+        appId: "1:751125712074:web:f14ec596ab00695a04b833"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    // Принудительно указываем URL для европейского региона
+    const db = getDatabase(app, firebaseConfig.databaseURL);
+    const ADMIN_EMAIL = "daniilgrigorov26@gmail.com";
+
+    let user = null;
+    let isAdmin = false;
+
+    window.handleAuth = async () => {
+        const e = document.getElementById('email').value.trim();
+        const p = document.getElementById('pass').value.trim();
+        if(!e || !p) return;
+        try { await signInWithEmailAndPassword(auth, e, p); } 
+        catch { try { await createUserWithEmailAndPassword(auth, e, p); } catch(err) { alert(err.message); } }
+    };
+
+    window.logout = () => signOut(auth);
+
+    onAuthStateChanged(auth, u => {
+        user = u;
+        if(u) {
+            isAdmin = (u.email === ADMIN_EMAIL);
+            document.getElementById('auth-screen').classList.add('hidden');
+            document.getElementById('chat-screen').style.display = 'flex';
+            document.getElementById('display-user').innerHTML = (u.displayName || "Без ника") + (isAdmin ? " <span class='admin-crown'>👑</span>" : "");
+            if(!u.displayName) document.getElementById('profile-modal').classList.remove('hidden');
+            loadMessages();
+        } else {
+            document.getElementById('auth-screen').classList.remove('hidden');
+            document.getElementById('chat-screen').style.display = 'none';
+        }
+    });
+
+    document.getElementById('save-profile').onclick = async () => {
+        const name = document.getElementById('new-name').value.trim();
+        if(name && user) {
+            await updateProfile(user, { displayName: name });
+            location.reload();
+        }
+    };
+
+    const send = () => {
+        const txt = document.getElementById('m-input').value.trim();
+        if(!txt || !user?.displayName) return;
+        push(ref(db, 'messages'), {
+            uid: user.uid,
+            name: user.displayName,
+            email: user.email,
+            text: txt,
+            time: serverTimestamp()
+        });
+        document.getElementById('m-input').value = '';
+    };
+
+    document.getElementById('send-btn').onclick = send;
+    document.getElementById('m-input').onkeypress = (e) => { if(e.key==='Enter') send(); };
+
+    window.deleteMsg = (id) => { if(isAdmin && confirm("Удалить?")) remove(ref(db, 'messages/' + id)); };
+
+    function loadMessages() {
+        onValue(ref(db, 'messages'), (snapshot) => {
+            const box = document.getElementById('msg-box');
+            box.innerHTML = "";
+            snapshot.forEach((child) => {
+                const d = child.val();
+                const id = child.key;
+                const isMe = d.uid === user?.uid;
+                const isMsgAdmin = d.email === ADMIN_EMAIL;
+                const div = document.createElement('div');
+                div.className = `message ${isMe ? 'my-msg' : 'other-msg'}`;
+                div.innerHTML = `
+                    <span class="u-name" style="${isMsgAdmin ? 'color:var(--admin)' : ''}">
+                        ${d.name} ${isMsgAdmin ? '👑' : ''}
+                        ${isAdmin ? `<span class="delete-btn" onclick="deleteMsg('${id}')">❌</span>` : ''}
+                    </span>
+                    ${d.text}
+                `;
+                box.appendChild(div);
+            });
+            box.scrollTop = box.scrollHeight;
+        });
+    }
+</script>
+</body>
+</html>
