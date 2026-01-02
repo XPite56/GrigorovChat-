@@ -12,21 +12,21 @@
         
         #auth-screen, #contacts-screen, #chat-screen { padding: 25px; height: 100vh; display: none; flex-direction: column; }
         
-        /* ТА САМАЯ ВЕРХНЯЯ ПАЛОЧКА (ИНФО-ОКНО) */
+        /* ОКНО ОБНОВЛЕНИЙ (ПОЛНОЕ) */
         .info-bar {
             background: var(--card);
-            padding: 18px 25px;
+            padding: 22px;
             border-radius: 25px;
-            margin-bottom: 20px;
+            margin-bottom: 25px;
             border: 1px solid rgba(255,255,255,0.1);
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
             backdrop-filter: blur(10px);
+            line-height: 1.6;
         }
-        .status-dot { width: 8px; height: 8px; background: #00ff88; border-radius: 50%; display: inline-block; margin-right: 10px; box-shadow: 0 0 10px #00ff88; }
+        .info-bar h4 { color: var(--p); margin-bottom: 10px; font-size: 16px; }
+        .info-bar p { font-size: 13px; opacity: 0.9; margin-bottom: 8px; }
+        .info-bar .section-title { font-weight: bold; margin-top: 10px; display: block; color: rgba(255,255,255,0.6); font-size: 12px; text-transform: uppercase; }
 
-        /* ТВОИ КАРТОЧКИ (НИЖНИЕ ПАЛОЧКИ) */
+        /* ТВОИ КАРТОЧКИ ЧАТОВ */
         .auth-card { margin: auto; width: 90%; max-width: 340px; text-align: center; background: rgba(255, 255, 255, 0.05); padding: 40px 30px; border-radius: 30px; backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.1); }
         input { width: 100%; padding: 16px; margin: 10px 0; border-radius: 18px; border: none; background: rgba(255,255,255,0.1); color: white; outline: none; font-size: 16px; }
         .btn-main { width: 100%; padding: 16px; border-radius: 18px; border: none; background: var(--p); color: white; font-weight: bold; cursor: pointer; margin-top: 15px; }
@@ -63,13 +63,20 @@
 
     <div id="contacts-screen">
         <div class="info-bar">
-            <div><span class="status-dot"></span> <span>Версия 2.5: Окно обновлений</span></div>
-            <span style="opacity: 0.4; font-size: 12px;">2026</span>
+            <h4>1.1 — Новое обновление: «Готов к общению!»</h4>
+            
+            <span class="section-title">Что добавили?</span>
+            <p>Нормальный чат, уведомления, новый сервер (теперь GrigorovChat работает без VPN!)</p>
+            
+            <span class="section-title">Что добавят?</span>
+            <p>Общий чат, возможность присылать ⬛️⬛️⬛️⬛️, ⬛️⬛️⬛️⬛️⬛️?!</p>
+            
+            <p style="margin-top:15px; font-size:11px; opacity:0.5; text-align:right;">Спасибо за внимание!</p>
         </div>
 
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; padding: 0 10px;">
-            <h1>Чаты</h1>
-            <span onclick="logout()" style="color:#ff4757; cursor:pointer;">Выход</span>
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; padding: 0 5px;">
+            <h1 style="font-size: 24px;">Чаты</h1>
+            <span onclick="logout()" style="color:#ff4757; cursor:pointer; font-size: 14px;">Выход</span>
         </div>
         
         <div id="user-list"></div>
@@ -104,7 +111,7 @@
         const nick = document.getElementById('u-nick').value.trim();
         const pass = document.getElementById('pass').value;
         if(!nick || !pass) return;
-        const email = nick.includes('@') ? nick : `${nick}@chat.com`;
+        const email = `${nick}@chat.com`;
         try {
             if (isRegisterMode) {
                 await acc.create(ID.unique(), email, pass);
@@ -149,7 +156,7 @@
             const list = document.getElementById('user-list'); list.innerHTML = "";
             res.documents.forEach(u => {
                 if (u.email === currentUser.email) return;
-                const isDev = u.name === 'Даниил';
+                const isDev = u.name === 'Даниил' || u.email === 'daniilgrigorov26@gmail.com';
                 const card = document.createElement('div');
                 card.className = `contact-card ${isDev ? 'dev-badge' : ''}`;
                 card.onclick = () => openChat(u.name, u.email);
@@ -203,3 +210,4 @@
 </script>
 </body>
 </html>
+
