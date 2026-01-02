@@ -1,0 +1,211 @@
+<meta name='viewport' content='width=device-width, initial-scale=1'/><!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>GrigorovChat Pro</title>
+    <script src="https://cdn.jsdelivr.net/npm/appwrite@13.0.1"></script>
+    <style>
+        :root { --p: #6c5ce7; --bg: #13132b; --card: rgba(255, 255, 255, 0.07); --dev: #ffca28; }
+        * { margin:0; padding:0; box-sizing:border-box; font-family: 'Segoe UI', sans-serif; -webkit-tap-highlight-color: transparent; }
+        body { background: radial-gradient(circle at center, #2e2e5d 0%, #13132b 100%); color: white; height: 100vh; overflow: hidden; }
+        
+        /* Экраны */
+        #auth-screen, #contacts-screen, #chat-screen { padding: 25px; height: 100vh; display: none; flex-direction: column; }
+        .auth-card { margin: auto; width: 90%; max-width: 340px; text-align: center; background: rgba(255, 255, 255, 0.05); padding: 40px 30px; border-radius: 30px; backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.1); }
+        
+        /* Инпуты */
+        input { width: 100%; padding: 16px; margin: 10px 0; border-radius: 18px; border: none; background: rgba(255,255,255,0.1); color: white; outline: none; font-size: 16px; }
+        .btn-main { width: 100%; padding: 16px; border-radius: 18px; border: none; background: var(--p); color: white; font-weight: bold; cursor: pointer; margin-top: 15px; }
+        
+        /* Список чатов */
+        .contact-card { background: var(--card); padding: 20px; border-radius: 25px; display: flex; align-items: center; gap: 15px; margin-bottom: 12px; cursor: pointer; border: 1px solid rgba(255,255,255,0.05); }
+        .avatar { width: 45px; height: 45px; border-radius: 15px; background: var(--p); display: flex; align-items: center; justify-content: center; font-weight: bold; }
+        
+        /* Стиль разработчика */
+        .dev-badge { border: 2px solid var(--dev) !important; box-shadow: 0 0 15px rgba(255, 202, 40, 0.3); }
+        .dev-tag { color: var(--dev); font-size: 10px; font-weight: bold; text-transform: uppercase; margin-left: auto; }
+
+        /* Сообщения */
+        #messages { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; padding-bottom: 80px; }
+        .msg { max-width: 80%; padding: 12px 16px; border-radius: 22px; background: var(--card); align-self: flex-start; animation: fadeIn 0.2s ease; }
+        .my { align-self: flex-end; background: var(--p); border-bottom-right-radius: 4px; }
+        
+        .input-bar { position: fixed; bottom: 20px; left: 20px; right: 20px; display: flex; gap: 10px; }
+        #msg-inp { margin: 0; background: rgba(255,255,255,0.15); backdrop-filter: blur(10px); }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+    </style>
+</head>
+<body>
+
+    <div id="auth-screen">
+        <div class="auth-card">
+            <h2 style="margin-bottom:20px;">GrigorovChat</h2>
+            <input type="text" id="u-nick" placeholder="Никнейм">
+            <input type="password" id="pass" placeholder="Пароль">
+            <button class="btn-main" id="main-btn" onclick="handleAuth()">Войти</button>
+            <p onclick="toggleMode()" id="toggle-text" style="color:rgba(255,255,255,0.4); margin-top:20px; cursor:pointer; font-size:12px">Нет аккаунта? Создать</p>
+        </div>
+    </div>
+
+    <div id="contacts-screen">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px">
+            <h1>Чаты</h1>
+            <span onclick="logout()" style="color:#ff4757; cursor:pointer;">Выход</span>
+        </div>
+        <div id="user-list"></div>
+    </div>
+
+    <div id="chat-screen">
+        <header style="margin-bottom:20px; display:flex; align-items:center; gap:15px">
+            <span onclick="showContacts()" style="cursor:pointer; font-size:30px">←</span> 
+            <b id="active-chat-name" style="font-size:20px"></b>
+        </header>
+        <div id="messages"></div>
+        <div class="input-bar">
+            <input type="text" id="msg-inp" placeholder="Сообщение..." onkeypress="if(event.key==='Enter') sendMsg()">
+            <button onclick="sendMsg()" style="background:var(--p); border:none; padding:15px; border-radius:18px; color:white; min-width: 60px;">➤</button>
+        </div>
+    </div>
+
+<script>
+    const { Client, Account, Databases, ID, Query } = Appwrite;
+    const client = new Client().setEndpoint('https://cloud.appwrite.io/v1').setProject('695824a900049124f435');
+    const acc = new Account(client);
+    const db = new Databases(client);
+
+    const D_ID = '695825270032517f8888'; 
+    const C_MSGS = 'messages'; 
+    const C_USERS = 'users'; 
+
+    let currentUser = null;
+    let isRegisterMode = false;
+    let currentOpponentEmail = "";
+
+    function toggleMode() {
+        isRegisterMode = !isRegisterMode;
+        document.getElementById('main-btn').innerText = isRegisterMode ? 'Создать аккаунт' : 'Войти';
+    }
+
+    // Вход: если введен ник "Даниил", он превращается в "Даниил@chat.com"
+    async function handleAuth() {
+        const nick = document.getElementById('u-nick').value.trim();
+        const pass = document.getElementById('pass').value;
+        if(!nick || !pass) return;
+
+        const email = nick.includes('@') ? nick : `${nick}@chat.com`;
+
+        try {
+            if (isRegisterMode) {
+                await acc.create(ID.unique(), email, pass);
+                await acc.createEmailSession(email, pass);
+                // Сохраняем ник и email в базу пользователей
+                await db.createDocument(D_ID, C_USERS, ID.unique(), { name: nick, email: email });
+            } else {
+                await acc.createEmailSession(email, pass);
+            }
+            location.reload();
+        } catch (err) { alert("Ошибка: " + err.message); }
+    }
+
+    async function init() {
+        try {
+            currentUser = await acc.get(); // Проверка сессии (САМОВХОД)
+            showScreen('contacts-screen');
+            getUsers();
+            
+            // ПОДПИСКА REALTIME (Мгновенные сообщения)
+            client.subscribe(`databases.${D_ID}.collections.${C_MSGS}.documents`, res => {
+                if (res.events.some(e => e.includes("create"))) {
+                    const m = res.payload;
+                    if ((m.sender === currentOpponentEmail && m.receiver === currentUser.email) || 
+                        (m.sender === currentUser.email && m.receiver === currentOpponentEmail)) {
+                        renderMessage(m);
+                    }
+                }
+            });
+        } catch (e) { showScreen('auth-screen'); }
+    }
+
+    function showScreen(id) {
+        ['auth-screen', 'contacts-screen', 'chat-screen'].forEach(s => document.getElementById(s).style.display = 'none');
+        document.getElementById(id).style.display = 'flex';
+    }
+
+    async function getUsers() {
+        try {
+            const res = await db.listDocuments(D_ID, C_USERS);
+            const list = document.getElementById('user-list');
+            list.innerHTML = "";
+            res.documents.forEach(u => {
+                if (u.email === currentUser.email) return;
+                
+                // Проверка на разработчика (Даниил)
+                const isDev = u.email === 'daniilgrigorov26@gmail.com' || u.name === 'Даниил';
+                
+                const card = document.createElement('div');
+                card.className = `contact-card ${isDev ? 'dev-badge' : ''}`;
+                card.onclick = () => openChat(u.name, u.email);
+                card.innerHTML = `
+                    <div class="avatar" style="${isDev ? 'background:var(--dev)' : ''}">${u.name[0]}</div>
+                    <b>${u.name}</b>
+                    ${isDev ? '<span class="dev-tag">Разработчик</span>' : ''}
+                `;
+                list.appendChild(card);
+            });
+        } catch (e) { console.error(e); }
+    }
+
+    function openChat(name, email) {
+        currentOpponentEmail = email;
+        showScreen('chat-screen');
+        document.getElementById('active-chat-name').innerText = name;
+        loadMessages();
+    }
+
+    function showContacts() { currentOpponentEmail = ""; showScreen('contacts-screen'); }
+
+    async function loadMessages() {
+        const box = document.getElementById('messages');
+        box.innerHTML = '';
+        try {
+            const res = await db.listDocuments(D_ID, C_MSGS, [Query.orderAsc("$createdAt"), Query.limit(100)]);
+            res.documents.forEach(msg => {
+                if ((msg.sender === currentUser.email && msg.receiver === currentOpponentEmail) || 
+                    (msg.sender === currentOpponentEmail && msg.receiver === currentUser.email)) {
+                    renderMessage(msg);
+                }
+            });
+        } catch (e) { }
+    }
+
+    function renderMessage(msg) {
+        const box = document.getElementById('messages');
+        if (document.getElementById(msg.$id)) return;
+        const isMy = msg.sender === currentUser.email;
+        const div = document.createElement('div');
+        div.id = msg.$id;
+        div.className = `msg ${isMy ? 'my' : ''}`;
+        div.innerHTML = msg.text;
+        box.appendChild(div);
+        box.scrollTop = box.scrollHeight;
+    }
+
+    async function sendMsg() {
+        const input = document.getElementById('msg-inp');
+        const text = input.value.trim();
+        if (!text) return;
+        try {
+            const doc = await db.createDocument(D_ID, C_MSGS, ID.unique(), { 
+                text: text, sender: currentUser.email, receiver: currentOpponentEmail 
+            });
+            renderMessage(doc);
+            input.value = "";
+        } catch (e) { alert("Ошибка при отправке!"); }
+    }
+
+    async function logout() { await acc.deleteSession('current'); location.reload(); }
+    init();
+</script>
+</body>
+</html>
