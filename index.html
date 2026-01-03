@@ -1,0 +1,225 @@
+<meta name='viewport' content='width=device-width, initial-scale=1'/><!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>GrigorovChat Admin Pro</title>
+    <script src="https://cdn.jsdelivr.net/npm/appwrite@13.0.1"></script>
+    <style>
+        :root { --p: #6c5ce7; --bg: #13132b; --card: rgba(255, 255, 255, 0.07); --admin: #ff4757; }
+        * { margin:0; padding:0; box-sizing:border-box; font-family: 'Segoe UI', sans-serif; -webkit-tap-highlight-color: transparent; }
+        
+        body { 
+            background: radial-gradient(circle at center, #2e2e5d 0%, #13132b 100%); 
+            color: white; height: 100vh; overflow: hidden; 
+        }
+
+        #auth-screen, #contacts-screen, #chat-screen { padding: 25px; height: 100vh; display: none; flex-direction: column; }
+
+        /* Стиль карточки из твоего интерфейса */
+        .glass-card { 
+            margin: auto; width: 90%; max-width: 340px; text-align: center; 
+            background: rgba(255, 255, 255, 0.05); padding: 40px 30px; 
+            border-radius: 30px; backdrop-filter: blur(20px); 
+            border: 1px solid rgba(255,255,255,0.1); 
+        }
+
+        input { 
+            width: 100%; padding: 18px; margin: 10px 0; border-radius: 18px; 
+            border: none; background: rgba(255,255,255,0.1); color: white; 
+            outline: none; font-size: 16px; 
+        }
+
+        .btn-main { 
+            width: 100%; padding: 18px; border-radius: 18px; border: none; 
+            background: var(--p); color: white; font-weight: bold; 
+            cursor: pointer; margin-top: 15px; box-shadow: 0 10px 20px rgba(108, 92, 231, 0.3);
+        }
+
+        /* Список контактов */
+        .contact-card { 
+            background: var(--card); padding: 20px; border-radius: 25px; 
+            display: flex; align-items: center; gap: 15px; margin-bottom: 12px; 
+            border: 1px solid rgba(255,255,255,0.05);
+        }
+
+        .avatar { 
+            width: 45px; height: 45px; border-radius: 15px; background: var(--p); 
+            display: flex; align-items: center; justify-content: center; font-weight: bold; 
+        }
+
+        /* Сообщения */
+        #messages { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; padding-bottom: 90px; }
+        .msg { 
+            max-width: 80%; padding: 14px 18px; border-radius: 22px; 
+            background: var(--card); align-self: flex-start; position: relative;
+        }
+        .my { align-self: flex-end; background: var(--p); border-bottom-right-radius: 4px; }
+
+        /* Кнопки админа */
+        .adm-tool { font-size: 10px; color: var(--admin); cursor: pointer; margin-left: 10px; text-transform: uppercase; font-weight: bold; }
+        .adm-row { display: flex; gap: 10px; margin-top: 8px; }
+
+        .input-bar { 
+            position: fixed; bottom: 20px; left: 20px; right: 20px; 
+            display: flex; gap: 10px; 
+        }
+        #msg-inp { margin: 0; background: rgba(255,255,255,0.15); backdrop-filter: blur(10px); flex: 1; }
+    </style>
+</head>
+<body>
+
+    <div id="auth-screen">
+        <div class="glass-card">
+            <h2 style="margin-bottom:20px">GrigorovChat</h2>
+            <input type="text" id="u-nick" placeholder="Никнейм">
+            <input type="password" id="pass" placeholder="Пароль">
+            <button class="btn-main" onclick="handleAuth()">Войти</button>
+            <p onclick="toggleMode()" id="toggle-text" style="color:rgba(255,255,255,0.4); margin-top:20px; cursor:pointer; font-size:12px">Нет аккаунта? Создать</p>
+        </div>
+    </div>
+
+    <div id="contacts-screen">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:25px;">
+            <h1 style="font-size:28px">Чаты <span id="dev-tag" style="display:none; color:var(--admin); font-size:14px">[DEV]</span></h1>
+            <span onclick="logout()" style="opacity:0.3; cursor:pointer">Выйти</span>
+        </div>
+        <div id="user-list"></div>
+    </div>
+
+    <div id="chat-screen">
+        <header style="margin-bottom:20px; display:flex; align-items:center; gap:15px">
+            <span onclick="closeChat()" style="cursor:pointer; font-size:30px">←</span> 
+            <b id="active-chat-name" style="font-size:20px"></b>
+        </header>
+        <div id="messages"></div>
+        <div class="input-bar">
+            <input type="text" id="msg-inp" placeholder="Сообщение...">
+            <button onclick="sendMsg()" style="background:var(--p); border:none; width:55px; height:55px; border-radius:18px; color:white; font-size:20px">➤</button>
+        </div>
+    </div>
+
+<script>
+    const { Client, Account, Databases, ID, Query } = Appwrite;
+    const client = new Client().setEndpoint('https://cloud.appwrite.io/v1').setProject('695824a900049124f435');
+    const acc = new Account(client), db = new Databases(client);
+
+    const D_ID = '695825270032517f8888', C_MSGS = 'messages', C_USERS = 'users'; 
+    const ADMIN_EMAIL = 'daniilgrigorov26@gmail.com'; 
+
+    let currentUser = null, isReg = false, currentOpponent = null, unsubscribe = null;
+
+    function toggleMode() {
+        isReg = !isReg;
+        document.querySelector('.btn-main').innerText = isReg ? 'Создать' : 'Войти';
+    }
+
+    async function handleAuth() {
+        const nick = document.getElementById('u-nick').value.trim();
+        const pass = document.getElementById('pass').value;
+        const email = nick.includes('@') ? nick : `${nick.toLowerCase().replace(/\s/g, '_')}@chat.com`;
+
+        try {
+            if (isReg) {
+                await acc.create(ID.unique(), email, pass);
+                await acc.createEmailSession(email, pass);
+                await db.createDocument(D_ID, C_USERS, ID.unique(), { name: nick, email: email });
+            } else {
+                await acc.createEmailSession(email, pass);
+            }
+            location.reload();
+        } catch (e) { alert("Ошибка: " + e.message); }
+    }
+
+    async function init() {
+        try {
+            currentUser = await acc.get();
+            if(currentUser.email === ADMIN_EMAIL) document.getElementById('dev-tag').style.display = 'inline';
+            showScreen('contacts-screen');
+            loadUsers();
+        } catch (e) { showScreen('auth-screen'); }
+    }
+
+    async function loadUsers() {
+        const res = await db.listDocuments(D_ID, C_USERS);
+        const list = document.getElementById('user-list'); list.innerHTML = "";
+        res.documents.forEach(u => {
+            if (u.email === currentUser.email) return;
+            const card = document.createElement('div');
+            card.className = 'contact-card';
+            
+            let adminUI = '';
+            if(currentUser.email === ADMIN_EMAIL) {
+                adminUI = `<div class="adm-row">
+                    <span class="adm-tool" onclick="admRename('${u.$id}')">Ник</span>
+                    <span class="adm-tool" onclick="admBan('${u.$id}')">Бан</span>
+                </div>`;
+            }
+
+            card.innerHTML = `
+                <div style="flex:1" onclick="openChat('${u.email}', '${u.name}')">
+                    <div style="display:flex; align-items:center; gap:15px">
+                        <div class="avatar">${u.name[0].toUpperCase()}</div>
+                        <b>${u.name}</b>
+                    </div>
+                    ${adminUI}
+                </div>`;
+            list.appendChild(card);
+        });
+    }
+
+    // ФУНКЦИИ АДМИНА
+    async function admRename(id) {
+        const n = prompt("Новое имя:");
+        if(n) { await db.updateDocument(D_ID, C_USERS, id, { name: n }); loadUsers(); }
+    }
+    async function admBan(id) {
+        if(confirm("Удалить пользователя?")) { await db.deleteDocument(D_ID, C_USERS, id); loadUsers(); }
+    }
+    async function admDelMsg(id) {
+        if(confirm("Удалить сообщение?")) { await db.deleteDocument(D_ID, C_MSGS, id); loadMessages(); }
+    }
+
+    function openChat(email, name) {
+        currentOpponent = { email, name };
+        document.getElementById('active-chat-name').innerText = name;
+        showScreen('chat-screen');
+        loadMessages();
+        unsubscribe = client.subscribe(`databases.${D_ID}.collections.${C_MSGS}.documents`, () => loadMessages());
+    }
+
+    async function loadMessages() {
+        const res = await db.listDocuments(D_ID, C_MSGS, [Query.orderAsc("$createdAt")]);
+        const box = document.getElementById('messages'); box.innerHTML = '';
+        res.documents.forEach(m => {
+            if ((m.sender === currentUser.email && m.receiver === currentOpponent.email) || 
+                (m.sender === currentOpponent.email && m.receiver === currentUser.email)) {
+                const d = document.createElement('div');
+                d.className = `msg ${m.sender === currentUser.email ? 'my' : ''}`;
+                let x = (currentUser.email === ADMIN_EMAIL) ? `<span class="adm-tool" onclick="admDelMsg('${m.$id}')">×</span>` : '';
+                d.innerHTML = `${m.text} ${x}`;
+                box.appendChild(d);
+            }
+        });
+        box.scrollTop = box.scrollHeight;
+    }
+
+    async function sendMsg() {
+        const inp = document.getElementById('msg-inp');
+        if(!inp.value.trim()) return;
+        await db.createDocument(D_ID, C_MSGS, ID.unique(), { 
+            text: inp.value, sender: currentUser.email, receiver: currentOpponent.email 
+        });
+        inp.value = "";
+    }
+
+    function showScreen(id) {
+        ['auth-screen', 'contacts-screen', 'chat-screen'].forEach(s => document.getElementById(s).style.display = 'none');
+        document.getElementById(id).style.display = 'flex';
+    }
+    function closeChat() { if(unsubscribe) unsubscribe(); showScreen('contacts-screen'); }
+    function logout() { acc.deleteSession('current'); location.reload(); }
+    init();
+</script>
+</body>
+</html>
