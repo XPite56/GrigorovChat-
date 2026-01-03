@@ -1,0 +1,162 @@
+<meta name='viewport' content='width=device-width, initial-scale=1'/><!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>GrigorovChat Final</title>
+    <script src="https://cdn.jsdelivr.net/npm/appwrite@13.0.1"></script>
+    <style>
+        :root { --p: #6c5ce7; --bg: #13132b; --card: rgba(255, 255, 255, 0.07); }
+        * { margin:0; padding:0; box-sizing:border-box; font-family: 'Segoe UI', sans-serif; -webkit-tap-highlight-color: transparent; }
+        body { background: radial-gradient(circle at center, #2e2e5d 0%, #13132b 100%); color: white; height: 100vh; overflow: hidden; }
+        #auth-screen, #contacts-screen, #chat-screen { padding: 25px; height: 100vh; display: none; flex-direction: column; }
+        .auth-card { margin: auto; width: 90%; max-width: 340px; text-align: center; background: rgba(255, 255, 255, 0.05); padding: 40px 30px; border-radius: 30px; backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.1); }
+        input { width: 100%; padding: 18px; margin: 10px 0; border-radius: 18px; border: none; background: rgba(255,255,255,0.1); color: white; outline: none; font-size: 16px; }
+        .btn-main { width: 100%; padding: 18px; border-radius: 18px; border: none; background: var(--p); color: white; font-weight: bold; cursor: pointer; margin-top: 15px; }
+        .btn-main:disabled { background: #444; cursor: not-allowed; }
+        .error-msg { color: #ff4757; font-size: 13px; margin-top: 15px; display: none; background: rgba(255, 71, 87, 0.1); padding: 10px; border-radius: 10px; }
+        .contact-card { background: var(--card); padding: 20px; border-radius: 25px; display: flex; align-items: center; gap: 15px; margin-bottom: 12px; cursor: pointer; }
+        #messages { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; padding-bottom: 80px; }
+        .msg { max-width: 80%; padding: 14px 18px; border-radius: 22px; background: var(--card); align-self: flex-start; }
+        .my { align-self: flex-end; background: var(--p); border-bottom-right-radius: 4px; }
+        .input-bar { position: fixed; bottom: 20px; left: 20px; right: 20px; display: flex; gap: 10px; }
+    </style>
+</head>
+<body>
+
+    <div id="auth-screen">
+        <div class="auth-card">
+            <h2>GrigorovChat</h2>
+            <input type="text" id="u-nick" placeholder="Никнейм">
+            <input type="password" id="pass" placeholder="Пароль (мин. 8 знаков)">
+            <div id="auth-error" class="error-msg"></div>
+            <button class="btn-main" id="main-btn" onclick="handleAuth()">Войти</button>
+            <p onclick="toggleMode()" id="toggle-text" style="color:rgba(255,255,255,0.4); margin-top:20px; cursor:pointer; font-size:12px">Нет аккаунта? Создать</p>
+        </div>
+    </div>
+
+    <div id="contacts-screen">
+        <h1 style="margin-bottom:20px">Чаты</h1>
+        <div id="user-list"></div>
+    </div>
+
+    <div id="chat-screen">
+        <header style="margin-bottom:20px; display:flex; align-items:center; gap:15px">
+            <span onclick="showScreen('contacts-screen')" style="cursor:pointer; font-size:30px">←</span> 
+            <b id="active-chat-name"></b>
+        </header>
+        <div id="messages"></div>
+        <div class="input-bar">
+            <input type="text" id="msg-inp" placeholder="Сообщение..." style="flex:1; margin:0; background:rgba(255,255,255,0.15)">
+            <button onclick="sendMsg()" style="background:var(--p); border:none; padding:15px; border-radius:18px; color:white;">➤</button>
+        </div>
+    </div>
+
+<script>
+    const { Client, Account, Databases, ID, Query } = Appwrite;
+    const client = new Client().setEndpoint('https://cloud.appwrite.io/v1').setProject('695824a900049124f435');
+    const acc = new Account(client), db = new Databases(client);
+
+    const D_ID = '695825270032517f8888', C_MSGS = 'messages', C_USERS = 'users'; 
+    let currentUser = null, isRegisterMode = false, currentOpponentEmail = "";
+
+    function toggleMode() {
+        isRegisterMode = !isRegisterMode;
+        document.getElementById('main-btn').innerText = isRegisterMode ? 'Создать аккаунт' : 'Войти';
+        document.getElementById('auth-error').style.display = 'none';
+    }
+
+    // Умная очистка ника
+    function safeNick(text) {
+        const map = {"а":"a","б":"b","в":"v","г":"g","д":"d","е":"e","ё":"yo","ж":"zh","з":"z","и":"i","й":"y","к":"k","л":"l","м":"m","н":"n","о":"o","п":"p","р":"r","с":"s","т":"t","у":"u","ф":"f","х":"h","ц":"ts","ч":"ch","ш":"sh","щ":"sch","ы":"y","э":"e","ю":"yu","я":"ya"," ":"_"};
+        return text.toLowerCase().split('').map(l => map[l] || l).join('').replace(/[^a-z0-9_]/g, '');
+    }
+
+    async function handleAuth() {
+        const nick = document.getElementById('u-nick').value.trim();
+        const pass = document.getElementById('pass').value;
+        const btn = document.getElementById('main-btn');
+        const errBox = document.getElementById('auth-error');
+
+        if(!nick || pass.length < 8) {
+            errBox.innerText = "Пароль должен быть не менее 8 символов!";
+            errBox.style.display = 'block';
+            return;
+        }
+
+        const email = `${safeNick(nick)}@chat.com`;
+        btn.disabled = true;
+        errBox.style.display = 'none';
+
+        try {
+            if (isRegisterMode) {
+                await acc.create(ID.unique(), email, pass);
+                await acc.createEmailSession(email, pass);
+                await db.createDocument(D_ID, C_USERS, ID.unique(), { name: nick, email: email });
+            } else {
+                await acc.createEmailSession(email, pass);
+            }
+            location.reload();
+        } catch (err) {
+            btn.disabled = false;
+            errBox.style.display = 'block';
+            // Выводим РЕАЛЬНУЮ причину для отладки
+            if (err.message.includes('Rate limit')) {
+                errBox.innerText = "Блокировка за спам! Подожди 15 минут.";
+            } else {
+                errBox.innerText = "Ошибка сервера: " + err.message;
+            }
+        }
+    }
+
+    async function init() {
+        try {
+            currentUser = await acc.get();
+            showScreen('contacts-screen');
+            getUsers();
+        } catch (e) { showScreen('auth-screen'); }
+    }
+
+    function showScreen(id) {
+        ['auth-screen', 'contacts-screen', 'chat-screen'].forEach(s => document.getElementById(s).style.display = 'none');
+        document.getElementById(id).style.display = 'flex';
+    }
+
+    async function getUsers() {
+        const res = await db.listDocuments(D_ID, C_USERS);
+        const list = document.getElementById('user-list'); list.innerHTML = "";
+        res.documents.forEach(u => {
+            if (u.email === currentUser.email) return;
+            const card = document.createElement('div');
+            card.className = 'contact-card';
+            card.onclick = () => { currentOpponentEmail = u.email; showScreen('chat-screen'); document.getElementById('active-chat-name').innerText = u.name; loadMessages(); };
+            card.innerHTML = `<div style="width:40px;height:40px;background:var(--p);border-radius:10px;display:flex;align-items:center;justify-content:center;font-weight:bold">${u.name[0].toUpperCase()}</div><b>${u.name}</b>`;
+            list.appendChild(card);
+        });
+    }
+
+    async function loadMessages() {
+        const box = document.getElementById('messages'); box.innerHTML = '';
+        const res = await db.listDocuments(D_ID, C_MSGS, [Query.orderAsc("$createdAt")]);
+        res.documents.forEach(msg => {
+            if ((msg.sender === currentUser.email && msg.receiver === currentOpponentEmail) || 
+                (msg.sender === currentOpponentEmail && msg.receiver === currentUser.email)) {
+                const div = document.createElement('div');
+                div.className = `msg ${msg.sender === currentUser.email ? 'my' : ''}`;
+                div.innerText = msg.text;
+                box.appendChild(div);
+            }
+        });
+        box.scrollTop = box.scrollHeight;
+    }
+
+    async function sendMsg() {
+        const input = document.getElementById('msg-inp');
+        if (!input.value.trim()) return;
+        await db.createDocument(D_ID, C_MSGS, ID.unique(), { text: input.value, sender: currentUser.email, receiver: currentOpponentEmail });
+        input.value = ""; loadMessages();
+    }
+    init();
+</script>
+</body>
+</html>
