@@ -1,0 +1,77 @@
+<meta name='viewport' content='width=device-width, initial-scale=1'/><!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Уведомления Тест</title>
+    <script src="https://cdn.jsdelivr.net/npm/appwrite@13.0.1"></script>
+    <style>
+        body { background: #13132b; color: white; font-family: sans-serif; text-align: center; padding: 50px; }
+        .box { background: rgba(255,255,255,0.1); padding: 20px; border-radius: 20px; border: 1px solid #6c5ce7; max-width: 300px; margin: auto; }
+        #push { 
+            position: fixed; top: -100px; left: 50%; transform: translateX(-50%);
+            background: #6c5ce7; padding: 15px 30px; border-radius: 50px;
+            transition: 0.5s; box-shadow: 0 0 20px #6c5ce7;
+        }
+        #push.active { top: 20px; }
+        input, button { width: 100%; padding: 10px; margin: 5px 0; border-radius: 10px; border: none; }
+        button { background: #6c5ce7; color: white; cursor: pointer; }
+    </style>
+</head>
+<body>
+
+    <div id="push">🔔 Новое сообщение!</div>
+
+    <div class="box">
+        <h3>Notification Test</h3>
+        <p id="status">Статус: Выключено</p>
+        <button onclick="start()">1. Включить прослушку</button>
+        <hr>
+        <input type="text" id="target" placeholder="Кому (Email)">
+        <button onclick="send()">2. Отправить Тест</button>
+    </div>
+
+<script>
+    const client = new Appwrite.Client()
+        .setEndpoint('https://cloud.appwrite.io/v1')
+        .setProject('695824a900049124f435');
+    const db = new Appwrite.Databases(client);
+    const D_ID = '695825270032517f8888', C_MSGS = 'messages';
+
+    // ВАЖНО: Подставь свою почту для теста
+    const MY_EMAIL = 'daniilgrigorov26@gmail.com'; 
+
+    function start() {
+        document.getElementById('status').innerText = "Статус: Слушаю базу...";
+        
+        // Подписка на Realtime
+        client.subscribe(`databases.${D_ID}.collections.${C_MSGS}.documents`, res => {
+            console.log("Пришло событие:", res);
+            const m = res.payload;
+            
+            // Если получатель - я
+            if(m.receiver === MY_EMAIL) {
+                const el = document.getElementById('push');
+                el.innerText = "📩 От: " + m.sender + " | " + m.text;
+                el.classList.add('active');
+                setTimeout(() => el.classList.remove('active'), 4000);
+            }
+        });
+        alert("Прослушка запущена! Не закрывай вкладку.");
+    }
+
+    async function send() {
+        const to = document.getElementById('target').value;
+        try {
+            await db.createDocument(D_ID, C_MSGS, 'unique()', {
+                text: "Проверка связи! " + new Date().toLocaleTimeString(),
+                sender: "TESTER",
+                receiver: to
+            });
+            alert("Отправлено!");
+        } catch(e) {
+            alert("Ошибка: " + e.message + " | Проверь Permissions в Appwrite Console!");
+        }
+    }
+</script>
+</body>
+</html>
