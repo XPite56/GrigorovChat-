@@ -1,0 +1,191 @@
+<meta name='viewport' content='width=device-width, initial-scale=1'/><!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>GrigorovChat 1.1</title>
+    <script src="https://cdn.jsdelivr.net/npm/appwrite@13.0.1"></script>
+    <style>
+        :root { --p: #6c5ce7; --bg: #13132b; --card: rgba(255, 255, 255, 0.07); --admin: #ff4757; --gold: #f1c40f; }
+        * { margin:0; padding:0; box-sizing:border-box; font-family: 'Segoe UI', sans-serif; -webkit-tap-highlight-color: transparent; }
+        body { background: radial-gradient(circle at center, #2e2e5d 0%, #13132b 100%); color: white; height: 100vh; overflow: hidden; }
+        
+        #auth-screen, #contacts-screen, #chat-screen { padding: 25px; height: 100vh; display: none; flex-direction: column; }
+        
+        .glass-card { margin: auto; width: 100%; max-width: 340px; text-align: center; background: rgba(255, 255, 255, 0.05); padding: 40px 30px; border-radius: 30px; backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.1); }
+        input { width: 100%; padding: 18px; margin: 10px 0; border-radius: 18px; border: none; background: rgba(255,255,255,0.1); color: white; outline: none; font-size: 16px; }
+        .btn-p { width: 100%; padding: 18px; border-radius: 18px; border: none; background: var(--p); color: white; font-weight: bold; cursor: pointer; }
+
+        .contact-card { background: var(--card); padding: 20px; border-radius: 25px; display: flex; align-items: center; gap: 15px; margin-bottom: 12px; border: 1px solid rgba(255,255,255,0.05); }
+        .admin-glow { border: 2px solid var(--gold) !important; box-shadow: 0 0 15px rgba(241, 196, 15, 0.4); }
+        
+        .dev-badge { background: var(--gold); color: black; font-size: 10px; padding: 2px 6px; border-radius: 5px; font-weight: 900; margin-left: 5px; }
+
+        .avatar { width: 45px; height: 45px; border-radius: 15px; background: var(--p); display: flex; align-items: center; justify-content: center; font-weight: bold; }
+        #messages { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; padding-bottom: 90px; }
+        .msg { max-width: 80%; padding: 14px 18px; border-radius: 22px; background: var(--card); align-self: flex-start; }
+        .my { align-self: flex-end; background: var(--p); border-bottom-right-radius: 4px; }
+
+        .adm-btn { font-size: 10px; color: var(--admin); cursor: pointer; border: 1px solid var(--admin); padding: 2px 5px; border-radius: 5px; margin-left: 5px; }
+        .input-bar { position: fixed; bottom: 20px; left: 20px; right: 20px; display: flex; gap: 10px; }
+        #msg-inp { margin: 0; background: rgba(255,255,255,0.15); backdrop-filter: blur(15px); flex: 1; }
+    </style>
+</head>
+<body>
+
+    <div id="auth-screen">
+        <div class="glass-card">
+            <h2>GrigorovChat 1.1</h2>
+            <input type="text" id="u-nick" placeholder="Почта(можно выдуманую gmail.com)">
+            <input type="password" id="pass" placeholder="Пароль">
+            <div id="auth-err" style="color:var(--admin); font-size:12px; margin:10px 0; display:none"></div>
+            <button class="btn-p" onclick="handleAuth()">Войти</button>
+            <p onclick="toggleMode()" id="toggle-text" style="color:rgba(255,255,255,0.4); margin-top:20px; cursor:pointer; font-size:12px">Нет аккаунта? Создать</p>
+        </div>
+    </div>
+
+    <div id="contacts-screen">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+            <h1 style="font-size:24px">Чаты</h1>
+            <div style="display:flex; gap:10px">
+                <button id="adm-clear" style="display:none; background:var(--admin); color:white; border:none; padding:5px 10px; border-radius:10px; font-size:10px" onclick="clearAllMsgs()">CLEAN DB</button>
+                <button onclick="logout()" style="background:rgba(255,255,255,0.1); border:none; color:white; padding:5px 10px; border-radius:10px">Выход</button>
+            </div>
+        </div>
+        <div id="user-list"></div>
+    </div>
+
+    <div id="chat-screen">
+        <header style="margin-bottom:20px; display:flex; align-items:center; gap:15px">
+            <span onclick="closeChat()" style="cursor:pointer; font-size:30px">←</span> 
+            <b id="active-chat-name" style="font-size:20px"></b>
+        </header>
+        <div id="messages"></div>
+        <div class="input-bar">
+            <input type="text" id="msg-inp" placeholder="Сообщение...">
+            <button onclick="sendMsg()" style="background:var(--p); border:none; width:55px; height:55px; border-radius:18px; color:white; font-size:20px">➤</button>
+        </div>
+    </div>
+
+<script>
+    const { Client, Account, Databases, ID, Query } = Appwrite;
+    const client = new Client().setEndpoint('https://cloud.appwrite.io/v1').setProject('695824a900049124f435');
+    const acc = new Account(client), db = new Databases(client);
+
+    const D_ID = '695825270032517f8888', C_MSGS = 'messages', C_USERS = 'users'; 
+    const ADMIN_EMAIL = 'daniilgrigorov26@gmail.com'; 
+
+    let me = null, isReg = false, opponent = null, sub = null;
+
+    function toEmail(n) { return n.toLowerCase().replace(/[^a-z0-9]/g, '') + "@chat.com"; }
+
+    async function handleAuth() {
+        const nick = document.getElementById('u-nick').value.trim();
+        const pass = document.getElementById('pass').value;
+        const email = toEmail(nick);
+        try {
+            if (isReg) {
+                await acc.create(ID.unique(), email, pass);
+                await acc.createEmailSession(email, pass);
+                await db.createDocument(D_ID, C_USERS, ID.unique(), { name: nick, email: email, verified: (email === ADMIN_EMAIL) });
+            } else { await acc.createEmailSession(email, pass); }
+            location.reload();
+        } catch (e) { alert(e.message); }
+    }
+
+    async function init() {
+        try {
+            me = await acc.get();
+            if(me.email === ADMIN_EMAIL) document.getElementById('adm-clear').style.display = 'block';
+            show('contacts-screen');
+            loadUsers();
+        } catch (e) { show('auth-screen'); }
+    }
+
+    async function loadUsers() {
+        const res = await db.listDocuments(D_ID, C_USERS);
+        const list = document.getElementById('user-list'); list.innerHTML = "";
+        res.documents.forEach(u => {
+            if (u.email === me.email) return;
+            const isUAdmin = u.email === ADMIN_EMAIL;
+            const card = document.createElement('div');
+            card.className = `contact-card ${isUAdmin ? 'admin-glow' : ''}`;
+            
+            let admControls = (me.email === ADMIN_EMAIL) ? `
+                <span class="adm-btn" onclick="toggleV('${u.$id}', ${u.verified})">V</span>
+                <span class="adm-btn" onclick="ban('${u.$id}')">X</span>` : '';
+
+            card.innerHTML = `
+                <div style="flex:1; display:flex; align-items:center; gap:15px" onclick="openChat('${u.email}', '${u.name}')">
+                    <div class="avatar">${u.name[0].toUpperCase()}</div>
+                    <div>
+                        <b>${u.name} ${u.verified ? '●' : ''}</b>
+                        ${isUAdmin ? '<span class="dev-badge">DEV</span>' : ''}
+                    </div>
+                </div> ${admControls}`;
+            list.appendChild(card);
+        });
+    }
+
+    async function toggleV(id, v) { await db.updateDocument(D_ID, C_USERS, id, { verified: !v }); loadUsers(); }
+    async function ban(id) { if(confirm("Удалить?")) { await db.deleteDocument(D_ID, C_USERS, id); loadUsers(); } }
+    async function clearAllMsgs() {
+        if(confirm("УДАЛИТЬ ВСЮ ИСТОРИЮ?")) {
+            const res = await db.listDocuments(D_ID, C_MSGS, [Query.limit(100)]);
+            for(let d of res.documents) await db.deleteDocument(D_ID, C_MSGS, d.$id);
+            alert("База очищена");
+        }
+    }
+
+    async function logout() {
+        try {
+            await acc.deleteSession('current');
+            localStorage.clear();
+            sessionStorage.clear();
+            document.cookie.split(";").forEach(c => {
+                document.cookie = c.replace(/^ +/, "").replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/");
+            });
+            window.location.href = window.location.origin + window.location.pathname; 
+        } catch(e) { location.reload(); }
+    }
+
+    function openChat(e, n) {
+        opponent = { email: e, name: n };
+        document.getElementById('active-chat-name').innerText = n;
+        show('chat-screen');
+        loadMessages();
+        if(sub) sub();
+        sub = client.subscribe(`databases.${D_ID}.collections.${C_MSGS}.documents`, () => loadMessages());
+    }
+
+    async function loadMessages() {
+        const res = await db.listDocuments(D_ID, C_MSGS, [Query.orderAsc("$createdAt")]);
+        const box = document.getElementById('messages'); box.innerHTML = '';
+        res.documents.forEach(m => {
+            if ((m.sender === me.email && m.receiver === opponent.email) || (m.sender === opponent.email && m.receiver === me.email)) {
+                const d = document.createElement('div');
+                d.className = `msg ${m.sender === me.email ? 'my' : ''}`;
+                d.innerHTML = m.text;
+                box.appendChild(d);
+            }
+        });
+        box.scrollTop = box.scrollHeight;
+    }
+
+    async function sendMsg() {
+        const inp = document.getElementById('msg-inp');
+        if(!inp.value.trim()) return;
+        await db.createDocument(D_ID, C_MSGS, ID.unique(), { text: inp.value, sender: me.email, receiver: opponent.email });
+        inp.value = "";
+    }
+
+    function show(id) {
+        ['auth-screen', 'contacts-screen', 'chat-screen'].forEach(s => document.getElementById(s).style.display = 'none');
+        document.getElementById(id).style.display = 'flex';
+    }
+    function toggleMode() { isReg = !isReg; document.querySelector('.btn-p').innerText = isReg ? 'Создать' : 'Войти'; }
+    function closeChat() { if(sub) sub(); show('contacts-screen'); }
+    init();
+</script>
+</body>
+</html>
