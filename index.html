@@ -1,0 +1,245 @@
+<meta name='viewport' content='width=device-width, initial-scale=1'/><!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>GrigorovChat v1.1.5</title>
+    <script src="https://cdn.jsdelivr.net/npm/appwrite@13.0.1"></script>
+    <style>
+        :root { --p: #6c5ce7; --bg: #13132b; --card: rgba(255, 255, 255, 0.07); --admin: #ff4757; --gold: #f1c40f; --neon: #00d2ff; }
+        * { margin:0; padding:0; box-sizing:border-box; font-family: 'Segoe UI', sans-serif; -webkit-tap-highlight-color: transparent; }
+        body { background: radial-gradient(circle at center, #2e2e5d 0%, #13132b 100%); color: white; height: 100vh; overflow: hidden; }
+        
+        #auth-screen, #contacts-screen, #chat-screen { padding: 20px; height: 100vh; display: none; flex-direction: column; }
+        
+        /* Неоновый аватар админа */
+        @keyframes neon-pulse { 0% { box-shadow: 0 0 5px var(--neon); } 50% { box-shadow: 0 0 20px var(--neon); } 100% { box-shadow: 0 0 5px var(--neon); } }
+        .avatar-admin { animation: neon-pulse 2s infinite; border: 2px solid var(--neon) !important; }
+
+        /* Глобальное объявление */
+        #global-alert { background: var(--admin); color: white; padding: 12px; text-align: center; font-size: 14px; font-weight: bold; display: none; border-radius: 12px; margin-bottom: 15px; border: 1px solid rgba(255,255,255,0.2); }
+
+        .glass-card { margin: auto; width: 100%; max-width: 340px; text-align: center; background: rgba(255, 255, 255, 0.05); padding: 30px; border-radius: 30px; backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.1); }
+        input { width: 100%; padding: 15px; margin: 10px 0; border-radius: 15px; border: none; background: rgba(255,255,255,0.1); color: white; outline: none; font-size: 16px; }
+        .btn-p { width: 100%; padding: 15px; border-radius: 15px; border: none; background: var(--p); color: white; font-weight: bold; cursor: pointer; }
+
+        .contact-card { background: var(--card); padding: 15px; border-radius: 20px; display: flex; align-items: center; gap: 12px; margin-bottom: 10px; border: 1px solid rgba(255,255,255,0.05); cursor: pointer; }
+        .avatar { width: 50px; height: 50px; border-radius: 18px; background: var(--p); display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 20px; }
+        
+        #messages { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; padding-bottom: 85px; }
+        .msg { max-width: 80%; padding: 12px 16px; border-radius: 20px; background: var(--card); align-self: flex-start; word-wrap: break-word; }
+        .my { align-self: flex-end; background: var(--p); border-bottom-right-radius: 4px; }
+        
+        /* Градиент сообщений админа */
+        .msg-dev { background: linear-gradient(135deg, #6c5ce7 0%, #f1c40f 100%) !important; color: white; font-weight: 500; }
+
+        .adm-tool { font-size: 10px; padding: 5px 10px; border-radius: 8px; cursor: pointer; border: 1px solid rgba(255,255,255,0.2); background: rgba(255,255,255,0.05); }
+        .admin-panel { background: rgba(255,255,255,0.1); padding: 15px; border-radius: 20px; margin-bottom: 15px; display: none; border: 1px solid var(--gold); }
+    </style>
+</head>
+<body>
+
+    <div id="global-alert"></div>
+
+    <div id="auth-screen">
+        <div class="glass-card">
+            <h2 style="margin-bottom: 5px;">GrigorovChat</h2>
+            <p style="font-size: 10px; opacity: 0.5; margin-bottom: 15px;">v1.1.5</p>
+            <input type="text" id="u-nick" placeholder="Эл. почта">
+            <input type="password" id="pass" placeholder="Пароль">
+            <button class="btn-p" onclick="handleAuth()">Войти</button>
+            <p onclick="toggleMode()" id="toggle-text" style="color:rgba(255,255,255,0.4); margin-top:15px; cursor:pointer; font-size:12px">Нет аккаунта? Создать</p>
+        </div>
+    </div>
+
+    <div id="contacts-screen">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+            <h1 style="font-size:28px">Чаты</h1>
+            <button onclick="logout()" style="background:none; border:none; color:rgba(255,255,255,0.4); font-size:14px; cursor:pointer;">Выход</button>
+        </div>
+
+        <div id="admin-box" class="admin-panel">
+            <b style="color:var(--gold); font-size:11px; letter-spacing: 1px;">DEVELOPER PANEL</b>
+            <div style="display:flex; gap:8px; margin-top:10px">
+                <input type="text" id="announcement-inp" placeholder="Глобальное сообщение..." style="margin:0; flex:1; padding:10px; font-size: 12px;">
+                <button onclick="setGlobalMsg()" style="background:var(--admin); border:none; border-radius:12px; padding:0 15px; color:white; font-weight:bold">OK</button>
+            </div>
+            <button onclick="clearAllMsgs()" style="width:100%; background:none; border:1px solid var(--admin); color:var(--admin); font-size:10px; margin-top:10px; padding:8px; border-radius:12px; font-weight:bold">СТЕРЕТЬ ВСЮ ИСТОРИЮ (MESSAGES)</button>
+        </div>
+
+        <div id="user-list"></div>
+    </div>
+
+    <div id="chat-screen">
+        <header style="margin-bottom:15px; display:flex; align-items:center; gap:12px">
+            <span onclick="closeChat()" style="cursor:pointer; font-size:30px">←</span> 
+            <b id="active-chat-name" style="font-size:20px"></b>
+        </header>
+        <div id="messages"></div>
+        <div id="chat-input-area" style="position: fixed; bottom: 20px; left: 20px; right: 20px; display: flex; gap: 10px;">
+            <input type="text" id="msg-inp" placeholder="Сообщение..." style="margin:0; background:rgba(255,255,255,0.15); backdrop-filter:blur(15px); flex:1">
+            <button id="send-btn" onclick="sendMsg()" style="background:var(--p); border:none; width:55px; height:55px; border-radius:18px; color:white; font-size: 20px;">➤</button>
+        </div>
+    </div>
+
+<script>
+    const { Client, Account, Databases, ID, Query } = Appwrite;
+    const client = new Client().setEndpoint('https://cloud.appwrite.io/v1').setProject('695824a900049124f435');
+    const acc = new Account(client), db = new Databases(client);
+
+    const D_ID = '695825270032517f8888', C_MSGS = 'messages', C_USERS = 'users'; 
+    const ADMIN_EMAIL = 'daniilgrigorov26@gmail.com'; 
+    const ADMIN_NAME = 'Даниил'; // Твой точный никнейм
+
+    let me = null, isReg = false, opponent = null, sub = null;
+
+    function toEmail(n) { return n.toLowerCase().trim().replace(/[^a-z0-9]/g, '') + "@chat.com"; }
+
+    async function handleAuth() {
+        const nick = document.getElementById('u-nick').value.trim();
+        const pass = document.getElementById('pass').value;
+        if(!nick || pass.length < 8) return alert("Введите ник и пароль (мин. 8 символов)");
+        
+        const email = toEmail(nick);
+        try {
+            if (isReg) {
+                await acc.create(ID.unique(), email, pass, nick);
+                await acc.createEmailSession(email, pass);
+                await db.createDocument(D_ID, C_USERS, ID.unique(), { name: nick, email: email, verified: (email === ADMIN_EMAIL || nick === ADMIN_NAME), muted: false });
+            } else { await acc.createEmailSession(email, pass); }
+            location.reload();
+        } catch (e) { alert("Ошибка входа: " + e.message); }
+    }
+
+    async function init() {
+        try {
+            me = await acc.get();
+            // Двойная проверка прав админа
+            const isAdmin = (me.email.toLowerCase() === ADMIN_EMAIL.toLowerCase() || me.name === ADMIN_NAME);
+            
+            if(isAdmin) {
+                document.getElementById('admin-box').style.display = 'block';
+                console.log("Welcome, Developer!");
+            }
+            
+            show('contacts-screen');
+            loadUsers();
+            syncGlobalMsg();
+        } catch (e) { show('auth-screen'); }
+    }
+
+    async function loadUsers() {
+        const res = await db.listDocuments(D_ID, C_USERS);
+        const list = document.getElementById('user-list'); list.innerHTML = "";
+        res.documents.forEach(u => {
+            if (u.email === me.email) return;
+            const isUAdmin = (u.email === ADMIN_EMAIL || u.name === ADMIN_NAME);
+            const card = document.createElement('div');
+            card.className = 'contact-card';
+            
+            let admControls = (me.email === ADMIN_EMAIL || me.name === ADMIN_NAME) ? `
+                <div style="display:flex; gap:5px; margin-top:5px">
+                    <span class="adm-tool" style="color:var(--gold)" onclick="event.stopPropagation(); toggleMute('${u.$id}', ${u.muted})">${u.muted ? 'UNMUTE' : 'MUTE'}</span>
+                    <span class="adm-tool" style="color:var(--admin)" onclick="event.stopPropagation(); ban('${u.$id}')">BAN</span>
+                </div>` : '';
+
+            card.innerHTML = `
+                <div style="flex:1; display:flex; align-items:center; gap:15px" onclick="openChat('${u.email}', '${u.name}', ${u.muted})">
+                    <div class="avatar ${isUAdmin ? 'avatar-admin' : ''}">${u.name[0].toUpperCase()}</div>
+                    <div>
+                        <b style="${isUAdmin ? 'color:var(--gold)' : ''}">${u.name}</b>
+                        ${isUAdmin ? '<span style="font-size:10px; display:block; color:var(--neon); font-weight:bold">DEVELOPER</span>' : ''}
+                    </div>
+                </div> ${admControls}`;
+            list.appendChild(card);
+        });
+    }
+
+    async function toggleMute(id, m) { await db.updateDocument(D_ID, C_USERS, id, { muted: !m }); loadUsers(); }
+    async function ban(id) { if(confirm("Удалить пользователя навсегда?")) { await db.deleteDocument(D_ID, C_USERS, id); loadUsers(); } }
+    
+    async function setGlobalMsg() {
+        const txt = document.getElementById('announcement-inp').value;
+        try {
+            await db.createDocument(D_ID, C_MSGS, 'GLOBAL_NEWS', { text: txt, sender: 'SYSTEM', receiver: 'ALL' });
+            alert("Объявление создано!");
+            location.reload();
+        } catch(e) { 
+            await db.updateDocument(D_ID, C_MSGS, 'GLOBAL_NEWS', { text: txt });
+            location.reload();
+        }
+    }
+
+    async function syncGlobalMsg() {
+        try {
+            const doc = await db.getDocument(D_ID, C_MSGS, 'GLOBAL_NEWS');
+            if(doc.text) {
+                const el = document.getElementById('global-alert');
+                el.innerText = "📢 " + doc.text;
+                el.style.display = 'block';
+            }
+        } catch(e) {}
+    }
+
+    async function clearAllMsgs() {
+        if(!confirm("ВНИМАНИЕ: Стереть ВСЮ переписку?")) return;
+        const res = await db.listDocuments(D_ID, C_MSGS, [Query.limit(100)]);
+        for(let d of res.documents) {
+            if(d.$id !== 'GLOBAL_NEWS') await db.deleteDocument(D_ID, C_MSGS, d.$id);
+        }
+        alert("База очищена");
+        location.reload();
+    }
+
+    async function logout() {
+        try {
+            await acc.deleteSession('current');
+            localStorage.clear();
+            sessionStorage.clear();
+            location.reload();
+        } catch(e) { location.reload(); }
+    }
+
+    function openChat(e, n, isMuted) {
+        opponent = { email: e, name: n };
+        document.getElementById('active-chat-name').innerText = n;
+        const canWrite = !(isMuted && me.email !== ADMIN_EMAIL && me.name !== ADMIN_NAME);
+        document.getElementById('chat-input-area').style.display = canWrite ? 'flex' : 'none';
+        show('chat-screen');
+        loadMessages();
+        if(sub) sub();
+        sub = client.subscribe(`databases.${D_ID}.collections.${C_MSGS}.documents`, () => loadMessages());
+    }
+
+    async function loadMessages() {
+        const res = await db.listDocuments(D_ID, C_MSGS, [Query.orderAsc("$createdAt"), Query.limit(50)]);
+        const box = document.getElementById('messages'); box.innerHTML = '';
+        res.documents.forEach(m => {
+            if ((m.sender === me.email && m.receiver === opponent.email) || (m.sender === opponent.email && m.receiver === me.email)) {
+                const d = document.createElement('div');
+                const isFromDev = (m.sender === ADMIN_EMAIL || m.sender === toEmail(ADMIN_NAME));
+                d.className = `msg ${m.sender === me.email ? 'my' : ''} ${isFromDev ? 'msg-dev' : ''}`;
+                d.innerHTML = m.text;
+                box.appendChild(d);
+            }
+        });
+        box.scrollTop = box.scrollHeight;
+    }
+
+    async function sendMsg() {
+        const inp = document.getElementById('msg-inp');
+        if(!inp.value.trim()) return;
+        await db.createDocument(D_ID, C_MSGS, ID.unique(), { text: inp.value, sender: me.email, receiver: opponent.email });
+        inp.value = "";
+    }
+
+    function show(id) {
+        ['auth-screen', 'contacts-screen', 'chat-screen'].forEach(s => document.getElementById(s).style.display = 'none');
+        document.getElementById(id).style.display = 'flex';
+    }
+    function toggleMode() { isReg = !isReg; document.getElementById('toggle-text').innerText = isReg ? 'Уже есть аккаунт' : 'Создать аккаунт'; }
+    function closeChat() { if(sub) sub(); show('contacts-screen'); }
+    init();
+</script>
+</body>
+</html>
