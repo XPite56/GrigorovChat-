@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>GrigorovChat v1.1.6</title>
+    <title>GrigorovChat v1.1.8</title>
     <script src="https://cdn.jsdelivr.net/npm/appwrite@13.0.1"></script>
     <style>
         :root { --p: #6c5ce7; --bg: #13132b; --card: rgba(255, 255, 255, 0.08); --gold: #f1c40f; }
@@ -89,9 +89,7 @@
                 if (opponent && (m.sender === opponent.email || m.sender === me.email)) { loadMessages(); } 
                 else if (m.receiver === me.email) {
                     const senderName = allUsers[m.sender] || "Кто-то";
-                    if (Notification.permission === 'granted') {
-                        new Notification("GrigorovChat", { body: `${senderName}: ${m.text}` });
-                    }
+                    if (Notification.permission === 'granted') new Notification("GrigorovChat", { body: `${senderName}: ${m.text}` });
                 }
             });
         } catch (e) { show('auth-screen'); }
@@ -111,33 +109,29 @@
             list.appendChild(card);
         });
     }
-    async function openChat(e, n) { 
-        opponent = { email: e, name: n }; 
-        document.getElementById('active-chat-name').innerText = n; 
-        show('chat-screen'); 
-        loadMessages(); 
-    }
+    async function openChat(e, n) { opponent = { email: e, name: n }; document.getElementById('active-chat-name').innerText = n; show('chat-screen'); loadMessages(); }
     async function loadMessages() {
-        const res = await db.listDocuments(D_ID, C_MSGS, [Query.orderAsc("$createdAt"), Query.limit(100)]);
-        const box = document.getElementById('messages'); box.innerHTML = '';
-        res.documents.forEach(m => {
-            const isMy = (m.sender === me.email && m.receiver === opponent.email);
-            const isHis = (m.sender === opponent.email && m.receiver === me.email);
-            if (isMy || isHis) {
+        try {
+            const res = await db.listDocuments(D_ID, C_MSGS, [Query.orderDesc("$createdAt"), Query.limit(50)]);
+            const box = document.getElementById('messages'); box.innerHTML = '';
+            const filtered = res.documents.filter(m => 
+                (m.sender === me.email && m.receiver === opponent.email) || (m.sender === opponent.email && m.receiver === me.email)
+            ).reverse();
+            filtered.forEach(m => {
                 const d = document.createElement('div');
                 d.className = `msg ${m.sender === me.email ? 'my' : ''} ${m.sender === ADMIN_EMAIL ? 'msg-dev' : ''}`;
                 d.innerHTML = m.text; box.appendChild(d);
-            }
-        });
-        box.scrollTop = box.scrollHeight;
+            });
+            box.scrollTop = box.scrollHeight;
+        } catch(e) { console.error(e); }
     }
     async function sendMsg() {
-        const inp = document.getElementById('msg-inp'); if(!inp.value.trim()) return;
+        const inp = document.getElementById('msg-inp'); const txt = inp.value.trim();
+        if(!txt || !opponent) return;
         try { 
-            await db.createDocument(D_ID, C_MSGS, ID.unique(), { text: inp.value, sender: me.email, receiver: opponent.email }); 
-            inp.value = ""; 
-            // Сообщение появится само через подписку (Realtime)
-        } catch(e) { console.error(e); }
+            await db.createDocument(D_ID, C_MSGS, ID.unique(), { text: txt, sender: me.email, receiver: opponent.email }); 
+            inp.value = ""; await loadMessages(); 
+        } catch(e) { alert("Ошибка: " + e.message); }
     }
     async function logout() { await acc.deleteSession('current'); location.reload(); }
     function toggleMode() { isReg = !isReg; document.getElementById('u-nick').style.display = isReg ? 'block' : 'none'; document.getElementById('toggle-text').innerText = isReg ? 'Войти' : 'Создать аккаунт'; }
@@ -147,3 +141,4 @@
 </script>
 </body>
 </html>
+
