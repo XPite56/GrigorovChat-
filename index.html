@@ -14,7 +14,6 @@
         input { width: 100%; padding: 16px; margin: 10px 0; border-radius: 18px; border: none; background: rgba(255,255,255,0.1); color: white; outline: none; }
         .btn-p { width: 100%; padding: 16px; border-radius: 18px; border: none; background: var(--p); color: white; font-weight: bold; cursor: pointer; }
         
-        /* Стили карточек и красной точки */
         .contact-card { background: var(--card); padding: 15px; border-radius: 20px; display: flex; align-items: center; gap: 12px; margin-bottom: 10px; border: 1px solid rgba(255,255,255,0.05); cursor: pointer; position: relative; }
         .avatar-wrapper { position: relative; }
         .unread-dot { position: absolute; top: -2px; right: -2px; width: 14px; height: 14px; background: var(--red); border: 2px solid #1d1d3d; border-radius: 50%; display: none; z-index: 10; }
@@ -28,7 +27,6 @@
         .msg { max-width: 80%; padding: 12px 16px; border-radius: 20px; background: var(--card); align-self: flex-start; word-wrap: break-word; }
         .my { align-self: flex-end; background: var(--p); border-bottom-right-radius: 4px; }
         .msg-dev { background: linear-gradient(135deg, #6c5ce7 0%, var(--gold) 100%) !important; }
-        
         @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.2); } 100% { transform: scale(1); } }
     </style>
 </head>
@@ -36,7 +34,7 @@
     <div id="auth-screen">
         <div class="glass-card"><h1>GrigorovChat</h1>
             <input type="email" id="u-email" placeholder="Email">
-            <input type="text" id="u-nick" placeholder="Имя (для регистрации)" style="display:none">
+            <input type="text" id="u-nick" placeholder="Имя пользователя" style="display:none">
             <input type="password" id="pass" placeholder="Пароль">
             <button class="btn-p" onclick="handleAuth()">Войти</button>
             <p onclick="toggleMode()" id="toggle-text" style="margin-top:20px; cursor:pointer; opacity:0.5">Создать аккаунт</p>
@@ -46,10 +44,7 @@
     <div id="contacts-screen">
         <header style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
             <h1 id="head-title">Чаты</h1>
-            <div style="display:flex; gap:15px; align-items:center;">
-                <button onclick="enableNotifs()" style="background:none; border:none; font-size:20px;">🔔</button>
-                <button onclick="logout()" style="opacity:0.6; background:none; border:none; color:white;">Выход</button>
-            </div>
+            <button onclick="logout()" style="opacity:0.6; background:none; border:none; color:white; cursor:pointer;">Выход</button>
         </header>
         <div id="user-list"></div>
     </div>
@@ -81,20 +76,23 @@
             show('contacts-screen');
             await loadUsers();
             
-            // Подписка на живые обновления и красные точки
+            // Автоматический запрос прав при входе, если еще не даны
+            if ("Notification" in window && Notification.permission === "default") {
+                Notification.requestPermission();
+            }
+
             client.subscribe(`databases.${D_ID}.collections.${C_MSGS}.documents`, res => {
                 const m = res.payload;
                 if (opponent && (m.sender === opponent.email || m.sender === me.email)) {
                     loadMessages();
                 } else if (m.receiver === me.email) {
-                    // Зажигаем красную точку на карточке отправителя
+                    localStorage.setItem(`unread_${m.sender}`, 'true');
                     const cardId = `user-${m.sender.replace(/[@.]/g, '_')}`;
                     const card = document.getElementById(cardId);
                     if (card) card.classList.add('has-new');
                     
-                    // Системное уведомление, если разрешено
                     if (Notification.permission === 'granted') {
-                        new Notification("GrigorovChat", { body: `${allUsers[m.sender] || 'Кто-то'}: ${m.text}` });
+                        new Notification("GrigorovChat", { body: `${allUsers[m.sender] || 'Сообщение'}: ${m.text}` });
                     }
                 }
             });
@@ -109,9 +107,13 @@
             if (u.email === me.email) return;
             const isDev = u.email === ADMIN_EMAIL;
             const card = document.createElement('div');
-            card.id = `user-${u.email.replace(/[@.]/g, '_')}`;
-            card.className = 'contact-card';
+            const safeEmail = u.email.replace(/[@.]/g, '_');
+            card.id = `user-${safeEmail}`;
+            const hasUnread = localStorage.getItem(`unread_${u.email}`) === 'true';
+            card.className = `contact-card ${hasUnread ? 'has-new' : ''}`;
+            
             card.onclick = () => {
+                localStorage.removeItem(`unread_${u.email}`);
                 card.classList.remove('has-new');
                 openChat(u.email, u.name);
             };
@@ -125,15 +127,12 @@
         });
     }
 
-    async function enableNotifs() {
-        const p = await Notification.requestPermission();
-        if (p === 'granted') {
-            new Notification("GrigorovChat", { body: "Уведомления включены! ✅" });
-            if ('serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js');
-        } else { alert("Разреши уведомления в настройках браузера!"); }
+    async function openChat(e, n) { 
+        opponent = { email: e, name: n }; 
+        document.getElementById('active-chat-name').innerText = n; 
+        show('chat-screen'); 
+        loadMessages(); 
     }
-
-    async function openChat(e, n) { opponent = { email: e, name: n }; document.getElementById('active-chat-name').innerText = n; show('chat-screen'); loadMessages(); }
     
     async function loadMessages() {
         const res = await db.listDocuments(D_ID, C_MSGS, [Query.orderDesc("$createdAt"), Query.limit(50)]);
@@ -153,14 +152,17 @@
         try { 
             await db.createDocument(D_ID, C_MSGS, ID.unique(), { text: inp.value, sender: me.email, receiver: opponent.email });
             inp.value = ""; loadMessages();
-        } catch(e) { alert("Ошибка отправки: " + e.message); }
+        } catch(e) { console.error(e); }
     }
 
     async function handleAuth() {
         const e = document.getElementById('u-email').value, p = document.getElementById('pass').value, n = document.getElementById('u-nick').value;
         try {
-            if (isReg) { await acc.create(ID.unique(), e, p, n); await acc.createEmailSession(e, p); await db.createDocument(D_ID, C_USERS, ID.unique(), { name: n, email: e }); }
-            else { await acc.createEmailSession(e, p); }
+            if (isReg) { 
+                await acc.create(ID.unique(), e, p, n); 
+                await acc.createEmailSession(e, p); 
+                await db.createDocument(D_ID, C_USERS, ID.unique(), { name: n, email: e }); 
+            } else { await acc.createEmailSession(e, p); }
             location.reload();
         } catch (err) { alert(err.message); }
     }
