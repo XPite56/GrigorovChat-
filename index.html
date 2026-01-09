@@ -3,25 +3,33 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>GrigorovChat v1.1.9</title>
+    <title>GrigorovChat v1.1.8</title>
     <script src="https://cdn.jsdelivr.net/npm/appwrite@13.0.1"></script>
     <style>
-        :root { --p: #6c5ce7; --bg: #13132b; --card: rgba(255, 255, 255, 0.08); --gold: #f1c40f; }
+        :root { --p: #6c5ce7; --bg: #13132b; --card: rgba(255, 255, 255, 0.08); --gold: #f1c40f; --red: #ff4757; }
         * { margin:0; padding:0; box-sizing:border-box; font-family: 'Segoe UI', sans-serif; -webkit-tap-highlight-color: transparent; }
         body { background: radial-gradient(circle at center, #2e2e5d 0%, #13132b 100%); color: white; height: 100vh; overflow: hidden; }
         #auth-screen, #contacts-screen, #chat-screen { padding: 20px; height: 100vh; display: none; flex-direction: column; }
         .glass-card { margin: auto; width: 100%; max-width: 340px; text-align: center; background: rgba(255, 255, 255, 0.05); padding: 30px; border-radius: 30px; backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.1); }
         input { width: 100%; padding: 16px; margin: 10px 0; border-radius: 18px; border: none; background: rgba(255,255,255,0.1); color: white; outline: none; }
         .btn-p { width: 100%; padding: 16px; border-radius: 18px; border: none; background: var(--p); color: white; font-weight: bold; cursor: pointer; }
-        .contact-card { background: var(--card); padding: 15px; border-radius: 20px; display: flex; align-items: center; gap: 12px; margin-bottom: 10px; border: 1px solid rgba(255,255,255,0.05); cursor: pointer; }
+        
+        /* Стили карточек и красной точки */
+        .contact-card { background: var(--card); padding: 15px; border-radius: 20px; display: flex; align-items: center; gap: 12px; margin-bottom: 10px; border: 1px solid rgba(255,255,255,0.05); cursor: pointer; position: relative; }
+        .avatar-wrapper { position: relative; }
+        .unread-dot { position: absolute; top: -2px; right: -2px; width: 14px; height: 14px; background: var(--red); border: 2px solid #1d1d3d; border-radius: 50%; display: none; z-index: 10; }
+        .has-new .unread-dot { display: block; animation: pulse 1.5s infinite; }
+        
         .avatar { width: 45px; height: 45px; border-radius: 15px; background: var(--p); display: flex; align-items: center; justify-content: center; font-weight: bold; }
         .avatar-dev { border: 2px solid var(--gold); box-shadow: 0 0 10px var(--gold); }
         .dev-label { color: var(--gold); font-size: 10px; font-weight: bold; margin-top: 2px; display: block; }
-        #messages { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; padding-bottom: 80px; padding-top: 10px; }
-        .msg { max-width: 80%; padding: 12px 16px; border-radius: 20px; background: var(--card); align-self: flex-start; word-wrap: break-word; position: relative; }
+        
+        #messages { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; padding-bottom: 80px; }
+        .msg { max-width: 80%; padding: 12px 16px; border-radius: 20px; background: var(--card); align-self: flex-start; word-wrap: break-word; }
         .my { align-self: flex-end; background: var(--p); border-bottom-right-radius: 4px; }
-        .msg-dev { background: linear-gradient(135deg, #6c5ce7 0%, var(--gold) 100%) !important; color: white; }
-        .exit-btn { opacity: 0.6; font-size: 14px; cursor: pointer; background: none; border: none; color: white; }
+        .msg-dev { background: linear-gradient(135deg, #6c5ce7 0%, var(--gold) 100%) !important; }
+        
+        @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.2); } 100% { transform: scale(1); } }
     </style>
 </head>
 <body>
@@ -34,12 +42,18 @@
             <p onclick="toggleMode()" id="toggle-text" style="margin-top:20px; cursor:pointer; opacity:0.5">Создать аккаунт</p>
         </div>
     </div>
+
     <div id="contacts-screen">
         <header style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
-            <h1 id="head-title">Чаты</h1><button class="exit-btn" onclick="logout()">Выход</button>
+            <h1 id="head-title">Чаты</h1>
+            <div style="display:flex; gap:15px; align-items:center;">
+                <button onclick="enableNotifs()" style="background:none; border:none; font-size:20px;">🔔</button>
+                <button onclick="logout()" style="opacity:0.6; background:none; border:none; color:white;">Выход</button>
+            </div>
         </header>
         <div id="user-list"></div>
     </div>
+
     <div id="chat-screen">
         <header style="margin-bottom:20px; display:flex; align-items:center; gap:15px">
             <div onclick="closeChat()" style="cursor:pointer; background:rgba(255,255,255,0.1); width:40px; height:40px; border-radius:15px; display:flex; align-items:center; justify-content:center">←</div>
@@ -51,6 +65,7 @@
             <button onclick="sendMsg()" style="background:var(--p); border:none; width:55px; height:55px; border-radius:20px; color:white">➤</button>
         </div>
     </div>
+
 <script>
     const { Client, Account, Databases, ID, Query } = Appwrite;
     const client = new Client().setEndpoint('https://cloud.appwrite.io/v1').setProject('695824a900049124f435');
@@ -59,46 +74,27 @@
     const ADMIN_EMAIL = 'daniilgrigorov26@gmail.com';
     let me = null, opponent = null, isReg = false, allUsers = {};
 
-    async function initNotifications() {
-        if ('serviceWorker' in navigator) {
-            try {
-                const reg = await navigator.serviceWorker.register('./sw.js');
-                console.log('SW registered');
-                if ('Notification' in window) {
-                    const permission = await Notification.requestPermission();
-                    if (permission !== 'granted') console.log('Permission denied');
-                }
-            } catch (e) { console.error("SW error:", e); }
-        }
-    }
-
-    async function handleAuth() {
-        const e = document.getElementById('u-email').value.trim(), p = document.getElementById('pass').value, n = document.getElementById('u-nick').value;
-        try {
-            if (isReg) {
-                await acc.create(ID.unique(), e, p, n);
-                await acc.createEmailSession(e, p);
-                await db.createDocument(D_ID, C_USERS, ID.unique(), { name: n, email: e });
-            } else { await acc.createEmailSession(e, p); }
-            location.reload();
-        } catch (err) { alert(err.message); }
-    }
-
     async function init() {
         try {
             me = await acc.get();
             if(me.email === ADMIN_EMAIL) document.getElementById('head-title').innerText = "DEV CHAT";
             show('contacts-screen');
             await loadUsers();
-            initNotifications();
+            
+            // Подписка на живые обновления и красные точки
             client.subscribe(`databases.${D_ID}.collections.${C_MSGS}.documents`, res => {
                 const m = res.payload;
                 if (opponent && (m.sender === opponent.email || m.sender === me.email)) {
                     loadMessages();
                 } else if (m.receiver === me.email) {
-                    const senderName = allUsers[m.sender] || "Новое сообщение";
+                    // Зажигаем красную точку на карточке отправителя
+                    const cardId = `user-${m.sender.replace(/[@.]/g, '_')}`;
+                    const card = document.getElementById(cardId);
+                    if (card) card.classList.add('has-new');
+                    
+                    // Системное уведомление, если разрешено
                     if (Notification.permission === 'granted') {
-                        new Notification("GrigorovChat", { body: `${senderName}: ${m.text}` });
+                        new Notification("GrigorovChat", { body: `${allUsers[m.sender] || 'Кто-то'}: ${m.text}` });
                     }
                 }
             });
@@ -106,61 +102,75 @@
     }
 
     async function loadUsers() {
-        try {
-            const res = await db.listDocuments(D_ID, C_USERS);
-            const list = document.getElementById('user-list'); list.innerHTML = "";
-            res.documents.forEach(u => {
-                allUsers[u.email] = u.name;
-                if (u.email === me.email) return;
-                const isDev = u.email === ADMIN_EMAIL;
-                const card = document.createElement('div');
-                card.className = 'contact-card';
-                card.onclick = () => openChat(u.email, u.name);
-                card.innerHTML = `<div class="avatar ${isDev?'avatar-dev':''}">${u.name ? u.name[0].toUpperCase() : 'U'}</div>
-                    <div><b>${u.name || u.email}</b>${isDev ? '<span class="dev-label">РАЗРАБОТЧИК</span>' : ''}</div>`;
-                list.appendChild(card);
-            });
-        } catch(e) { console.error(e); }
+        const res = await db.listDocuments(D_ID, C_USERS);
+        const list = document.getElementById('user-list'); list.innerHTML = "";
+        res.documents.forEach(u => {
+            allUsers[u.email] = u.name;
+            if (u.email === me.email) return;
+            const isDev = u.email === ADMIN_EMAIL;
+            const card = document.createElement('div');
+            card.id = `user-${u.email.replace(/[@.]/g, '_')}`;
+            card.className = 'contact-card';
+            card.onclick = () => {
+                card.classList.remove('has-new');
+                openChat(u.email, u.name);
+            };
+            card.innerHTML = `
+                <div class="avatar-wrapper">
+                    <div class="unread-dot"></div>
+                    <div class="avatar ${isDev?'avatar-dev':''}">${u.name ? u.name[0].toUpperCase() : 'U'}</div>
+                </div>
+                <div><b>${u.name || u.email}</b>${isDev ? '<span class="dev-label">РАЗРАБОТЧИК</span>' : ''}</div>`;
+            list.appendChild(card);
+        });
     }
 
-    async function openChat(e, n) { 
-        opponent = { email: e, name: n }; 
-        document.getElementById('active-chat-name').innerText = n; 
-        show('chat-screen'); 
-        loadMessages(); 
+    async function enableNotifs() {
+        const p = await Notification.requestPermission();
+        if (p === 'granted') {
+            new Notification("GrigorovChat", { body: "Уведомления включены! ✅" });
+            if ('serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js');
+        } else { alert("Разреши уведомления в настройках браузера!"); }
     }
 
+    async function openChat(e, n) { opponent = { email: e, name: n }; document.getElementById('active-chat-name').innerText = n; show('chat-screen'); loadMessages(); }
+    
     async function loadMessages() {
-        try {
-            const res = await db.listDocuments(D_ID, C_MSGS, [Query.orderDesc("$createdAt"), Query.limit(50)]);
-            const box = document.getElementById('messages'); box.innerHTML = '';
-            const filtered = res.documents.filter(m => 
-                (m.sender === me.email && m.receiver === opponent.email) || (m.sender === opponent.email && m.receiver === me.email)
-            ).reverse();
-            filtered.forEach(m => {
-                const d = document.createElement('div');
-                d.className = `msg ${m.sender === me.email ? 'my' : ''} ${m.sender === ADMIN_EMAIL ? 'msg-dev' : ''}`;
-                d.innerHTML = m.text; box.appendChild(d);
-            });
-            box.scrollTop = box.scrollHeight;
-        } catch(e) { console.error(e); }
+        const res = await db.listDocuments(D_ID, C_MSGS, [Query.orderDesc("$createdAt"), Query.limit(50)]);
+        const box = document.getElementById('messages'); box.innerHTML = '';
+        res.documents.filter(m => (m.sender === me.email && m.receiver === opponent.email) || (m.sender === opponent.email && m.receiver === me.email))
+        .reverse().forEach(m => {
+            const d = document.createElement('div');
+            d.className = `msg ${m.sender === me.email ? 'my' : ''} ${m.sender === ADMIN_EMAIL ? 'msg-dev' : ''}`;
+            d.innerHTML = m.text; box.appendChild(d);
+        });
+        box.scrollTop = box.scrollHeight;
     }
 
     async function sendMsg() {
-        const inp = document.getElementById('msg-inp'); const txt = inp.value.trim();
-        if(!txt || !opponent) return;
+        const inp = document.getElementById('msg-inp');
+        if(!inp.value.trim() || !opponent) return;
         try { 
-            await db.createDocument(D_ID, C_MSGS, ID.unique(), { text: txt, sender: me.email, receiver: opponent.email }); 
-            inp.value = ""; 
-            loadMessages(); 
-        } catch(e) { alert("Ошибка: " + e.message); }
+            await db.createDocument(D_ID, C_MSGS, ID.unique(), { text: inp.value, sender: me.email, receiver: opponent.email });
+            inp.value = ""; loadMessages();
+        } catch(e) { alert("Ошибка отправки: " + e.message); }
     }
 
-    async function logout() { await acc.deleteSession('current'); location.reload(); }
+    async function handleAuth() {
+        const e = document.getElementById('u-email').value, p = document.getElementById('pass').value, n = document.getElementById('u-nick').value;
+        try {
+            if (isReg) { await acc.create(ID.unique(), e, p, n); await acc.createEmailSession(e, p); await db.createDocument(D_ID, C_USERS, ID.unique(), { name: n, email: e }); }
+            else { await acc.createEmailSession(e, p); }
+            location.reload();
+        } catch (err) { alert(err.message); }
+    }
+
     function toggleMode() { isReg = !isReg; document.getElementById('u-nick').style.display = isReg ? 'block' : 'none'; document.getElementById('toggle-text').innerText = isReg ? 'Войти' : 'Создать аккаунт'; }
     function show(id) { ['auth-screen', 'contacts-screen', 'chat-screen'].forEach(s => document.getElementById(s).style.display = 'none'); document.getElementById(id).style.display = 'flex'; }
     function closeChat() { opponent = null; show('contacts-screen'); }
+    function logout() { acc.deleteSession('current'); location.reload(); }
     init();
 </script>
 </body>
 </html>
+
