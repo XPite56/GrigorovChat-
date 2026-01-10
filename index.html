@@ -3,58 +3,64 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>GrigorovChat v1.1.9 (beta 2)</title>
+    <title>GrigorovChat v1.1.9 (beta 3)</title>
     <script src="https://cdn.jsdelivr.net/npm/appwrite@13.0.1"></script>
     <style>
         :root { --p: #6c5ce7; --bg: #13132b; --card: rgba(255, 255, 255, 0.08); --gold: #f1c40f; --red: #ff4757; }
         * { margin:0; padding:0; box-sizing:border-box; font-family: 'Segoe UI', sans-serif; -webkit-tap-highlight-color: transparent; }
         body { background: radial-gradient(circle at center, #2e2e5d 0%, #13132b 100%); color: white; height: 100vh; overflow: hidden; }
+        
         #auth-screen, #contacts-screen, #chat-screen { padding: 20px; height: 100vh; display: none; flex-direction: column; }
         .glass-card { margin: auto; width: 100%; max-width: 340px; text-align: center; background: rgba(255, 255, 255, 0.05); padding: 30px; border-radius: 30px; backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.1); }
         input { width: 100%; padding: 16px; margin: 10px 0; border-radius: 18px; border: none; background: rgba(255,255,255,0.1); color: white; outline: none; }
         .btn-p { width: 100%; padding: 16px; border-radius: 18px; border: none; background: var(--p); color: white; font-weight: bold; cursor: pointer; }
-        .contact-card { background: var(--card); padding: 15px; border-radius: 20px; display: flex; align-items: center; gap: 12px; margin-bottom: 10px; cursor: pointer; position: relative; }
-        .unread-dot { position: absolute; top: -2px; right: -2px; width: 14px; height: 14px; background: var(--red); border: 2px solid #1d1d3d; border-radius: 50%; display: none; }
-        .has-new .unread-dot { display: block; animation: pulse 1.5s infinite; }
-        .avatar { width: 45px; height: 45px; border-radius: 15px; background: var(--p); display: flex; align-items: center; justify-content: center; font-weight: bold; }
-        #messages { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; padding-bottom: 100px; }
-        .msg { max-width: 80%; padding: 12px 16px; border-radius: 20px; background: var(--card); align-self: flex-start; word-wrap: break-word; }
-        .my { align-self: flex-end; background: var(--p); border-bottom-right-radius: 4px; }
         
-        /* Стиль для фото в чате */
-        .msg img { max-width: 100%; border-radius: 12px; display: block; margin-top: 5px; box-shadow: 0 4px 15px rgba(0,0,0,0.3); }
+        .contact-card { background: var(--card); padding: 15px; border-radius: 20px; display: flex; align-items: center; gap: 15px; margin-bottom: 15px; cursor: pointer; border: 1px solid rgba(255,255,255,0.05); }
+        .avatar-group { width: 55px; height: 55px; border-radius: 18px; background-image: url('https://cloud.appwrite.io/v1/storage/buckets/696289e3001b875d11ad/files/1000069937/view?project=695824a900049124f435'); background-size: cover; background-position: center; border: 2px solid var(--p); }
+        
+        #messages { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; padding-bottom: 100px; }
+        .msg { max-width: 85%; padding: 10px 14px; border-radius: 18px; background: var(--card); align-self: flex-start; position: relative; }
+        .msg-sender { font-size: 11px; color: var(--gold); margin-bottom: 4px; display: block; font-weight: bold; }
+        .my { align-self: flex-end; background: var(--p); border-bottom-right-radius: 4px; }
+        .my .msg-sender { color: #dcdde1; text-align: right; }
+        .msg img { max-width: 100%; border-radius: 12px; margin-top: 5px; }
 
         #attach-panel { display: none; background: rgba(20, 20, 45, 0.98); border-radius: 25px 25px 0 0; padding: 20px; position: fixed; bottom: 85px; left: 0; right: 0; z-index: 100; backdrop-filter: blur(15px); border-top: 1px solid rgba(255,255,255,0.1); }
         .attach-grid { display: flex; gap: 20px; justify-content: space-around; }
         .attach-item { display: flex; flex-direction: column; align-items: center; gap: 8px; cursor: pointer; }
         .attach-icon { width: 60px; height: 60px; border-radius: 20px; background: rgba(255,255,255,0.1); display: flex; align-items: center; justify-content: center; font-size: 24px; }
-        @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.2); } 100% { transform: scale(1); } }
     </style>
 </head>
 <body>
 
     <div id="auth-screen">
-        <div class="glass-card"><h1>GrigorovChat (beta)</h1>
+        <div class="glass-card"><h1>GrigorovChat (beta 3)</h1>
             <input type="email" id="u-email" placeholder="Email">
-            <input type="text" id="u-nick" placeholder="Имя (регистрация)" style="display:none">
+            <input type="text" id="u-nick" placeholder="Ваше Имя" style="display:none">
             <input type="password" id="pass" placeholder="Пароль">
             <button class="btn-p" onclick="handleAuth()">Войти</button>
-            <p onclick="toggleMode()" id="toggle-text" style="margin-top:20px; cursor:pointer; opacity:0.5">Создать аккаунт</p>
+            <p onclick="toggleMode()" id="toggle-text" style="margin-top:20px; cursor:pointer; opacity:0.5">Регистрация</p>
         </div>
     </div>
 
     <div id="contacts-screen">
-        <header style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
-            <h1>Чаты</h1>
-            <button onclick="logout()" style="opacity:0.6; background:none; border:none; color:white;">Выход</button>
-        </header>
-        <div id="user-list"></div>
+        <header style="margin-bottom:20px;"><h1>Мои Группы</h1></header>
+        <div id="group-list">
+            <div class="contact-card" onclick="openFamilyChat()">
+                <div class="avatar-group"></div>
+                <div>
+                    <b style="font-size: 18px;">Фэмели</b>
+                    <p style="font-size: 12px; opacity: 0.6;">Общий семейный чат</p>
+                </div>
+            </div>
+        </div>
+        <button onclick="logout()" style="margin-top:auto; background:none; border:none; color:white; opacity:0.5; padding: 20px;">Выйти из аккаунта</button>
     </div>
 
     <div id="chat-screen">
         <header style="margin-bottom:20px; display:flex; align-items:center; gap:15px">
             <div onclick="closeChat()" style="cursor:pointer; background:rgba(255,255,255,0.1); width:40px; height:40px; border-radius:15px; display:flex; align-items:center; justify-content:center">←</div>
-            <b id="active-chat-name">Чат</b>
+            <b>Фэмели</b>
         </header>
         <div id="messages"></div>
         
@@ -65,16 +71,16 @@
                     <div class="attach-icon">🖼️</div>
                     <div class="attach-label">Фото</div>
                 </label>
-                <div class="attach-item" onclick="alert('Скоро, следите за обновлениями!')">
+                <div class="attach-item" onclick="alert('Скоро!')">
                     <div class="attach-icon">😃</div>
-                    <div class="attach-label">Стикеры</div>
+                    <div class="attach-label">Скоро</div>
                 </div>
             </div>
         </div>
 
         <div style="position:fixed; bottom:25px; left:20px; right:20px; display:flex; gap:10px; align-items: center;">
             <button onclick="toggleAttach()" style="background:none; border:none; font-size:24px; color:white;">📎</button>
-            <input type="text" id="msg-inp" placeholder="Сообщение..." style="margin:0; flex:1">
+            <input type="text" id="msg-inp" placeholder="Написать семье..." style="margin:0; flex:1">
             <button onclick="sendMsg()" style="background:var(--p); border:none; width:55px; height:55px; border-radius:20px; color:white">➤</button>
         </div>
     </div>
@@ -84,70 +90,73 @@
     const client = new Client().setEndpoint('https://cloud.appwrite.io/v1').setProject('695824a900049124f435');
     const acc = new Account(client), db = new Databases(client), storage = new Storage(client);
     
-    const D_ID = '695825270032517f8888', C_MSGS = 'messages', C_USERS = 'users';
-    const B_ID = '696289e3001b875d11ad'; // Твой ID Bucket
-    
-    let me = null, opponent = null, allUsers = {};
+    const D_ID = '695825270032517f8888', C_MSGS = 'messages', C_USERS = 'users', B_ID = '696289e3001b875d11ad';
+    const FAMILY_ID = 'family_group'; // Идентификатор для общей группы
+
+    let me = null, isFamilyOpen = false;
 
     async function init() {
         try {
             me = await acc.get();
             show('contacts-screen');
-            await loadUsers();
             client.subscribe(`databases.${D_ID}.collections.${C_MSGS}.documents`, res => {
-                if (opponent && (res.payload.sender === opponent.email || res.payload.receiver === me.email)) loadMessages();
+                if (isFamilyOpen && res.payload.receiver === FAMILY_ID) loadMessages();
             });
         } catch (e) { show('auth-screen'); }
     }
 
-    async function uploadPhoto(el) {
-        if (!el.files[0] || !opponent) return;
-        try {
-            const file = await storage.createFile(B_ID, ID.unique(), el.files[0]);
-            const url = `https://cloud.appwrite.io/v1/storage/buckets/${B_ID}/files/${file.$id}/view?project=${client.config.project}`;
-            await db.createDocument(D_ID, C_MSGS, ID.unique(), { text: `IMG:${url}`, sender: me.email, receiver: opponent.email });
-            toggleAttach();
-            loadMessages();
-        } catch (e) { alert("Ошибка загрузки. Проверь права доступа (Permissions) в Storage!"); }
+    async function openFamilyChat() {
+        isFamilyOpen = true;
+        show('chat-screen');
+        loadMessages();
     }
 
     async function loadMessages() {
-        const res = await db.listDocuments(D_ID, C_MSGS, [Query.orderDesc("$createdAt"), Query.limit(50)]);
+        const res = await db.listDocuments(D_ID, C_MSGS, [Query.equal('receiver', FAMILY_ID), Query.orderDesc("$createdAt"), Query.limit(100)]);
         const box = document.getElementById('messages'); box.innerHTML = '';
-        res.documents.filter(m => (m.sender === me.email && m.receiver === opponent.email) || (m.sender === opponent.email && m.receiver === me.email))
-        .reverse().forEach(m => {
+        res.documents.reverse().forEach(m => {
             const d = document.createElement('div');
-            d.className = `msg ${m.sender === me.email ? 'my' : ''}`;
+            const isMy = m.sender_email === me.email;
+            d.className = `msg ${isMy ? 'my' : ''}`;
+            
+            let content = `<span class="msg-sender">${m.sender_name || 'Участник'}</span>`;
             if (m.text.startsWith('IMG:')) {
                 const url = m.text.replace('IMG:', '');
-                d.innerHTML = `<img src="${url}" onclick="window.open('${url}')">`;
-            } else { d.innerHTML = m.text; }
+                content += `<img src="${url}" onclick="window.open('${url}')">`;
+            } else { content += m.text; }
+            
+            d.innerHTML = content;
             box.appendChild(d);
         });
         box.scrollTop = box.scrollHeight;
     }
 
-    async function loadUsers() {
-        const res = await db.listDocuments(D_ID, C_USERS);
-        const list = document.getElementById('user-list'); list.innerHTML = "";
-        res.documents.forEach(u => {
-            if (u.email === me.email) return;
-            allUsers[u.email] = u.name;
-            const card = document.createElement('div');
-            card.className = 'contact-card';
-            card.onclick = () => openChat(u.email, u.name);
-            card.innerHTML = `<div class="avatar">${u.name[0].toUpperCase()}</div><b>${u.name}</b>`;
-            list.appendChild(card);
-        });
-    }
-
-    async function openChat(e, n) { opponent = { email: e, name: n }; document.getElementById('active-chat-name').innerText = n; show('chat-screen'); loadMessages(); }
     async function sendMsg() {
         const inp = document.getElementById('msg-inp');
-        if(!inp.value.trim() || !opponent) return;
-        await db.createDocument(D_ID, C_MSGS, ID.unique(), { text: inp.value, sender: me.email, receiver: opponent.email });
+        if(!inp.value.trim()) return;
+        await db.createDocument(D_ID, C_MSGS, ID.unique(), { 
+            text: inp.value, 
+            sender: me.email, // для совместимости
+            sender_email: me.email,
+            sender_name: me.name,
+            receiver: FAMILY_ID 
+        });
         inp.value = ""; loadMessages();
     }
+
+    async function uploadPhoto(el) {
+        if (!el.files[0]) return;
+        const file = await storage.createFile(B_ID, ID.unique(), el.files[0]);
+        const url = `https://cloud.appwrite.io/v1/storage/buckets/${B_ID}/files/${file.$id}/view?project=${client.config.project}`;
+        await db.createDocument(D_ID, C_MSGS, ID.unique(), { 
+            text: `IMG:${url}`, 
+            sender_email: me.email, 
+            sender_name: me.name, 
+            receiver: FAMILY_ID 
+        });
+        toggleAttach(); loadMessages();
+    }
+
     async function handleAuth() {
         const e = document.getElementById('u-email').value, p = document.getElementById('pass').value, n = document.getElementById('u-nick').value;
         try {
@@ -159,13 +168,13 @@
             location.reload();
         } catch (err) { alert(err.message); }
     }
+
     function toggleMode() { const n = document.getElementById('u-nick'); n.style.display = n.style.display === 'none' ? 'block' : 'none'; }
     function toggleAttach() { const p = document.getElementById('attach-panel'); p.style.display = p.style.display === 'block' ? 'none' : 'block'; }
     function show(id) { ['auth-screen', 'contacts-screen', 'chat-screen'].forEach(s => document.getElementById(s).style.display = 'none'); document.getElementById(id).style.display = 'flex'; }
-    function closeChat() { opponent = null; document.getElementById('attach-panel').style.display = 'none'; show('contacts-screen'); }
+    function closeChat() { isFamilyOpen = false; show('contacts-screen'); }
     function logout() { acc.deleteSession('current'); location.reload(); }
     init();
 </script>
 </body>
 </html>
-
