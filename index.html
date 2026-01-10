@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>GrigorovChat v1.1.9 (beta 4)</title>
+    <title>GrigorovChat v1.2</title>
     <script src="https://cdn.jsdelivr.net/npm/appwrite@13.0.1"></script>
     <style>
         :root { --p: #6c5ce7; --bg: #13132b; --card: rgba(255, 255, 255, 0.08); --gold: #f1c40f; --red: #ff4757; }
@@ -17,18 +17,36 @@
         
         .contact-card { background: var(--card); padding: 15px; border-radius: 20px; display: flex; align-items: center; gap: 12px; margin-bottom: 10px; cursor: pointer; border: 1px solid rgba(255,255,255,0.05); }
         .avatar { width: 45px; height: 45px; border-radius: 15px; background: var(--p); display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 20px; }
-        
-        /* Новая иконка для Фэмели */
-        .avatar-family { background: linear-gradient(45deg, #6c5ce7, #a29bfe); border: 2px solid var(--gold); color: white; }
+        .avatar-family { background: linear-gradient(45deg, #6c5ce7, #a29bfe); border: 2px solid var(--gold); }
         
         #messages { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; padding-bottom: 100px; }
         .msg { max-width: 80%; padding: 10px 14px; border-radius: 18px; background: var(--card); align-self: flex-start; position: relative; }
-        
-        /* Стиль имени отправителя */
         .msg-author { font-size: 11px; color: var(--gold); font-weight: bold; display: block; margin-bottom: 4px; }
-        
         .my { align-self: flex-end; background: var(--p); border-bottom-right-radius: 4px; }
         .msg img { max-width: 100%; border-radius: 12px; margin-top: 5px; }
+
+        /* Эффект Сияющего Ника (Admin) */
+        .shiny-nick {
+            background: linear-gradient(to right, #f1c40f, #ffeb3b, #f1c40f);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            animation: shine 3s infinite linear;
+            text-shadow: 0 0 10px rgba(241, 196, 15, 0.5);
+        }
+        @keyframes shine { 0% { background-position: 0% 50%; } 100% { background-position: 200% 50%; } }
+
+        /* Админ-кнопка и панель */
+        #admin-btn { position: fixed; top: 20px; right: 20px; font-size: 24px; background: none; border: none; cursor: pointer; z-index: 200; display: none; filter: drop-shadow(0 0 5px var(--gold)); }
+        
+        #admin-panel { 
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
+            background: rgba(0,0,0,0.9); z-index: 300; padding: 30px; overflow-y: auto;
+        }
+        .admin-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 20px; }
+        .admin-card { background: rgba(255,255,255,0.1); padding: 20px; border-radius: 20px; text-align: center; cursor: pointer; border: 1px solid var(--p); transition: 0.2s; }
+        .admin-card:active { transform: scale(0.95); background: var(--p); }
+        .admin-icon { font-size: 30px; display: block; margin-bottom: 10px; }
 
         #attach-panel { display: none; background: rgba(20, 20, 45, 0.98); border-radius: 25px 25px 0 0; padding: 20px; position: fixed; bottom: 85px; left: 0; right: 0; z-index: 100; backdrop-filter: blur(15px); }
         .attach-grid { display: flex; gap: 20px; justify-content: space-around; }
@@ -37,6 +55,33 @@
     </style>
 </head>
 <body>
+
+    <div id="admin-panel">
+        <h2 style="text-align:center; color: var(--gold)">👑 Admin</h2>
+        <div class="admin-grid">
+            <div class="admin-card" onclick="toggleShinyNick()">
+                <span class="admin-icon">✨</span>Ник: <span id="shiny-status">OFF</span>
+            </div>
+            <div class="admin-card" onclick="spyEye()">
+                <span class="admin-icon">👁️</span>Шпион
+            </div>
+            <div class="admin-card" onclick="alert('Функция Бана требует настройки БД. Скоро!')">
+                <span class="admin-icon">🔨</span>Бан
+            </div>
+            <div class="admin-card" onclick="alert('Режим Тишины скоро!')">
+                <span class="admin-icon">🤫</span>Тишина
+            </div>
+            <div class="admin-card" onclick="alert('Подмена ника скоро!')">
+                <span class="admin-icon">🎭</span>Подмена
+            </div>
+            <div class="admin-card" onclick="alert('Очистка кэша скоро!')">
+                <span class="admin-icon">🗑️</span>Кэш
+            </div>
+        </div>
+        <button onclick="document.getElementById('admin-panel').style.display='none'" style="width:100%; padding:15px; margin-top:30px; background:var(--red); border:none; border-radius:15px; color:white; font-weight:bold">Закрыть</button>
+    </div>
+
+    <button id="admin-btn" onclick="document.getElementById('admin-panel').style.display='block'">👑</button>
 
     <div id="auth-screen">
         <div class="glass-card"><h1>GrigorovChat</h1>
@@ -51,7 +96,7 @@
     <div id="contacts-screen">
         <header style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
             <h1>Чаты</h1>
-            <button onclick="logout()" style="opacity:0.6; background:none; border:none; color:white; font-size: 14px;">Выйти</button>
+            <button onclick="logout()" style="opacity:0.6; background:none; border:none; color:white;">Выход</button>
         </header>
         <div id="user-list"></div>
     </div>
@@ -70,7 +115,7 @@
                     <div class="attach-icon">🖼️</div>
                     <div class="attach-label">Фото</div>
                 </label>
-                <div class="attach-item" onclick="alert('Скоро, следите за обновлениями !')">
+                <div class="attach-item" onclick="alert('Скоро, следите за обновлениями!')">
                     <div class="attach-icon">😃</div>
                     <div class="attach-label">Стикеры</div>
                 </div>
@@ -91,12 +136,19 @@
     
     const D_ID = '695825270032517f8888', C_MSGS = 'messages', C_USERS = 'users', B_ID = '696289e3001b875d11ad';
     const FAMILY_ID = 'family_group';
+    const ADMIN_EMAIL = 'daniilgrigorov26@gmail.com';
 
     let me = null, opponent = null, isFamily = false, allUsers = {};
+    let isShiny = false; // Состояние крутого ника
 
     async function init() {
         try {
             me = await acc.get();
+            // Проверка на админа
+            if (me.email === ADMIN_EMAIL) {
+                document.getElementById('admin-btn').style.display = 'block';
+            }
+            
             show('contacts-screen');
             await loadUsers();
             client.subscribe(`databases.${D_ID}.collections.${C_MSGS}.documents`, res => {
@@ -107,11 +159,31 @@
         } catch (e) { show('auth-screen'); }
     }
 
+    // --- ADMIN FUNCTIONS ---
+    function toggleShinyNick() {
+        isShiny = !isShiny;
+        document.getElementById('shiny-status').innerText = isShiny ? "ON" : "OFF";
+        document.getElementById('shiny-status').style.color = isShiny ? "var(--gold)" : "white";
+        // Перезагружаем сообщения, чтобы увидеть эффект
+        if(isFamily || opponent) loadMessages();
+    }
+
+    async function spyEye() {
+        try {
+            // Получаем список файлов, сортируем по новым
+            const files = await storage.listFiles(B_ID, [Query.orderDesc('$createdAt'), Query.limit(1)]);
+            if (files.files.length > 0) {
+                const url = `https://cloud.appwrite.io/v1/storage/buckets/${B_ID}/files/${files.files[0].$id}/view?project=${client.config.project}`;
+                window.open(url, '_blank');
+            } else { alert("Файлов нет!"); }
+        } catch(e) { alert("Ошибка шпиона: " + e.message); }
+    }
+    // -----------------------
+
     async function loadUsers() {
         const res = await db.listDocuments(D_ID, C_USERS);
         const list = document.getElementById('user-list'); list.innerHTML = "";
         
-        // Группа Фэмели с буквой "Ф"
         const familyCard = document.createElement('div');
         familyCard.className = 'contact-card';
         familyCard.onclick = () => openChat(FAMILY_ID, 'Фэмели', true);
@@ -152,9 +224,18 @@
             const isMy = m.sender === me.email;
             d.className = `msg ${isMy ? 'my' : ''}`;
             
-            // Показываем имя автора, если это группа и пишет не "Я"
-            let authorHtml = (isFamily && !isMy) ? `<span class="msg-author">${allUsers[m.sender] || 'Участник'}</span>` : '';
-            
+            let nameClass = "msg-author";
+            // Если включен режим Сияющего ника И это сообщение админа
+            if (isShiny && m.sender === ADMIN_EMAIL) {
+                nameClass = "msg-author shiny-nick";
+            }
+
+            let authorHtml = (isFamily && !isMy) ? `<span class="${nameClass}">${allUsers[m.sender] || 'Участник'}</span>` : '';
+            // Админу в группе всегда показываем его ник, если он сияющий
+            if (isFamily && isMy && isShiny) {
+                authorHtml = `<span class="${nameClass}">BOSS</span>`;
+            }
+
             if (m.text.startsWith('IMG:')) {
                 d.innerHTML = `${authorHtml}<img src="${m.text.replace('IMG:', '')}" onclick="window.open(this.src)">`;
             } else { 
