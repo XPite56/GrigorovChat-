@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>GrigorovChat v1.1.9 (beta 3)</title>
+    <title>GrigorovChat v1.1.9</title>
     <script src="https://cdn.jsdelivr.net/npm/appwrite@13.0.1"></script>
     <style>
         :root { --p: #6c5ce7; --bg: #13132b; --card: rgba(255, 255, 255, 0.08); --gold: #f1c40f; --red: #ff4757; }
@@ -15,17 +15,19 @@
         input { width: 100%; padding: 16px; margin: 10px 0; border-radius: 18px; border: none; background: rgba(255,255,255,0.1); color: white; outline: none; }
         .btn-p { width: 100%; padding: 16px; border-radius: 18px; border: none; background: var(--p); color: white; font-weight: bold; cursor: pointer; }
         
-        .contact-card { background: var(--card); padding: 15px; border-radius: 20px; display: flex; align-items: center; gap: 15px; margin-bottom: 15px; cursor: pointer; border: 1px solid rgba(255,255,255,0.05); }
-        .avatar-group { width: 55px; height: 55px; border-radius: 18px; background-image: url('https://cloud.appwrite.io/v1/storage/buckets/696289e3001b875d11ad/files/1000069937/view?project=695824a900049124f435'); background-size: cover; background-position: center; border: 2px solid var(--p); }
+        .contact-card { background: var(--card); padding: 15px; border-radius: 20px; display: flex; align-items: center; gap: 12px; margin-bottom: 10px; cursor: pointer; border: 1px solid rgba(255,255,255,0.05); position: relative; }
+        .avatar { width: 45px; height: 45px; border-radius: 15px; background: var(--p); display: flex; align-items: center; justify-content: center; font-weight: bold; background-size: cover; background-position: center; }
+        
+        /* Специальный стиль для аватарки Фэмели */
+        .avatar-family { background-image: url('https://cloud.appwrite.io/v1/storage/buckets/696289e3001b875d11ad/files/1000069937/view?project=695824a900049124f435'); border: 2px solid var(--gold); }
         
         #messages { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; padding-bottom: 100px; }
-        .msg { max-width: 85%; padding: 10px 14px; border-radius: 18px; background: var(--card); align-self: flex-start; position: relative; }
-        .msg-sender { font-size: 11px; color: var(--gold); margin-bottom: 4px; display: block; font-weight: bold; }
+        .msg { max-width: 80%; padding: 12px 16px; border-radius: 20px; background: var(--card); align-self: flex-start; word-wrap: break-word; }
+        .msg-sender { font-size: 10px; color: var(--gold); font-weight: bold; display: block; margin-bottom: 4px; }
         .my { align-self: flex-end; background: var(--p); border-bottom-right-radius: 4px; }
-        .my .msg-sender { color: #dcdde1; text-align: right; }
         .msg img { max-width: 100%; border-radius: 12px; margin-top: 5px; }
 
-        #attach-panel { display: none; background: rgba(20, 20, 45, 0.98); border-radius: 25px 25px 0 0; padding: 20px; position: fixed; bottom: 85px; left: 0; right: 0; z-index: 100; backdrop-filter: blur(15px); border-top: 1px solid rgba(255,255,255,0.1); }
+        #attach-panel { display: none; background: rgba(20, 20, 45, 0.98); border-radius: 25px 25px 0 0; padding: 20px; position: fixed; bottom: 85px; left: 0; right: 0; z-index: 100; backdrop-filter: blur(15px); }
         .attach-grid { display: flex; gap: 20px; justify-content: space-around; }
         .attach-item { display: flex; flex-direction: column; align-items: center; gap: 8px; cursor: pointer; }
         .attach-icon { width: 60px; height: 60px; border-radius: 20px; background: rgba(255,255,255,0.1); display: flex; align-items: center; justify-content: center; font-size: 24px; }
@@ -34,9 +36,9 @@
 <body>
 
     <div id="auth-screen">
-        <div class="glass-card"><h1>GrigorovChat (beta 3)</h1>
+        <div class="glass-card"><h1>GrigorovChat</h1>
             <input type="email" id="u-email" placeholder="Email">
-            <input type="text" id="u-nick" placeholder="Ваше Имя" style="display:none">
+            <input type="text" id="u-nick" placeholder="Имя" style="display:none">
             <input type="password" id="pass" placeholder="Пароль">
             <button class="btn-p" onclick="handleAuth()">Войти</button>
             <p onclick="toggleMode()" id="toggle-text" style="margin-top:20px; cursor:pointer; opacity:0.5">Регистрация</p>
@@ -44,23 +46,15 @@
     </div>
 
     <div id="contacts-screen">
-        <header style="margin-bottom:20px;"><h1>Мои Группы</h1></header>
-        <div id="group-list">
-            <div class="contact-card" onclick="openFamilyChat()">
-                <div class="avatar-group"></div>
-                <div>
-                    <b style="font-size: 18px;">Фэмели</b>
-                    <p style="font-size: 12px; opacity: 0.6;">Общий семейный чат</p>
-                </div>
-            </div>
-        </div>
-        <button onclick="logout()" style="margin-top:auto; background:none; border:none; color:white; opacity:0.5; padding: 20px;">Выйти из аккаунта</button>
+        <header style="margin-bottom:20px;"><h1>Чаты</h1></header>
+        <div id="user-list"></div>
+        <button onclick="logout()" style="margin-top:auto; opacity:0.5; background:none; border:none; color:white; padding:10px;">Выйти</button>
     </div>
 
     <div id="chat-screen">
         <header style="margin-bottom:20px; display:flex; align-items:center; gap:15px">
             <div onclick="closeChat()" style="cursor:pointer; background:rgba(255,255,255,0.1); width:40px; height:40px; border-radius:15px; display:flex; align-items:center; justify-content:center">←</div>
-            <b>Фэмели</b>
+            <b id="active-chat-name">Чат</b>
         </header>
         <div id="messages"></div>
         
@@ -71,16 +65,16 @@
                     <div class="attach-icon">🖼️</div>
                     <div class="attach-label">Фото</div>
                 </label>
-                <div class="attach-item" onclick="alert('Скоро!')">
+                <div class="attach-item" onclick="alert('Скоро, следите за обновлениями!')">
                     <div class="attach-icon">😃</div>
-                    <div class="attach-label">Скоро</div>
+                    <div class="attach-label">Стикеры</div>
                 </div>
             </div>
         </div>
 
         <div style="position:fixed; bottom:25px; left:20px; right:20px; display:flex; gap:10px; align-items: center;">
             <button onclick="toggleAttach()" style="background:none; border:none; font-size:24px; color:white;">📎</button>
-            <input type="text" id="msg-inp" placeholder="Написать семье..." style="margin:0; flex:1">
+            <input type="text" id="msg-inp" placeholder="Сообщение..." style="margin:0; flex:1">
             <button onclick="sendMsg()" style="background:var(--p); border:none; width:55px; height:55px; border-radius:20px; color:white">➤</button>
         </div>
     </div>
@@ -91,41 +85,75 @@
     const acc = new Account(client), db = new Databases(client), storage = new Storage(client);
     
     const D_ID = '695825270032517f8888', C_MSGS = 'messages', C_USERS = 'users', B_ID = '696289e3001b875d11ad';
-    const FAMILY_ID = 'family_group'; // Идентификатор для общей группы
+    const FAMILY_ID = 'family_group';
 
-    let me = null, isFamilyOpen = false;
+    let me = null, opponent = null, isFamily = false, allUsers = {};
 
     async function init() {
         try {
             me = await acc.get();
             show('contacts-screen');
+            await loadUsers();
             client.subscribe(`databases.${D_ID}.collections.${C_MSGS}.documents`, res => {
-                if (isFamilyOpen && res.payload.receiver === FAMILY_ID) loadMessages();
+                const m = res.payload;
+                if (isFamily && m.receiver === FAMILY_ID) loadMessages();
+                else if (opponent && (m.sender === opponent.email || m.sender === me.email)) loadMessages();
             });
         } catch (e) { show('auth-screen'); }
     }
 
-    async function openFamilyChat() {
-        isFamilyOpen = true;
+    async function loadUsers() {
+        const res = await db.listDocuments(D_ID, C_USERS);
+        const list = document.getElementById('user-list'); list.innerHTML = "";
+        
+        // 1. Добавляем группу Фэмели в начало
+        const familyCard = document.createElement('div');
+        familyCard.className = 'contact-card';
+        familyCard.onclick = () => openChat(FAMILY_ID, 'Фэмели', true);
+        familyCard.innerHTML = `<div class="avatar avatar-family"></div><div><b>Фэмели</b><p style="font-size:10px; opacity:0.6">Общий чат</p></div>`;
+        list.appendChild(familyCard);
+
+        // 2. Добавляем всех остальных пользователей
+        res.documents.forEach(u => {
+            if (u.email === me.email) return;
+            allUsers[u.email] = u.name;
+            const card = document.createElement('div');
+            card.className = 'contact-card';
+            card.onclick = () => openChat(u.email, u.name, false);
+            card.innerHTML = `<div class="avatar">${u.name[0].toUpperCase()}</div><b>${u.name}</b>`;
+            list.appendChild(card);
+        });
+    }
+
+    async function openChat(id, name, isFam) {
+        opponent = isFam ? { email: FAMILY_ID } : { email: id };
+        isFamily = isFam;
+        document.getElementById('active-chat-name').innerText = name;
         show('chat-screen');
         loadMessages();
     }
 
     async function loadMessages() {
-        const res = await db.listDocuments(D_ID, C_MSGS, [Query.equal('receiver', FAMILY_ID), Query.orderDesc("$createdAt"), Query.limit(100)]);
+        let queries = isFamily ? [Query.equal('receiver', FAMILY_ID)] : [];
+        const res = await db.listDocuments(D_ID, C_MSGS, [...queries, Query.orderDesc("$createdAt"), Query.limit(50)]);
         const box = document.getElementById('messages'); box.innerHTML = '';
-        res.documents.reverse().forEach(m => {
+        
+        let filtered = isFamily ? res.documents : res.documents.filter(m => 
+            (m.sender === me.email && m.receiver === opponent.email) || 
+            (m.sender === opponent.email && m.receiver === me.email)
+        );
+
+        filtered.reverse().forEach(m => {
             const d = document.createElement('div');
-            const isMy = m.sender_email === me.email;
+            const isMy = m.sender === me.email;
             d.className = `msg ${isMy ? 'my' : ''}`;
             
-            let content = `<span class="msg-sender">${m.sender_name || 'Участник'}</span>`;
+            let html = isFamily && !isMy ? `<span class="msg-sender">${allUsers[m.sender] || 'Участник'}</span>` : '';
             if (m.text.startsWith('IMG:')) {
-                const url = m.text.replace('IMG:', '');
-                content += `<img src="${url}" onclick="window.open('${url}')">`;
-            } else { content += m.text; }
+                html += `<img src="${m.text.replace('IMG:', '')}" onclick="window.open(this.src)">`;
+            } else { html += m.text; }
             
-            d.innerHTML = content;
+            d.innerHTML = html;
             box.appendChild(d);
         });
         box.scrollTop = box.scrollHeight;
@@ -133,27 +161,20 @@
 
     async function sendMsg() {
         const inp = document.getElementById('msg-inp');
-        if(!inp.value.trim()) return;
+        if(!inp.value.trim() || !opponent) return;
         await db.createDocument(D_ID, C_MSGS, ID.unique(), { 
             text: inp.value, 
-            sender: me.email, // для совместимости
-            sender_email: me.email,
-            sender_name: me.name,
-            receiver: FAMILY_ID 
+            sender: me.email, 
+            receiver: opponent.email 
         });
         inp.value = ""; loadMessages();
     }
 
     async function uploadPhoto(el) {
-        if (!el.files[0]) return;
+        if (!el.files[0] || !opponent) return;
         const file = await storage.createFile(B_ID, ID.unique(), el.files[0]);
         const url = `https://cloud.appwrite.io/v1/storage/buckets/${B_ID}/files/${file.$id}/view?project=${client.config.project}`;
-        await db.createDocument(D_ID, C_MSGS, ID.unique(), { 
-            text: `IMG:${url}`, 
-            sender_email: me.email, 
-            sender_name: me.name, 
-            receiver: FAMILY_ID 
-        });
+        await db.createDocument(D_ID, C_MSGS, ID.unique(), { text: `IMG:${url}`, sender: me.email, receiver: opponent.email });
         toggleAttach(); loadMessages();
     }
 
@@ -172,9 +193,10 @@
     function toggleMode() { const n = document.getElementById('u-nick'); n.style.display = n.style.display === 'none' ? 'block' : 'none'; }
     function toggleAttach() { const p = document.getElementById('attach-panel'); p.style.display = p.style.display === 'block' ? 'none' : 'block'; }
     function show(id) { ['auth-screen', 'contacts-screen', 'chat-screen'].forEach(s => document.getElementById(s).style.display = 'none'); document.getElementById(id).style.display = 'flex'; }
-    function closeChat() { isFamilyOpen = false; show('contacts-screen'); }
+    function closeChat() { opponent = null; isFamily = false; document.getElementById('attach-panel').style.display = 'none'; show('contacts-screen'); }
     function logout() { acc.deleteSession('current'); location.reload(); }
     init();
 </script>
 </body>
 </html>
+
