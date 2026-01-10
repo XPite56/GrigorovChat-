@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>GrigorovChat v1.1.9</title>
+    <title>GrigorovChat v1.1.9 (beta 4)</title>
     <script src="https://cdn.jsdelivr.net/npm/appwrite@13.0.1"></script>
     <style>
         :root { --p: #6c5ce7; --bg: #13132b; --card: rgba(255, 255, 255, 0.08); --gold: #f1c40f; --red: #ff4757; }
@@ -15,15 +15,18 @@
         input { width: 100%; padding: 16px; margin: 10px 0; border-radius: 18px; border: none; background: rgba(255,255,255,0.1); color: white; outline: none; }
         .btn-p { width: 100%; padding: 16px; border-radius: 18px; border: none; background: var(--p); color: white; font-weight: bold; cursor: pointer; }
         
-        .contact-card { background: var(--card); padding: 15px; border-radius: 20px; display: flex; align-items: center; gap: 12px; margin-bottom: 10px; cursor: pointer; border: 1px solid rgba(255,255,255,0.05); position: relative; }
-        .avatar { width: 45px; height: 45px; border-radius: 15px; background: var(--p); display: flex; align-items: center; justify-content: center; font-weight: bold; background-size: cover; background-position: center; }
+        .contact-card { background: var(--card); padding: 15px; border-radius: 20px; display: flex; align-items: center; gap: 12px; margin-bottom: 10px; cursor: pointer; border: 1px solid rgba(255,255,255,0.05); }
+        .avatar { width: 45px; height: 45px; border-radius: 15px; background: var(--p); display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 20px; }
         
-        /* Специальный стиль для аватарки Фэмели */
-        .avatar-family { background-image: url('https://cloud.appwrite.io/v1/storage/buckets/696289e3001b875d11ad/files/1000069937/view?project=695824a900049124f435'); border: 2px solid var(--gold); }
+        /* Новая иконка для Фэмели */
+        .avatar-family { background: linear-gradient(45deg, #6c5ce7, #a29bfe); border: 2px solid var(--gold); color: white; }
         
-        #messages { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; padding-bottom: 100px; }
-        .msg { max-width: 80%; padding: 12px 16px; border-radius: 20px; background: var(--card); align-self: flex-start; word-wrap: break-word; }
-        .msg-sender { font-size: 10px; color: var(--gold); font-weight: bold; display: block; margin-bottom: 4px; }
+        #messages { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; padding-bottom: 100px; }
+        .msg { max-width: 80%; padding: 10px 14px; border-radius: 18px; background: var(--card); align-self: flex-start; position: relative; }
+        
+        /* Стиль имени отправителя */
+        .msg-author { font-size: 11px; color: var(--gold); font-weight: bold; display: block; margin-bottom: 4px; }
+        
         .my { align-self: flex-end; background: var(--p); border-bottom-right-radius: 4px; }
         .msg img { max-width: 100%; border-radius: 12px; margin-top: 5px; }
 
@@ -46,9 +49,11 @@
     </div>
 
     <div id="contacts-screen">
-        <header style="margin-bottom:20px;"><h1>Чаты</h1></header>
+        <header style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+            <h1>Чаты</h1>
+            <button onclick="logout()" style="opacity:0.6; background:none; border:none; color:white; font-size: 14px;">Выйти</button>
+        </header>
         <div id="user-list"></div>
-        <button onclick="logout()" style="margin-top:auto; opacity:0.5; background:none; border:none; color:white; padding:10px;">Выйти</button>
     </div>
 
     <div id="chat-screen">
@@ -65,7 +70,7 @@
                     <div class="attach-icon">🖼️</div>
                     <div class="attach-label">Фото</div>
                 </label>
-                <div class="attach-item" onclick="alert('Скоро, следите за обновлениями!')">
+                <div class="attach-item" onclick="alert('Скоро, следите за обновлениями !')">
                     <div class="attach-icon">😃</div>
                     <div class="attach-label">Стикеры</div>
                 </div>
@@ -106,17 +111,16 @@
         const res = await db.listDocuments(D_ID, C_USERS);
         const list = document.getElementById('user-list'); list.innerHTML = "";
         
-        // 1. Добавляем группу Фэмели в начало
+        // Группа Фэмели с буквой "Ф"
         const familyCard = document.createElement('div');
         familyCard.className = 'contact-card';
         familyCard.onclick = () => openChat(FAMILY_ID, 'Фэмели', true);
-        familyCard.innerHTML = `<div class="avatar avatar-family"></div><div><b>Фэмели</b><p style="font-size:10px; opacity:0.6">Общий чат</p></div>`;
+        familyCard.innerHTML = `<div class="avatar avatar-family">Ф</div><div><b>Фэмели</b><p style="font-size:10px; opacity:0.6">Общий чат</p></div>`;
         list.appendChild(familyCard);
 
-        // 2. Добавляем всех остальных пользователей
         res.documents.forEach(u => {
-            if (u.email === me.email) return;
             allUsers[u.email] = u.name;
+            if (u.email === me.email) return;
             const card = document.createElement('div');
             card.className = 'contact-card';
             card.onclick = () => openChat(u.email, u.name, false);
@@ -148,12 +152,14 @@
             const isMy = m.sender === me.email;
             d.className = `msg ${isMy ? 'my' : ''}`;
             
-            let html = isFamily && !isMy ? `<span class="msg-sender">${allUsers[m.sender] || 'Участник'}</span>` : '';
-            if (m.text.startsWith('IMG:')) {
-                html += `<img src="${m.text.replace('IMG:', '')}" onclick="window.open(this.src)">`;
-            } else { html += m.text; }
+            // Показываем имя автора, если это группа и пишет не "Я"
+            let authorHtml = (isFamily && !isMy) ? `<span class="msg-author">${allUsers[m.sender] || 'Участник'}</span>` : '';
             
-            d.innerHTML = html;
+            if (m.text.startsWith('IMG:')) {
+                d.innerHTML = `${authorHtml}<img src="${m.text.replace('IMG:', '')}" onclick="window.open(this.src)">`;
+            } else { 
+                d.innerHTML = `${authorHtml}${m.text}`; 
+            }
             box.appendChild(d);
         });
         box.scrollTop = box.scrollHeight;
@@ -162,20 +168,18 @@
     async function sendMsg() {
         const inp = document.getElementById('msg-inp');
         if(!inp.value.trim() || !opponent) return;
-        await db.createDocument(D_ID, C_MSGS, ID.unique(), { 
-            text: inp.value, 
-            sender: me.email, 
-            receiver: opponent.email 
-        });
+        await db.createDocument(D_ID, C_MSGS, ID.unique(), { text: inp.value, sender: me.email, receiver: opponent.email });
         inp.value = ""; loadMessages();
     }
 
     async function uploadPhoto(el) {
         if (!el.files[0] || !opponent) return;
-        const file = await storage.createFile(B_ID, ID.unique(), el.files[0]);
-        const url = `https://cloud.appwrite.io/v1/storage/buckets/${B_ID}/files/${file.$id}/view?project=${client.config.project}`;
-        await db.createDocument(D_ID, C_MSGS, ID.unique(), { text: `IMG:${url}`, sender: me.email, receiver: opponent.email });
-        toggleAttach(); loadMessages();
+        try {
+            const file = await storage.createFile(B_ID, ID.unique(), el.files[0]);
+            const url = `https://cloud.appwrite.io/v1/storage/buckets/${B_ID}/files/${file.$id}/view?project=${client.config.project}`;
+            await db.createDocument(D_ID, C_MSGS, ID.unique(), { text: `IMG:${url}`, sender: me.email, receiver: opponent.email });
+            toggleAttach(); loadMessages();
+        } catch(e) { alert("Ошибка!"); }
     }
 
     async function handleAuth() {
@@ -199,4 +203,3 @@
 </script>
 </body>
 </html>
-
