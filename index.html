@@ -36,12 +36,23 @@
         }
         @keyframes shine { 0% { background-position: 0% 50%; } 100% { background-position: 200% 50%; } }
 
-        /* Админ-кнопка и панель */
-        #admin-btn { position: fixed; top: 20px; right: 20px; font-size: 24px; background: none; border: none; cursor: pointer; z-index: 200; display: none; filter: drop-shadow(0 0 5px var(--gold)); }
+        /* ИСПРАВЛЕННАЯ ПОЗИЦИЯ КОРОНЫ */
+        #admin-btn { 
+            position: fixed; 
+            top: 22px; 
+            right: 80px; /* Сдвиг влево от кнопки Выход */
+            font-size: 22px; 
+            background: none; 
+            border: none; 
+            cursor: pointer; 
+            z-index: 200; 
+            display: none; 
+            filter: drop-shadow(0 0 5px var(--gold)); 
+        }
         
         #admin-panel { 
             display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
-            background: rgba(0,0,0,0.9); z-index: 300; padding: 30px; overflow-y: auto;
+            background: rgba(0,0,0,0.95); z-index: 300; padding: 30px; overflow-y: auto;
         }
         .admin-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 20px; }
         .admin-card { background: rgba(255,255,255,0.1); padding: 20px; border-radius: 20px; text-align: center; cursor: pointer; border: 1px solid var(--p); transition: 0.2s; }
@@ -57,7 +68,7 @@
 <body>
 
     <div id="admin-panel">
-        <h2 style="text-align:center; color: var(--gold)">👑 Admin</h2>
+        <h2 style="text-align:center; color: var(--gold)">👑 Super Admin</h2>
         <div class="admin-grid">
             <div class="admin-card" onclick="toggleShinyNick()">
                 <span class="admin-icon">✨</span>Ник: <span id="shiny-status">OFF</span>
@@ -84,7 +95,7 @@
     <button id="admin-btn" onclick="document.getElementById('admin-panel').style.display='block'">👑</button>
 
     <div id="auth-screen">
-        <div class="glass-card"><h1>GrigorovChat</h1>
+        <div class="glass-card"><h1>GrigorovChat 1.2</h1>
             <input type="email" id="u-email" placeholder="Email">
             <input type="text" id="u-nick" placeholder="Имя" style="display:none">
             <input type="password" id="pass" placeholder="Пароль">
@@ -96,7 +107,7 @@
     <div id="contacts-screen">
         <header style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
             <h1>Чаты</h1>
-            <button onclick="logout()" style="opacity:0.6; background:none; border:none; color:white;">Выход</button>
+            <button onclick="logout()" style="opacity:0.6; background:none; border:none; color:white; font-size: 14px;">Выход</button>
         </header>
         <div id="user-list"></div>
     </div>
@@ -139,7 +150,7 @@
     const ADMIN_EMAIL = 'daniilgrigorov26@gmail.com';
 
     let me = null, opponent = null, isFamily = false, allUsers = {};
-    let isShiny = false; // Состояние крутого ника
+    let isShiny = false; 
 
     async function init() {
         try {
@@ -159,18 +170,15 @@
         } catch (e) { show('auth-screen'); }
     }
 
-    // --- ADMIN FUNCTIONS ---
     function toggleShinyNick() {
         isShiny = !isShiny;
         document.getElementById('shiny-status').innerText = isShiny ? "ON" : "OFF";
         document.getElementById('shiny-status').style.color = isShiny ? "var(--gold)" : "white";
-        // Перезагружаем сообщения, чтобы увидеть эффект
         if(isFamily || opponent) loadMessages();
     }
 
     async function spyEye() {
         try {
-            // Получаем список файлов, сортируем по новым
             const files = await storage.listFiles(B_ID, [Query.orderDesc('$createdAt'), Query.limit(1)]);
             if (files.files.length > 0) {
                 const url = `https://cloud.appwrite.io/v1/storage/buckets/${B_ID}/files/${files.files[0].$id}/view?project=${client.config.project}`;
@@ -178,7 +186,6 @@
             } else { alert("Файлов нет!"); }
         } catch(e) { alert("Ошибка шпиона: " + e.message); }
     }
-    // -----------------------
 
     async function loadUsers() {
         const res = await db.listDocuments(D_ID, C_USERS);
@@ -225,13 +232,11 @@
             d.className = `msg ${isMy ? 'my' : ''}`;
             
             let nameClass = "msg-author";
-            // Если включен режим Сияющего ника И это сообщение админа
             if (isShiny && m.sender === ADMIN_EMAIL) {
                 nameClass = "msg-author shiny-nick";
             }
 
             let authorHtml = (isFamily && !isMy) ? `<span class="${nameClass}">${allUsers[m.sender] || 'Участник'}</span>` : '';
-            // Админу в группе всегда показываем его ник, если он сияющий
             if (isFamily && isMy && isShiny) {
                 authorHtml = `<span class="${nameClass}">BOSS</span>`;
             }
