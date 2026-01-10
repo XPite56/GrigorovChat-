@@ -28,10 +28,13 @@
         .msg { max-width: 80%; padding: 12px 16px; border-radius: 20px; background: var(--card); align-self: flex-start; word-wrap: break-word; }
         .my { align-self: flex-end; background: var(--p); border-bottom-right-radius: 4px; }
         
-        /* Панель стикеров */
-        #sticker-panel { display: none; background: rgba(20, 20, 45, 0.95); border-top: 1px solid rgba(255,255,255,0.1); padding: 15px; position: fixed; bottom: 85px; left: 0; right: 0; height: 200px; z-index: 100; backdrop-filter: blur(10px); }
-        .sticker-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; overflow-y: auto; height: 100%; }
-        .sticker-item { width: 100%; aspect-ratio: 1; background: rgba(255,255,255,0.05); border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 24px; }
+        /* Панель вложений */
+        #attach-panel { display: none; background: rgba(20, 20, 45, 0.98); border-radius: 25px 25px 0 0; border-top: 1px solid rgba(255,255,255,0.1); padding: 20px; position: fixed; bottom: 85px; left: 0; right: 0; z-index: 100; backdrop-filter: blur(15px); box-shadow: 0 -10px 30px rgba(0,0,0,0.5); }
+        .attach-grid { display: flex; gap: 20px; justify-content: space-around; }
+        .attach-item { display: flex; flex-direction: column; align-items: center; gap: 8px; cursor: pointer; }
+        .attach-icon { width: 60px; height: 60px; border-radius: 20px; background: rgba(255,255,255,0.1); display: flex; align-items: center; justify-content: center; font-size: 24px; transition: 0.3s; }
+        .attach-item:hover .attach-icon { background: var(--p); }
+        .attach-label { font-size: 12px; opacity: 0.8; }
 
         @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.2); } 100% { transform: scale(1); } }
     </style>
@@ -64,17 +67,21 @@
         
         <div id="messages"></div>
 
-        <div id="sticker-panel">
-            <div class="sticker-grid" id="sticker-list">
-                <div class="sticker-item" onclick="sendSticker('😊')">😊</div>
-                <div class="sticker-item" onclick="sendSticker('🔥')">🔥</div>
-                <div class="sticker-item" onclick="sendSticker('😎')">😎</div>
-                <div class="sticker-item" onclick="sendSticker('👻')">👻</div>
+        <div id="attach-panel">
+            <div class="attach-grid">
+                <div class="attach-item" onclick="alert('Функция выбора фото в разработке...')">
+                    <div class="attach-icon">🖼️</div>
+                    <div class="attach-label">Фото</div>
+                </div>
+                <div class="attach-item" onclick="alert('Скоро, следите за обновлениями!')">
+                    <div class="attach-icon">⏳</div>
+                    <div class="attach-label">Скоро</div>
+                </div>
             </div>
         </div>
 
         <div style="position:fixed; bottom:25px; left:20px; right:20px; display:flex; gap:10px; align-items: center;">
-            <button onclick="toggleStickers()" style="background:none; border:none; font-size:24px; cursor:pointer;">😊</button>
+            <button onclick="toggleAttach()" style="background:none; border:none; font-size:24px; cursor:pointer; color: white;">📎</button>
             <input type="text" id="msg-inp" placeholder="Сообщение..." style="margin:0; flex:1">
             <button onclick="sendMsg()" style="background:var(--p); border:none; width:55px; height:55px; border-radius:20px; color:white">➤</button>
         </div>
@@ -95,9 +102,7 @@
             show('contacts-screen');
             await loadUsers();
             
-            // Запрос разрешений для будущего (уведомления + камера/микрофон)
             if ("Notification" in window) Notification.requestPermission();
-            navigator.mediaDevices.getUserMedia({ audio: true, video: false }).catch(() => console.log("Микрофон пока не нужен"));
 
             client.subscribe(`databases.${D_ID}.collections.${C_MSGS}.documents`, res => {
                 const m = res.payload;
@@ -108,9 +113,6 @@
                     const cardId = `user-${m.sender.replace(/[@.]/g, '_')}`;
                     const card = document.getElementById(cardId);
                     if (card) card.classList.add('has-new');
-                    if (Notification.permission === 'granted') {
-                        new Notification("GrigorovChat", { body: `${allUsers[m.sender] || 'Кто-то'}: ${m.text}` });
-                    }
                 }
             });
         } catch (e) { show('auth-screen'); }
@@ -123,10 +125,10 @@
             allUsers[u.email] = u.name;
             if (u.email === me.email) return;
             const isDev = u.email === ADMIN_EMAIL;
+            const card = document.createElement('div');
             const safeEmail = u.email.replace(/[@.]/g, '_');
             const hasUnread = localStorage.getItem(`unread_${u.email}`) === 'true';
             
-            const card = document.createElement('div');
             card.id = `user-${safeEmail}`;
             card.className = `contact-card ${hasUnread ? 'has-new' : ''}`;
             card.onclick = () => {
@@ -141,12 +143,7 @@
         });
     }
 
-    async function openChat(e, n) { 
-        opponent = { email: e, name: n }; 
-        document.getElementById('active-chat-name').innerText = n; 
-        show('chat-screen'); 
-        loadMessages(); 
-    }
+    async function openChat(e, n) { opponent = { email: e, name: n }; document.getElementById('active-chat-name').innerText = n; show('chat-screen'); loadMessages(); }
     
     async function loadMessages() {
         const res = await db.listDocuments(D_ID, C_MSGS, [Query.orderDesc("$createdAt"), Query.limit(50)]);
@@ -169,16 +166,9 @@
         } catch(e) { console.error(e); }
     }
 
-    function toggleStickers() {
-        const p = document.getElementById('sticker-panel');
+    function toggleAttach() {
+        const p = document.getElementById('attach-panel');
         p.style.display = p.style.display === 'block' ? 'none' : 'block';
-    }
-
-    async function sendSticker(emoji) {
-        if(!opponent) return;
-        await db.createDocument(D_ID, C_MSGS, ID.unique(), { text: emoji, sender: me.email, receiver: opponent.email });
-        toggleStickers();
-        loadMessages();
     }
 
     async function handleAuth() {
@@ -195,7 +185,7 @@
 
     function toggleMode() { isReg = !isReg; document.getElementById('u-nick').style.display = isReg ? 'block' : 'none'; document.getElementById('toggle-text').innerText = isReg ? 'Войти' : 'Создать аккаунт'; }
     function show(id) { ['auth-screen', 'contacts-screen', 'chat-screen'].forEach(s => document.getElementById(s).style.display = 'none'); document.getElementById(id).style.display = 'flex'; }
-    function closeChat() { opponent = null; document.getElementById('sticker-panel').style.display = 'none'; show('contacts-screen'); }
+    function closeChat() { opponent = null; document.getElementById('attach-panel').style.display = 'none'; show('contacts-screen'); }
     function logout() { acc.deleteSession('current'); location.reload(); }
     init();
 </script>
