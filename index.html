@@ -3,14 +3,16 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>GrigorovChat v1.1.8</title>
+    <title>GrigorovChat v1.1.9 (beta)</title>
     <script src="https://cdn.jsdelivr.net/npm/appwrite@13.0.1"></script>
     <style>
         :root { --p: #6c5ce7; --bg: #13132b; --card: rgba(255, 255, 255, 0.08); --gold: #f1c40f; --red: #ff4757; }
         * { margin:0; padding:0; box-sizing:border-box; font-family: 'Segoe UI', sans-serif; -webkit-tap-highlight-color: transparent; }
         body { background: radial-gradient(circle at center, #2e2e5d 0%, #13132b 100%); color: white; height: 100vh; overflow: hidden; }
+        
         #auth-screen, #contacts-screen, #chat-screen { padding: 20px; height: 100vh; display: none; flex-direction: column; }
         .glass-card { margin: auto; width: 100%; max-width: 340px; text-align: center; background: rgba(255, 255, 255, 0.05); padding: 30px; border-radius: 30px; backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.1); }
+        
         input { width: 100%; padding: 16px; margin: 10px 0; border-radius: 18px; border: none; background: rgba(255,255,255,0.1); color: white; outline: none; }
         .btn-p { width: 100%; padding: 16px; border-radius: 18px; border: none; background: var(--p); color: white; font-weight: bold; cursor: pointer; }
         
@@ -21,20 +23,25 @@
         
         .avatar { width: 45px; height: 45px; border-radius: 15px; background: var(--p); display: flex; align-items: center; justify-content: center; font-weight: bold; }
         .avatar-dev { border: 2px solid var(--gold); box-shadow: 0 0 10px var(--gold); }
-        .dev-label { color: var(--gold); font-size: 10px; font-weight: bold; margin-top: 2px; display: block; }
         
-        #messages { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; padding-bottom: 80px; }
+        #messages { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; padding-bottom: 100px; }
         .msg { max-width: 80%; padding: 12px 16px; border-radius: 20px; background: var(--card); align-self: flex-start; word-wrap: break-word; }
         .my { align-self: flex-end; background: var(--p); border-bottom-right-radius: 4px; }
-        .msg-dev { background: linear-gradient(135deg, #6c5ce7 0%, var(--gold) 100%) !important; }
+        
+        /* Панель стикеров */
+        #sticker-panel { display: none; background: rgba(20, 20, 45, 0.95); border-top: 1px solid rgba(255,255,255,0.1); padding: 15px; position: fixed; bottom: 85px; left: 0; right: 0; height: 200px; z-index: 100; backdrop-filter: blur(10px); }
+        .sticker-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; overflow-y: auto; height: 100%; }
+        .sticker-item { width: 100%; aspect-ratio: 1; background: rgba(255,255,255,0.05); border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 24px; }
+
         @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.2); } 100% { transform: scale(1); } }
     </style>
 </head>
 <body>
+
     <div id="auth-screen">
         <div class="glass-card"><h1>GrigorovChat</h1>
             <input type="email" id="u-email" placeholder="Email">
-            <input type="text" id="u-nick" placeholder="Имя пользователя" style="display:none">
+            <input type="text" id="u-nick" placeholder="Имя (регистрация)" style="display:none">
             <input type="password" id="pass" placeholder="Пароль">
             <button class="btn-p" onclick="handleAuth()">Войти</button>
             <p onclick="toggleMode()" id="toggle-text" style="margin-top:20px; cursor:pointer; opacity:0.5">Создать аккаунт</p>
@@ -44,7 +51,7 @@
     <div id="contacts-screen">
         <header style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
             <h1 id="head-title">Чаты</h1>
-            <button onclick="logout()" style="opacity:0.6; background:none; border:none; color:white; cursor:pointer;">Выход</button>
+            <button onclick="logout()" style="opacity:0.6; background:none; border:none; color:white;">Выход</button>
         </header>
         <div id="user-list"></div>
     </div>
@@ -54,8 +61,20 @@
             <div onclick="closeChat()" style="cursor:pointer; background:rgba(255,255,255,0.1); width:40px; height:40px; border-radius:15px; display:flex; align-items:center; justify-content:center">←</div>
             <b id="active-chat-name">Чат</b>
         </header>
+        
         <div id="messages"></div>
-        <div style="position:fixed; bottom:25px; left:20px; right:20px; display:flex; gap:10px">
+
+        <div id="sticker-panel">
+            <div class="sticker-grid" id="sticker-list">
+                <div class="sticker-item" onclick="sendSticker('😊')">😊</div>
+                <div class="sticker-item" onclick="sendSticker('🔥')">🔥</div>
+                <div class="sticker-item" onclick="sendSticker('😎')">😎</div>
+                <div class="sticker-item" onclick="sendSticker('👻')">👻</div>
+            </div>
+        </div>
+
+        <div style="position:fixed; bottom:25px; left:20px; right:20px; display:flex; gap:10px; align-items: center;">
+            <button onclick="toggleStickers()" style="background:none; border:none; font-size:24px; cursor:pointer;">😊</button>
             <input type="text" id="msg-inp" placeholder="Сообщение..." style="margin:0; flex:1">
             <button onclick="sendMsg()" style="background:var(--p); border:none; width:55px; height:55px; border-radius:20px; color:white">➤</button>
         </div>
@@ -76,10 +95,9 @@
             show('contacts-screen');
             await loadUsers();
             
-            // Автоматический запрос прав при входе, если еще не даны
-            if ("Notification" in window && Notification.permission === "default") {
-                Notification.requestPermission();
-            }
+            // Запрос разрешений для будущего (уведомления + камера/микрофон)
+            if ("Notification" in window) Notification.requestPermission();
+            navigator.mediaDevices.getUserMedia({ audio: true, video: false }).catch(() => console.log("Микрофон пока не нужен"));
 
             client.subscribe(`databases.${D_ID}.collections.${C_MSGS}.documents`, res => {
                 const m = res.payload;
@@ -90,9 +108,8 @@
                     const cardId = `user-${m.sender.replace(/[@.]/g, '_')}`;
                     const card = document.getElementById(cardId);
                     if (card) card.classList.add('has-new');
-                    
                     if (Notification.permission === 'granted') {
-                        new Notification("GrigorovChat", { body: `${allUsers[m.sender] || 'Сообщение'}: ${m.text}` });
+                        new Notification("GrigorovChat", { body: `${allUsers[m.sender] || 'Кто-то'}: ${m.text}` });
                     }
                 }
             });
@@ -106,23 +123,20 @@
             allUsers[u.email] = u.name;
             if (u.email === me.email) return;
             const isDev = u.email === ADMIN_EMAIL;
-            const card = document.createElement('div');
             const safeEmail = u.email.replace(/[@.]/g, '_');
-            card.id = `user-${safeEmail}`;
             const hasUnread = localStorage.getItem(`unread_${u.email}`) === 'true';
-            card.className = `contact-card ${hasUnread ? 'has-new' : ''}`;
             
+            const card = document.createElement('div');
+            card.id = `user-${safeEmail}`;
+            card.className = `contact-card ${hasUnread ? 'has-new' : ''}`;
             card.onclick = () => {
                 localStorage.removeItem(`unread_${u.email}`);
                 card.classList.remove('has-new');
                 openChat(u.email, u.name);
             };
             card.innerHTML = `
-                <div class="avatar-wrapper">
-                    <div class="unread-dot"></div>
-                    <div class="avatar ${isDev?'avatar-dev':''}">${u.name ? u.name[0].toUpperCase() : 'U'}</div>
-                </div>
-                <div><b>${u.name || u.email}</b>${isDev ? '<span class="dev-label">РАЗРАБОТЧИК</span>' : ''}</div>`;
+                <div class="avatar-wrapper"><div class="unread-dot"></div><div class="avatar ${isDev?'avatar-dev':''}">${u.name ? u.name[0].toUpperCase() : 'U'}</div></div>
+                <div><b>${u.name || u.email}</b>${isDev ? '<span style="color:var(--gold); font-size:10px; display:block">РАЗРАБОТЧИК</span>' : ''}</div>`;
             list.appendChild(card);
         });
     }
@@ -140,7 +154,7 @@
         res.documents.filter(m => (m.sender === me.email && m.receiver === opponent.email) || (m.sender === opponent.email && m.receiver === me.email))
         .reverse().forEach(m => {
             const d = document.createElement('div');
-            d.className = `msg ${m.sender === me.email ? 'my' : ''} ${m.sender === ADMIN_EMAIL ? 'msg-dev' : ''}`;
+            d.className = `msg ${m.sender === me.email ? 'my' : ''}`;
             d.innerHTML = m.text; box.appendChild(d);
         });
         box.scrollTop = box.scrollHeight;
@@ -153,6 +167,18 @@
             await db.createDocument(D_ID, C_MSGS, ID.unique(), { text: inp.value, sender: me.email, receiver: opponent.email });
             inp.value = ""; loadMessages();
         } catch(e) { console.error(e); }
+    }
+
+    function toggleStickers() {
+        const p = document.getElementById('sticker-panel');
+        p.style.display = p.style.display === 'block' ? 'none' : 'block';
+    }
+
+    async function sendSticker(emoji) {
+        if(!opponent) return;
+        await db.createDocument(D_ID, C_MSGS, ID.unique(), { text: emoji, sender: me.email, receiver: opponent.email });
+        toggleStickers();
+        loadMessages();
     }
 
     async function handleAuth() {
@@ -169,7 +195,7 @@
 
     function toggleMode() { isReg = !isReg; document.getElementById('u-nick').style.display = isReg ? 'block' : 'none'; document.getElementById('toggle-text').innerText = isReg ? 'Войти' : 'Создать аккаунт'; }
     function show(id) { ['auth-screen', 'contacts-screen', 'chat-screen'].forEach(s => document.getElementById(s).style.display = 'none'); document.getElementById(id).style.display = 'flex'; }
-    function closeChat() { opponent = null; show('contacts-screen'); }
+    function closeChat() { opponent = null; document.getElementById('sticker-panel').style.display = 'none'; show('contacts-screen'); }
     function logout() { acc.deleteSession('current'); location.reload(); }
     init();
 </script>
