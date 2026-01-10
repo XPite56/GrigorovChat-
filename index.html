@@ -3,46 +3,38 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>GrigorovChat v1.1.9 (beta)</title>
+    <title>GrigorovChat v1.1.9 (beta 2)</title>
     <script src="https://cdn.jsdelivr.net/npm/appwrite@13.0.1"></script>
     <style>
         :root { --p: #6c5ce7; --bg: #13132b; --card: rgba(255, 255, 255, 0.08); --gold: #f1c40f; --red: #ff4757; }
         * { margin:0; padding:0; box-sizing:border-box; font-family: 'Segoe UI', sans-serif; -webkit-tap-highlight-color: transparent; }
         body { background: radial-gradient(circle at center, #2e2e5d 0%, #13132b 100%); color: white; height: 100vh; overflow: hidden; }
-        
         #auth-screen, #contacts-screen, #chat-screen { padding: 20px; height: 100vh; display: none; flex-direction: column; }
         .glass-card { margin: auto; width: 100%; max-width: 340px; text-align: center; background: rgba(255, 255, 255, 0.05); padding: 30px; border-radius: 30px; backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.1); }
-        
         input { width: 100%; padding: 16px; margin: 10px 0; border-radius: 18px; border: none; background: rgba(255,255,255,0.1); color: white; outline: none; }
         .btn-p { width: 100%; padding: 16px; border-radius: 18px; border: none; background: var(--p); color: white; font-weight: bold; cursor: pointer; }
-        
-        .contact-card { background: var(--card); padding: 15px; border-radius: 20px; display: flex; align-items: center; gap: 12px; margin-bottom: 10px; border: 1px solid rgba(255,255,255,0.05); cursor: pointer; position: relative; }
-        .avatar-wrapper { position: relative; }
-        .unread-dot { position: absolute; top: -2px; right: -2px; width: 14px; height: 14px; background: var(--red); border: 2px solid #1d1d3d; border-radius: 50%; display: none; z-index: 10; }
+        .contact-card { background: var(--card); padding: 15px; border-radius: 20px; display: flex; align-items: center; gap: 12px; margin-bottom: 10px; cursor: pointer; position: relative; }
+        .unread-dot { position: absolute; top: -2px; right: -2px; width: 14px; height: 14px; background: var(--red); border: 2px solid #1d1d3d; border-radius: 50%; display: none; }
         .has-new .unread-dot { display: block; animation: pulse 1.5s infinite; }
-        
         .avatar { width: 45px; height: 45px; border-radius: 15px; background: var(--p); display: flex; align-items: center; justify-content: center; font-weight: bold; }
-        .avatar-dev { border: 2px solid var(--gold); box-shadow: 0 0 10px var(--gold); }
-        
         #messages { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; padding-bottom: 100px; }
         .msg { max-width: 80%; padding: 12px 16px; border-radius: 20px; background: var(--card); align-self: flex-start; word-wrap: break-word; }
         .my { align-self: flex-end; background: var(--p); border-bottom-right-radius: 4px; }
         
-        /* Панель вложений */
-        #attach-panel { display: none; background: rgba(20, 20, 45, 0.98); border-radius: 25px 25px 0 0; border-top: 1px solid rgba(255,255,255,0.1); padding: 20px; position: fixed; bottom: 85px; left: 0; right: 0; z-index: 100; backdrop-filter: blur(15px); box-shadow: 0 -10px 30px rgba(0,0,0,0.5); }
+        /* Стиль для фото в чате */
+        .msg img { max-width: 100%; border-radius: 12px; display: block; margin-top: 5px; box-shadow: 0 4px 15px rgba(0,0,0,0.3); }
+
+        #attach-panel { display: none; background: rgba(20, 20, 45, 0.98); border-radius: 25px 25px 0 0; padding: 20px; position: fixed; bottom: 85px; left: 0; right: 0; z-index: 100; backdrop-filter: blur(15px); border-top: 1px solid rgba(255,255,255,0.1); }
         .attach-grid { display: flex; gap: 20px; justify-content: space-around; }
         .attach-item { display: flex; flex-direction: column; align-items: center; gap: 8px; cursor: pointer; }
-        .attach-icon { width: 60px; height: 60px; border-radius: 20px; background: rgba(255,255,255,0.1); display: flex; align-items: center; justify-content: center; font-size: 24px; transition: 0.3s; }
-        .attach-item:hover .attach-icon { background: var(--p); }
-        .attach-label { font-size: 12px; opacity: 0.8; }
-
+        .attach-icon { width: 60px; height: 60px; border-radius: 20px; background: rgba(255,255,255,0.1); display: flex; align-items: center; justify-content: center; font-size: 24px; }
         @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.2); } 100% { transform: scale(1); } }
     </style>
 </head>
 <body>
 
     <div id="auth-screen">
-        <div class="glass-card"><h1>GrigorovChat</h1>
+        <div class="glass-card"><h1>GrigorovChat (beta)</h1>
             <input type="email" id="u-email" placeholder="Email">
             <input type="text" id="u-nick" placeholder="Имя (регистрация)" style="display:none">
             <input type="password" id="pass" placeholder="Пароль">
@@ -53,7 +45,7 @@
 
     <div id="contacts-screen">
         <header style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
-            <h1 id="head-title">Чаты</h1>
+            <h1>Чаты</h1>
             <button onclick="logout()" style="opacity:0.6; background:none; border:none; color:white;">Выход</button>
         </header>
         <div id="user-list"></div>
@@ -64,87 +56,61 @@
             <div onclick="closeChat()" style="cursor:pointer; background:rgba(255,255,255,0.1); width:40px; height:40px; border-radius:15px; display:flex; align-items:center; justify-content:center">←</div>
             <b id="active-chat-name">Чат</b>
         </header>
-        
         <div id="messages"></div>
-
+        
         <div id="attach-panel">
             <div class="attach-grid">
-                <div class="attach-item" onclick="alert('Функция выбора фото в разработке...')">
+                <label class="attach-item">
+                    <input type="file" id="file-inp" accept="image/*" style="display:none" onchange="uploadPhoto(this)">
                     <div class="attach-icon">🖼️</div>
                     <div class="attach-label">Фото</div>
-                </div>
-                <div class="attach-item" onclick="alert('Функция выбора стикеров в разработке...')">
-                    <div class="attach-icon">😀</div>
+                </label>
+                <div class="attach-item" onclick="alert('Скоро, следите за обновлениями!')">
+                    <div class="attach-icon">😃</div>
                     <div class="attach-label">Стикеры</div>
                 </div>
             </div>
         </div>
 
         <div style="position:fixed; bottom:25px; left:20px; right:20px; display:flex; gap:10px; align-items: center;">
-            <button onclick="toggleAttach()" style="background:none; border:none; font-size:24px; cursor:pointer; color: white;">📎</button>
+            <button onclick="toggleAttach()" style="background:none; border:none; font-size:24px; color:white;">📎</button>
             <input type="text" id="msg-inp" placeholder="Сообщение..." style="margin:0; flex:1">
             <button onclick="sendMsg()" style="background:var(--p); border:none; width:55px; height:55px; border-radius:20px; color:white">➤</button>
         </div>
     </div>
 
 <script>
-    const { Client, Account, Databases, ID, Query } = Appwrite;
+    const { Client, Account, Databases, Storage, ID, Query } = Appwrite;
     const client = new Client().setEndpoint('https://cloud.appwrite.io/v1').setProject('695824a900049124f435');
-    const acc = new Account(client), db = new Databases(client);
+    const acc = new Account(client), db = new Databases(client), storage = new Storage(client);
+    
     const D_ID = '695825270032517f8888', C_MSGS = 'messages', C_USERS = 'users';
-    const ADMIN_EMAIL = 'daniilgrigorov26@gmail.com';
-    let me = null, opponent = null, isReg = false, allUsers = {};
+    const B_ID = '696289e3001b875d11ad'; // Твой ID Bucket
+    
+    let me = null, opponent = null, allUsers = {};
 
     async function init() {
         try {
             me = await acc.get();
-            if(me.email === ADMIN_EMAIL) document.getElementById('head-title').innerText = "DEV CHAT";
             show('contacts-screen');
             await loadUsers();
-            
-            if ("Notification" in window) Notification.requestPermission();
-
             client.subscribe(`databases.${D_ID}.collections.${C_MSGS}.documents`, res => {
-                const m = res.payload;
-                if (opponent && (m.sender === opponent.email || m.sender === me.email)) {
-                    loadMessages();
-                } else if (m.receiver === me.email) {
-                    localStorage.setItem(`unread_${m.sender}`, 'true');
-                    const cardId = `user-${m.sender.replace(/[@.]/g, '_')}`;
-                    const card = document.getElementById(cardId);
-                    if (card) card.classList.add('has-new');
-                }
+                if (opponent && (res.payload.sender === opponent.email || res.payload.receiver === me.email)) loadMessages();
             });
         } catch (e) { show('auth-screen'); }
     }
 
-    async function loadUsers() {
-        const res = await db.listDocuments(D_ID, C_USERS);
-        const list = document.getElementById('user-list'); list.innerHTML = "";
-        res.documents.forEach(u => {
-            allUsers[u.email] = u.name;
-            if (u.email === me.email) return;
-            const isDev = u.email === ADMIN_EMAIL;
-            const card = document.createElement('div');
-            const safeEmail = u.email.replace(/[@.]/g, '_');
-            const hasUnread = localStorage.getItem(`unread_${u.email}`) === 'true';
-            
-            card.id = `user-${safeEmail}`;
-            card.className = `contact-card ${hasUnread ? 'has-new' : ''}`;
-            card.onclick = () => {
-                localStorage.removeItem(`unread_${u.email}`);
-                card.classList.remove('has-new');
-                openChat(u.email, u.name);
-            };
-            card.innerHTML = `
-                <div class="avatar-wrapper"><div class="unread-dot"></div><div class="avatar ${isDev?'avatar-dev':''}">${u.name ? u.name[0].toUpperCase() : 'U'}</div></div>
-                <div><b>${u.name || u.email}</b>${isDev ? '<span style="color:var(--gold); font-size:10px; display:block">РАЗРАБОТЧИК</span>' : ''}</div>`;
-            list.appendChild(card);
-        });
+    async function uploadPhoto(el) {
+        if (!el.files[0] || !opponent) return;
+        try {
+            const file = await storage.createFile(B_ID, ID.unique(), el.files[0]);
+            const url = `https://cloud.appwrite.io/v1/storage/buckets/${B_ID}/files/${file.$id}/view?project=${client.config.project}`;
+            await db.createDocument(D_ID, C_MSGS, ID.unique(), { text: `IMG:${url}`, sender: me.email, receiver: opponent.email });
+            toggleAttach();
+            loadMessages();
+        } catch (e) { alert("Ошибка загрузки. Проверь права доступа (Permissions) в Storage!"); }
     }
 
-    async function openChat(e, n) { opponent = { email: e, name: n }; document.getElementById('active-chat-name').innerText = n; show('chat-screen'); loadMessages(); }
-    
     async function loadMessages() {
         const res = await db.listDocuments(D_ID, C_MSGS, [Query.orderDesc("$createdAt"), Query.limit(50)]);
         const box = document.getElementById('messages'); box.innerHTML = '';
@@ -152,38 +118,49 @@
         .reverse().forEach(m => {
             const d = document.createElement('div');
             d.className = `msg ${m.sender === me.email ? 'my' : ''}`;
-            d.innerHTML = m.text; box.appendChild(d);
+            if (m.text.startsWith('IMG:')) {
+                const url = m.text.replace('IMG:', '');
+                d.innerHTML = `<img src="${url}" onclick="window.open('${url}')">`;
+            } else { d.innerHTML = m.text; }
+            box.appendChild(d);
         });
         box.scrollTop = box.scrollHeight;
     }
 
+    async function loadUsers() {
+        const res = await db.listDocuments(D_ID, C_USERS);
+        const list = document.getElementById('user-list'); list.innerHTML = "";
+        res.documents.forEach(u => {
+            if (u.email === me.email) return;
+            allUsers[u.email] = u.name;
+            const card = document.createElement('div');
+            card.className = 'contact-card';
+            card.onclick = () => openChat(u.email, u.name);
+            card.innerHTML = `<div class="avatar">${u.name[0].toUpperCase()}</div><b>${u.name}</b>`;
+            list.appendChild(card);
+        });
+    }
+
+    async function openChat(e, n) { opponent = { email: e, name: n }; document.getElementById('active-chat-name').innerText = n; show('chat-screen'); loadMessages(); }
     async function sendMsg() {
         const inp = document.getElementById('msg-inp');
         if(!inp.value.trim() || !opponent) return;
-        try { 
-            await db.createDocument(D_ID, C_MSGS, ID.unique(), { text: inp.value, sender: me.email, receiver: opponent.email });
-            inp.value = ""; loadMessages();
-        } catch(e) { console.error(e); }
+        await db.createDocument(D_ID, C_MSGS, ID.unique(), { text: inp.value, sender: me.email, receiver: opponent.email });
+        inp.value = ""; loadMessages();
     }
-
-    function toggleAttach() {
-        const p = document.getElementById('attach-panel');
-        p.style.display = p.style.display === 'block' ? 'none' : 'block';
-    }
-
     async function handleAuth() {
         const e = document.getElementById('u-email').value, p = document.getElementById('pass').value, n = document.getElementById('u-nick').value;
         try {
-            if (isReg) { 
-                await acc.create(ID.unique(), e, p, n); 
-                await acc.createEmailSession(e, p); 
-                await db.createDocument(D_ID, C_USERS, ID.unique(), { name: n, email: e }); 
+            if (document.getElementById('u-nick').style.display === 'block') {
+                await acc.create(ID.unique(), e, p, n);
+                await acc.createEmailSession(e, p);
+                await db.createDocument(D_ID, C_USERS, ID.unique(), { name: n, email: e });
             } else { await acc.createEmailSession(e, p); }
             location.reload();
         } catch (err) { alert(err.message); }
     }
-
-    function toggleMode() { isReg = !isReg; document.getElementById('u-nick').style.display = isReg ? 'block' : 'none'; document.getElementById('toggle-text').innerText = isReg ? 'Войти' : 'Создать аккаунт'; }
+    function toggleMode() { const n = document.getElementById('u-nick'); n.style.display = n.style.display === 'none' ? 'block' : 'none'; }
+    function toggleAttach() { const p = document.getElementById('attach-panel'); p.style.display = p.style.display === 'block' ? 'none' : 'block'; }
     function show(id) { ['auth-screen', 'contacts-screen', 'chat-screen'].forEach(s => document.getElementById(s).style.display = 'none'); document.getElementById(id).style.display = 'flex'; }
     function closeChat() { opponent = null; document.getElementById('attach-panel').style.display = 'none'; show('contacts-screen'); }
     function logout() { acc.deleteSession('current'); location.reload(); }
