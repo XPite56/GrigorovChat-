@@ -3,241 +3,215 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>GrigorovChat v1.2</title>
+    <title>GrigorovChat 1.2</title>
     <script src="https://cdn.jsdelivr.net/npm/appwrite@13.0.1"></script>
+    <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
     <style>
-        :root { --p: #6c5ce7; --bg: #13132b; --card: rgba(255, 255, 255, 0.08); --gold: #f1c40f; --red: #ff4757; --online: #2ecc71; }
+        :root { --p: #6c5ce7; --bg: #13132b; --card: rgba(255, 255, 255, 0.08); --gold: #f1c40f; --red: #ff4757; }
         * { margin:0; padding:0; box-sizing:border-box; font-family: 'Segoe UI', sans-serif; -webkit-tap-highlight-color: transparent; }
         body { background: #13132b; color: white; height: 100vh; overflow: hidden; }
-        
-        #auth-screen, #contacts-screen, #chat-screen, #call-screen { padding: 20px; height: 100vh; display: none; flex-direction: column; }
-        
-        /* ЭКРАН ЗВОНКА (ТВОЙ КОНЦЕПТ) */
-        #call-screen { background: radial-gradient(circle at center, #2e2e5d 0%, #13132b 100%); justify-content: space-around; align-items: center; z-index: 1000; position: fixed; top: 0; left: 0; width: 100%; }
-        .call-name { font-size: 48px; font-weight: bold; color: #cbd3f1; text-align: center; }
-        .call-timer { font-size: 32px; color: #a29bfe; font-family: monospace; }
-        .call-avatar { width: 140px; height: 140px; border-radius: 50%; background: var(--p); display: flex; align-items: center; justify-content: center; font-size: 60px; position: relative; }
-        .call-avatar::after { content: ''; position: absolute; width: 100%; height: 100%; border: 2px solid var(--p); border-radius: 50%; animation: pulse 2s infinite; }
-        @keyframes pulse { 0% { transform: scale(1); opacity: 1; } 100% { transform: scale(1.6); opacity: 0; } }
-        
-        .call-btns { display: flex; gap: 30px; }
-        .c-btn { width: 80px; height: 80px; border-radius: 50%; border: none; display: flex; align-items: center; justify-content: center; cursor: pointer; box-shadow: 0 10px 20px rgba(0,0,0,0.3); }
-        .hangup { background: var(--red); }
-        .accept { background: var(--online); }
 
-        /* ИНТЕРФЕЙС ЧАТОВ */
-        .glass-card { margin: auto; width: 100%; max-width: 340px; text-align: center; background: rgba(255, 255, 255, 0.05); padding: 30px; border-radius: 30px; backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.1); }
-        input { width: 100%; padding: 16px; margin: 10px 0; border-radius: 18px; border: none; background: rgba(255,255,255,0.1); color: white; outline: none; }
-        .btn-p { width: 100%; padding: 16px; border-radius: 18px; border: none; background: var(--p); color: white; font-weight: bold; }
-        .contact-card { background: var(--card); padding: 18px; border-radius: 22px; display: flex; align-items: center; gap: 15px; margin-bottom: 12px; cursor: pointer; border: 1px solid rgba(255,255,255,0.03); }
-        .avatar { width: 50px; height: 50px; border-radius: 15px; background: var(--p); display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 22px; position: relative; }
-        .status-dot { width: 14px; height: 14px; border-radius: 50%; position: absolute; bottom: -3px; right: -3px; border: 3px solid #13132b; }
-        .online { background: var(--online); }
-        .offline { background: #555; }
-        
-        #messages { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; padding-bottom: 100px; }
-        .msg { max-width: 80%; padding: 12px 16px; border-radius: 20px; background: var(--card); align-self: flex-start; line-height: 1.4; }
-        .my { align-self: flex-end; background: var(--p); border-bottom-right-radius: 5px; }
-        .shiny-nick { background: linear-gradient(to right, #f1c40f, #ffeb3b, #f1c40f); -webkit-background-clip: text; color: transparent; animation: shine 3s infinite linear; font-weight: bold; }
-        @keyframes shine { 0% { background-position: 0% 50%; } 100% { background-position: 200% 50%; } }
-        #admin-btn { position: fixed; top: 22px; right: 80px; font-size: 24px; background: none; border: none; z-index: 200; display: none; filter: drop-shadow(0 0 5px var(--gold)); }
+        /* ЭКРАН ЗВОНКА (ТВОЙ КОНЦЕПТ) */
+        #call-screen { background: #1a1a3a; justify-content: space-around; align-items: center; z-index: 1000; position: fixed; inset: 0; display: none; flex-direction: column; }
+        .call-name { font-size: 52px; font-weight: bold; color: #cbd3f1; }
+        .call-timer { font-size: 40px; color: #a29bfe; }
+        .hangup-btn { width: 95px; height: 95px; background: #c0392b; border-radius: 50%; border: none; display: flex; align-items: center; justify-content: center; box-shadow: 0 0 30px rgba(192, 57, 43, 0.5); }
+        .call-avatar { width: 150px; height: 150px; border-radius: 50%; background: var(--p); display: flex; align-items: center; justify-content: center; font-size: 60px; position: relative; }
+        .call-avatar::after { content: ''; position: absolute; inset: 0; border: 3px solid var(--p); border-radius: 50%; animation: wave 2s infinite; }
+        @keyframes wave { 0% { transform: scale(1); opacity: 1; } 100% { transform: scale(1.7); opacity: 0; } }
+
+        /* ИНТЕРФЕЙС */
+        #auth-screen, #contacts-screen, #chat-screen { padding: 20px; height: 100vh; display: none; flex-direction: column; }
+        .contact-card { background: var(--card); padding: 22px; border-radius: 28px; display: flex; align-items: center; gap: 15px; margin-bottom: 12px; cursor: pointer; }
+        .avatar { width: 55px; height: 55px; border-radius: 18px; background: var(--p); display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 24px; position: relative; }
+        .status-dot { width: 14px; height: 14px; border-radius: 50%; position: absolute; bottom: -2px; right: -2px; border: 3px solid #13132b; }
+
+        #messages { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; padding: 10px 0 100px 0; }
+        .msg { max-width: 85%; padding: 14px 20px; border-radius: 25px; background: #252545; align-self: flex-start; }
+        .my { align-self: flex-end; background: #5c5ce0; }
+        .msg img { max-width: 100%; border-radius: 15px; margin-top: 8px; }
+        .msg-author { font-size: 12px; color: var(--gold); font-weight: bold; margin-bottom: 5px; display: block; }
+
+        .input-area { position: fixed; bottom: 20px; left: 15px; right: 15px; display: flex; gap: 12px; align-items: center; }
+        .msg-input { flex: 1; background: #252545; border: none; padding: 18px 25px; border-radius: 30px; color: white; outline: none; }
+        #attach-panel { display: none; background: #1a1a3a; border-radius: 30px 30px 0 0; padding: 25px; position: fixed; bottom: 90px; left: 0; right: 0; border-top: 1px solid rgba(255,255,255,0.1); }
+
+        .shiny-nick { background: linear-gradient(90deg, #f1c40f, #ffee58, #f1c40f); -webkit-background-clip: text; color: transparent; animation: s-move 3s infinite linear; font-weight: 800; }
+        @keyframes s-move { 0% { background-position: -200%; } 100% { background-position: 200%; } }
+        #admin-btn { position: fixed; top: 22px; right: 80px; font-size: 26px; z-index: 200; cursor: pointer; display: none; }
     </style>
 </head>
 <body>
 
     <div id="call-screen">
         <div style="text-align: center;">
-            <div class="call-name" id="call-user-name">Загрузка...</div>
-            <div class="call-avatar" id="call-user-avatar">?</div>
-            <div class="call-timer" id="call-timer">00:00</div>
+            <div class="call-name" id="c-name">Анюта</div>
+            <div class="call-avatar" id="c-ava">А</div>
+            <div class="call-timer" id="c-timer">2</div>
         </div>
-        <div class="call-btns" id="call-actions">
-            </div>
-    </div>
-
-    <button id="admin-btn" onclick="document.getElementById('admin-panel').style.display='block'">👑</button>
-
-    <div id="auth-screen">
-        <div class="glass-card"><h1>GrigorovChat 1.2</h1>
-            <input type="email" id="u-email" placeholder="Email">
-            <input type="text" id="u-nick" placeholder="Имя" style="display:none">
-            <input type="password" id="pass" placeholder="Пароль">
-            <button class="btn-p" onclick="handleAuth()">Войти</button>
-            <p onclick="toggleMode()" style="margin-top:20px; cursor:pointer; opacity:0.5">Регистрация</p>
-        </div>
+        <button class="hangup-btn" onclick="endCall()"><img src="https://cdn-icons-png.flaticon.com/512/2991/2991174.png" width="45" style="filter:invert(1)"></button>
     </div>
 
     <div id="contacts-screen">
-        <header style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
-            <h1>Чаты</h1>
-            <button onclick="logout()" style="opacity:0.6; background:none; border:none; color:white;">Выход</button>
+        <header style="display:flex; justify-content:space-between; align-items:center; margin-bottom:25px;">
+            <h1 style="font-size:32px;">Чаты</h1>
+            <button onclick="logout()" style="background:none; border:none; color:white; opacity:0.6">Выход</button>
         </header>
-        <div id="user-list"></div>
+        <div id="u-list"></div>
     </div>
 
     <div id="chat-screen">
         <header style="display:flex; align-items:center; justify-content:space-between; margin-bottom:20px">
             <div style="display:flex; align-items:center; gap:15px">
-                <div onclick="closeChat()" style="cursor:pointer; background:rgba(255,255,255,0.1); width:42px; height:42px; border-radius:15px; display:flex; align-items:center; justify-content:center">←</div>
-                <b id="active-chat-name">Имя</b>
+                <div onclick="back()" style="font-size:24px; cursor:pointer">←</div>
+                <b id="chat-title" style="font-size:20px">Имя</b>
             </div>
-            <button onclick="initiateCall()" style="background:none; border:none; font-size:24px;">📞</button>
+            <span onclick="startVoiceCall()" style="font-size:26px; cursor:pointer">📞</span>
         </header>
         <div id="messages"></div>
-        <div style="position:fixed; bottom:25px; left:20px; right:20px; display:flex; gap:10px;">
-            <input type="text" id="msg-inp" placeholder="Сообщение..." style="flex:1; margin:0">
-            <button onclick="sendMsg()" style="background:var(--p); border:none; width:55px; border-radius:20px; color:white">➤</button>
+        <div id="attach-panel">
+            <label style="display:flex; flex-direction:column; align-items:center;">
+                <input type="file" accept="image/*" style="display:none" onchange="upImg(this)">
+                <div style="width:70px; height:70px; background:rgba(255,255,255,0.05); border-radius:20px; display:flex; align-items:center; justify-content:center; font-size:30px">🖼️</div>
+                <span>Фото</span>
+            </label>
+        </div>
+        <div class="input-area">
+            <span onclick="toggleAtt()" style="font-size:28px; cursor:pointer">📎</span>
+            <input type="text" id="m-inp" class="msg-input" placeholder="Сообщение...">
+            <button onclick="send()" style="background:var(--p); border:none; width:60px; height:60px; border-radius:50%; color:white">➤</button>
+        </div>
+    </div>
+
+    <div id="auth-screen">
+        <div style="background:var(--card); padding:40px; border-radius:30px; text-align:center; width:340px; margin:auto">
+            <h2>GrigorovChat</h2>
+            <input type="email" id="ae" placeholder="Email" class="msg-input" style="width:100%; margin-top:20px">
+            <input type="text" id="an" placeholder="Имя" class="msg-input" style="width:100%; margin-top:10px; display:none">
+            <input type="password" id="ap" placeholder="Пароль" class="msg-input" style="width:100%; margin-top:10px">
+            <button onclick="auth()" style="width:100%; margin-top:20px; padding:18px; border-radius:20px; background:var(--p); border:none; color:white; font-weight:bold">Войти</button>
+            <p onclick="regMode()" style="margin-top:20px; opacity:0.5; font-size:14px; cursor:pointer">Регистрация</p>
         </div>
     </div>
 
 <script>
-    const { Client, Account, Databases, ID, Query } = Appwrite;
+    const { Client, Account, Databases, Storage, ID, Query } = Appwrite;
     const client = new Client().setEndpoint('https://cloud.appwrite.io/v1').setProject('695824a900049124f435');
-    const acc = new Account(client), db = new Databases(client);
+    const acc = new Account(client), db = new Databases(client), st = new Storage(client);
     
-    const D_ID = '695825270032517f8888', C_MSGS = 'messages', C_USERS = 'users';
-    const ADMIN_EMAIL = 'daniilgrigorov26@gmail.com';
-    let me = null, opponent = null, allUsers = {}, myDocId = null, callInt = null;
+    const D_ID = '695825270032517f8888', C_M = 'messages', C_U = 'users', B_ID = '696289e3001b875d11ad';
+    let me = null, target = null, users = {}, myId = null, peer = null, callTimer = null;
 
     async function init() {
         try {
             me = await acc.get();
-            if (me.email === ADMIN_EMAIL) document.getElementById('admin-btn').style.display = 'block';
             show('contacts-screen');
-            await loadUsers();
-            
-            // Realtime подписка на сообщения и звонки
-            client.subscribe(`databases.${D_ID}.collections.${C_MSGS}.documents`, () => loadMessages());
-            client.subscribe(`databases.${D_ID}.collections.${C_USERS}.documents`, res => {
-                const u = res.payload;
-                allUsers[u.email] = u;
-                renderUsers();
-                
-                // Проверка входящего звонка для меня
-                if (u.email === me.email && u.calling_status && u.calling_status !== 'idle') {
-                    handleIncomingCall(u.calling_status);
-                } else if (u.email === me.email && u.calling_status === 'idle') {
-                    closeCallUI();
+            await sync();
+            initPeer();
+
+            client.subscribe(`databases.${D_ID}.collections.${C_M}.documents`, () => loadMsgs());
+            client.subscribe(`databases.${D_ID}.collections.${C_U}.documents`, r => {
+                users[r.payload.email] = r.payload;
+                renderU();
+                if(r.payload.email === me.email && r.payload.calling_status && r.payload.calling_status !== 'idle') {
+                    receiveCall(r.payload.calling_status);
                 }
             });
-
-            // "Сердцебиение"
-            setInterval(async () => { if(myDocId) await db.updateDocument(D_ID, C_USERS, myDocId, { last_seen: new Date().toISOString() }); }, 60000);
-        } catch (e) { show('auth-screen'); }
+            setInterval(async () => { if(myId) await db.updateDocument(D_ID, C_U, myId, { last_seen: new Date().toISOString() }); }, 60000);
+        } catch(e) { show('auth-screen'); }
     }
 
-    // --- ЛОГИКА ЗВОНКА ---
-    async function initiateCall() {
-        if (!opponent || !opponent.$id) return;
-        // Ставим оппоненту статус, что МЫ ему звоним
-        await db.updateDocument(D_ID, C_USERS, opponent.$id, { calling_status: me.email });
-        setupCallUI(opponent.name, 'Исходящий...');
+    // --- ГОЛОС (PeerJS) ---
+    function initPeer() {
+        peer = new Peer(me.email.replace(/[^a-zA-Z0-9]/g, ""));
+        peer.on('call', async call => {
+            const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+            call.answer(stream);
+            call.on('stream', s => { const a = new Audio(); a.srcObject = s; a.play(); });
+        });
     }
 
-    function handleIncomingCall(callerEmail) {
-        const caller = allUsers[callerEmail];
-        setupCallUI(caller ? caller.name : callerEmail, 'Входящий...', true);
+    async function startVoiceCall() {
+        await db.updateDocument(D_ID, C_U, target.$id, { calling_status: me.email });
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        const call = peer.call(target.email.replace(/[^a-zA-Z0-9]/g, ""), stream);
+        call.on('stream', s => { const a = new Audio(); a.srcObject = s; a.play(); });
+        setupCallUI(target.name);
     }
 
-    function setupCallUI(name, statusText, isIncoming = false) {
-        document.getElementById('call-user-name').innerText = name;
-        document.getElementById('call-user-avatar').innerText = name[0];
-        document.getElementById('call-timer').innerText = statusText;
-        
-        const actions = document.getElementById('call-actions');
-        actions.innerHTML = '';
-        
-        if (isIncoming) {
-            actions.innerHTML = `
-                <button class="c-btn accept" onclick="acceptCall()">✅</button>
-                <button class="c-btn hangup" onclick="endCall()">❌</button>`;
-        } else {
-            actions.innerHTML = `<button class="c-btn hangup" onclick="endCall()">❌</button>`;
-        }
+    function receiveCall(email) {
+        const caller = users[email];
+        if(caller) setupCallUI(caller.name);
+    }
+
+    function setupCallUI(name) {
+        document.getElementById('c-name').innerText = name;
+        document.getElementById('c-ava').innerText = name[0];
         show('call-screen');
-    }
-
-    function acceptCall() {
-        let sec = 0;
-        document.getElementById('call-timer').innerText = "00:00";
-        callInt = setInterval(() => {
-            sec++;
-            let m = Math.floor(sec/60).toString().padStart(2,'0'), s = (sec%60).toString().padStart(2,'0');
-            document.getElementById('call-timer').innerText = `${m}:${s}`;
-        }, 1000);
+        let s = 2;
+        callTimer = setInterval(() => { s++; document.getElementById('c-timer').innerText = s; }, 1000);
     }
 
     async function endCall() {
-        if (opponent && opponent.$id) {
-            await db.updateDocument(D_ID, C_USERS, opponent.$id, { calling_status: 'idle' });
-        }
-        await db.updateDocument(D_ID, C_USERS, myDocId, { calling_status: 'idle' });
-        closeCallUI();
+        clearInterval(callTimer);
+        if(target) await db.updateDocument(D_ID, C_U, target.$id, { calling_status: 'idle' });
+        await db.updateDocument(D_ID, C_U, myId, { calling_status: 'idle' });
+        location.reload();
     }
 
-    function closeCallUI() {
-        clearInterval(callInt);
-        show('chat-screen');
+    // --- БАЗОВЫЕ ---
+    async function sync() {
+        const r = await db.listDocuments(D_ID, C_U);
+        r.documents.forEach(u => { users[u.email] = u; if(u.email === me.email) myId = u.$id; });
+        renderU();
     }
-
-    // --- БАЗОВЫЕ ФУНКЦИИ ---
-    async function loadUsers() {
-        const res = await db.listDocuments(D_ID, C_USERS);
-        res.documents.forEach(u => {
-            allUsers[u.email] = u;
-            if (u.email === me.email) myDocId = u.$id;
-        });
-        renderUsers();
-    }
-
-    function renderUsers() {
-        const list = document.getElementById('user-list'); list.innerHTML = "";
-        Object.values(allUsers).forEach(u => {
-            if (u.email === me.email) return;
-            const isOnline = u.last_seen && (new Date() - new Date(u.last_seen) < 120000);
-            const card = document.createElement('div');
-            card.className = 'contact-card';
-            card.onclick = () => { opponent = u; document.getElementById('active-chat-name').innerText = u.name; show('chat-screen'); loadMessages(); };
-            card.innerHTML = `<div class="avatar">${u.name[0]}<div class="status-dot ${isOnline?'online':'offline'}"></div></div><b>${u.name}</b>`;
-            list.appendChild(card);
+    function renderU() {
+        const l = document.getElementById('u-list'); l.innerHTML = '';
+        const fam = document.createElement('div'); fam.className = 'contact-card';
+        fam.onclick = () => openChat('fam', 'Фэмели');
+        fam.innerHTML = `<div class="avatar" style="border:2px solid var(--gold)">Ф</div><b>Фэмели</b>`;
+        l.appendChild(fam);
+        Object.values(users).forEach(u => {
+            if(u.email === me.email) return;
+            const online = u.last_seen && (new Date() - new Date(u.last_seen) < 120000);
+            const d = document.createElement('div'); d.className = 'contact-card';
+            d.onclick = () => openChat(u.email, u.name);
+            d.innerHTML = `<div class="avatar">${u.name[0]}<div class="status-dot" style="background:${online?'#2ecc71':'#555'}"></div></div><b>${u.name}</b>`;
+            l.appendChild(d);
         });
     }
-
-    async function loadMessages() {
-        if (!opponent) return;
-        const res = await db.listDocuments(D_ID, C_MSGS, [Query.orderDesc("$createdAt"), Query.limit(40)]);
-        const box = document.getElementById('messages'); box.innerHTML = '';
-        res.documents.filter(m => (m.sender === me.email && m.receiver === opponent.email) || (m.sender === opponent.email && m.receiver === me.email))
-            .reverse().forEach(m => {
-                const d = document.createElement('div');
-                d.className = `msg ${m.sender === me.email ? 'my' : ''}`;
-                d.innerText = m.text;
-                box.appendChild(d);
-            });
-        box.scrollTop = box.scrollHeight;
+    function openChat(id, name) { target = id === 'fam' ? { email: 'fam', name: 'Фэмели' } : users[id]; document.getElementById('chat-title').innerText = name; show('chat-screen'); loadMsgs(); }
+    async function loadMsgs() {
+        if(!target) return;
+        const r = await db.listDocuments(D_ID, C_M, [Query.orderDesc("$createdAt"), Query.limit(50)]);
+        const b = document.getElementById('messages'); b.innerHTML = '';
+        const f = target.email === 'fam' ? r.documents.filter(m => m.receiver === 'fam') : r.documents.filter(m => (m.sender === me.email && m.receiver === target.email) || (m.sender === target.email && m.receiver === me.email));
+        f.reverse().forEach(m => {
+            const isMy = m.sender === me.email; const u = users[m.sender];
+            const d = document.createElement('div'); d.className = `msg ${isMy?'my':''}`;
+            let auth = (target.email==='fam' && !isMy) ? `<span class="msg-author ${u?.is_shiny?'shiny-nick':''}">${u?.name||'BOSS'}</span>` : '';
+            if(m.text.startsWith('IMG:')) d.innerHTML = `${auth}<img src="${m.text.replace('IMG:','')}">`;
+            else d.innerHTML = `${auth}${m.text}`;
+            b.appendChild(d);
+        });
+        b.scrollTop = b.scrollHeight;
     }
-
-    async function sendMsg() {
-        const inp = document.getElementById('msg-inp'); if(!inp.value.trim()) return;
-        await db.createDocument(D_ID, C_MSGS, ID.unique(), { text: inp.value, sender: me.email, receiver: opponent.email });
-        inp.value = "";
-    }
-
-    async function handleAuth() {
-        const e = document.getElementById('u-email').value, p = document.getElementById('pass').value, n = document.getElementById('u-nick').value;
+    async function send() { const i = document.getElementById('m-inp'); if(!i.value.trim()) return; await db.createDocument(D_ID, C_M, ID.unique(), { text: i.value, sender: me.email, receiver: target.email }); i.value = ''; }
+    async function upImg(el) { if(!el.files[0]) return; const f = await st.createFile(B_ID, ID.unique(), el.files[0]); const url = `https://cloud.appwrite.io/v1/storage/buckets/${B_ID}/files/${f.$id}/view?project=${client.config.project}`; await db.createDocument(D_ID, C_M, ID.unique(), { text: `IMG:${url}`, sender: me.email, receiver: target.email }); toggleAtt(); }
+    async function auth() {
+        const e = document.getElementById('ae').value, p = document.getElementById('ap').value, n = document.getElementById('an').value;
         try {
-            if (document.getElementById('u-nick').style.display === 'block') {
-                await acc.create(ID.unique(), e, p, n);
-                await acc.createEmailSession(e, p);
-                await db.createDocument(D_ID, C_USERS, ID.unique(), { name: n, email: e, calling_status: 'idle' });
+            if(document.getElementById('an').style.display === 'block') {
+                await acc.create(ID.unique(), e, p, n); await acc.createEmailSession(e, p);
+                await db.createDocument(D_ID, C_U, ID.unique(), { name: n, email: e, is_shiny: false, calling_status: 'idle' });
             } else await acc.createEmailSession(e, p);
             location.reload();
-        } catch (err) { alert(err.message); }
+        } catch(err) { alert(err.message); }
     }
-
-    function toggleMode() { const n = document.getElementById('u-nick'); n.style.display = n.style.display === 'none' ? 'block' : 'none'; }
-    function show(id) { ['auth-screen', 'contacts-screen', 'chat-screen', 'call-screen'].forEach(s => document.getElementById(s).style.display = 'none'); document.getElementById(id).style.display = 'flex'; }
-    function closeChat() { opponent = null; show('contacts-screen'); }
+    function regMode() { document.getElementById('an').style.display='block'; }
+    function toggleAtt() { const p = document.getElementById('attach-panel'); p.style.display = p.style.display==='block'?'none':'block'; }
+    function show(id) { document.querySelectorAll('body > div').forEach(d => d.style.display='none'); document.getElementById(id).style.display='flex'; }
+    function back() { target = null; show('contacts-screen'); }
     function logout() { acc.deleteSession('current'); location.reload(); }
     init();
 </script>
