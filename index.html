@@ -223,7 +223,7 @@
 <body>
 
     <div id="admin-panel">
-        <h2 style="text-align:center; color: var(--gold); margin-bottom: 20px;">👑 BOSS Управление</h2>
+        <h2 style="text-align:center; color: var(--gold); margin-bottom: 20px;">👑 АДМИН ПАНЕЛЬ</h2>
         <div style="display:grid; grid-template-columns: 1fr 1fr; gap:15px;">
             <div class="glass-card" onclick="toggleShinyNickDB()" style="max-width:none; margin:0;">
                 <span style="font-size:30px; display:block">✨</span>
@@ -242,7 +242,7 @@
     <div id="auth-screen">
         <div class="glass-card">
             <h1 style="margin-bottom:10px">GrigorovChat</h1>
-            <p style="opacity:0.5; margin-bottom:20px; font-size:12px">v1.3.1 Full Power</p>
+            <p style="opacity:0.5; margin-bottom:20px; font-size:12px">v1.2.3 (beta 1)</p>
             <input type="email" id="u-email" placeholder="Электронная почта">
             <input type="text" id="u-nick" placeholder="Твое имя" style="display:none">
             <input type="password" id="pass" placeholder="Пароль">
@@ -271,7 +271,7 @@
                 <label style="text-align:center; cursor:pointer">
                     <input type="file" id="file-inp" accept="image/*" style="display:none" onchange="uploadPhoto(this)">
                     <div style="width:65px; height:65px; background:rgba(255,255,255,0.1); border-radius:20px; display:flex; align-items:center; justify-content:center; font-size:28px; margin-bottom:5px">🖼️</div>
-                    <span style="font-size:12px">Галерея</span>
+                    <span style="font-size:12px">Фото</span>
                 </label>
             </div>
         </div>
@@ -327,7 +327,7 @@
         const fCard = document.createElement('div');
         fCard.className = 'contact-card';
         fCard.onclick = () => openChat(FAMILY_ID, 'Фэмели', true);
-        fCard.innerHTML = `<div class="avatar avatar-family">Ф</div><div><b>Фэмели</b><p style="font-size:10px; opacity:0.5">Общий семейный чат</p></div>`;
+        fCard.innerHTML = `<div class="avatar avatar-family">Ф</div><div><b>Фэмели</b><p style="font-size:10px; opacity:0.5">Семейный чат</p></div>`;
         list.appendChild(fCard);
 
         // ПОЛЬЗОВАТЕЛИ
