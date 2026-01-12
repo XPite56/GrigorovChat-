@@ -3,37 +3,169 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>GrigorovChat v1.2</title>
+    <title>GrigorovChat v1.2.3</title>
     <script src="https://cdn.jsdelivr.net/npm/appwrite@13.0.1"></script>
     <style>
-        :root { --p: #6c5ce7; --bg: #13132b; --card: rgba(255, 255, 255, 0.08); --gold: #f1c40f; --red: #ff4757; --online: #2ecc71; --offline: #95a5a6; }
-        * { margin:0; padding:0; box-sizing:border-box; font-family: 'Segoe UI', sans-serif; -webkit-tap-highlight-color: transparent; }
-        body { background: radial-gradient(circle at center, #2e2e5d 0%, #13132b 100%); color: white; height: 100vh; overflow: hidden; }
+        :root { 
+            --p: #6c5ce7; 
+            --bg: #13132b; 
+            --card: rgba(255, 255, 255, 0.08); 
+            --gold: #f1c40f; 
+            --red: #ff4757; 
+            --online: #2ecc71; 
+            --offline: #95a5a6; 
+        }
+
+        * { 
+            margin: 0; 
+            padding: 0; 
+            box-sizing: border-box; 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+            -webkit-tap-highlight-color: transparent; 
+        }
+
+        body { 
+            background: radial-gradient(circle at center, #2e2e5d 0%, #13132b 100%); 
+            color: white; 
+            height: 100vh; 
+            overflow: hidden; 
+        }
         
-        #auth-screen, #contacts-screen, #chat-screen { padding: 20px; height: 100vh; display: none; flex-direction: column; }
-        .glass-card { margin: auto; width: 100%; max-width: 340px; text-align: center; background: rgba(255, 255, 255, 0.05); padding: 30px; border-radius: 30px; backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.1); }
-        input { width: 100%; padding: 16px; margin: 10px 0; border-radius: 18px; border: none; background: rgba(255,255,255,0.1); color: white; outline: none; }
-        .btn-p { width: 100%; padding: 16px; border-radius: 18px; border: none; background: var(--p); color: white; font-weight: bold; cursor: pointer; }
+        #auth-screen, #contacts-screen, #chat-screen { 
+            padding: 20px; 
+            height: 100vh; 
+            display: none; 
+            flex-direction: column; 
+        }
+
+        /* ТВОЙ СТЕКЛЯННЫЙ ДИЗАЙН 1.2 */
+        .glass-card { 
+            margin: auto; 
+            width: 100%; 
+            max-width: 340px; 
+            text-align: center; 
+            background: rgba(255, 255, 255, 0.05); 
+            padding: 30px; 
+            border-radius: 30px; 
+            backdrop-filter: blur(20px); 
+            border: 1px solid rgba(255,255,255,0.1); 
+        }
+
+        input { 
+            width: 100%; 
+            padding: 16px; 
+            margin: 10px 0; 
+            border-radius: 18px; 
+            border: none; 
+            background: rgba(255,255,255,0.1); 
+            color: white; 
+            outline: none; 
+        }
+
+        .btn-p { 
+            width: 100%; 
+            padding: 16px; 
+            border-radius: 18px; 
+            border: none; 
+            background: var(--p); 
+            color: white; 
+            font-weight: bold; 
+            cursor: pointer; 
+            transition: 0.3s;
+        }
+        .btn-p:active { transform: scale(0.95); }
         
-        /* Карточка контакта с индикатором статуса */
-        .contact-card { background: var(--card); padding: 15px; border-radius: 20px; display: flex; align-items: center; gap: 12px; margin-bottom: 10px; cursor: pointer; border: 1px solid rgba(255,255,255,0.05); position: relative; transition: 0.2s; }
+        /* КАРТОЧКА КОНТАКТА */
+        .contact-card { 
+            background: var(--card); 
+            padding: 15px; 
+            border-radius: 20px; 
+            display: flex; 
+            align-items: center; 
+            gap: 12px; 
+            margin-bottom: 10px; 
+            cursor: pointer; 
+            border: 1px solid rgba(255,255,255,0.05); 
+            position: relative; 
+            transition: 0.2s; 
+        }
         .contact-card:active { transform: scale(0.98); background: rgba(255,255,255,0.1); }
         
-        .avatar { width: 45px; height: 45px; border-radius: 15px; background: var(--p); display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 20px; position: relative; }
-        .avatar-family { background: linear-gradient(45deg, #6c5ce7, #a29bfe); border: 2px solid var(--gold); }
+        .avatar { 
+            width: 45px; 
+            height: 45px; 
+            border-radius: 15px; 
+            background: var(--p); 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            font-weight: bold; 
+            font-size: 20px; 
+            position: relative; 
+        }
+        .avatar-family { 
+            background: linear-gradient(45deg, #6c5ce7, #a29bfe); 
+            border: 2px solid var(--gold); 
+        }
         
-        /* Точка статуса */
-        .status-dot { width: 12px; height: 12px; border-radius: 50%; border: 2px solid var(--card); position: absolute; bottom: -2px; right: -2px; z-index: 10; }
+        .status-dot { 
+            width: 12px; 
+            height: 12px; 
+            border-radius: 50%; 
+            border: 2px solid #1e1e3f; 
+            position: absolute; 
+            bottom: -2px; 
+            right: -2px; 
+            z-index: 10; 
+        }
         .online { background: var(--online); box-shadow: 0 0 5px var(--online); }
         .offline { background: var(--offline); }
 
-        #messages { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; padding-bottom: 100px; }
-        .msg { max-width: 80%; padding: 10px 14px; border-radius: 18px; background: var(--card); align-self: flex-start; position: relative; }
-        .msg-author { font-size: 11px; color: var(--gold); font-weight: bold; display: block; margin-bottom: 4px; }
-        .my { align-self: flex-end; background: var(--p); border-bottom-right-radius: 4px; }
-        .msg img { max-width: 100%; border-radius: 12px; margin-top: 5px; }
+        /* МЕССЕДЖИ */
+        #messages { 
+            flex: 1; 
+            overflow-y: auto; 
+            display: flex; 
+            flex-direction: column; 
+            gap: 12px; 
+            padding-bottom: 100px; 
+        }
+        .msg { 
+            max-width: 80%; 
+            padding: 10px 14px; 
+            border-radius: 18px; 
+            background: var(--card); 
+            align-self: flex-start; 
+            position: relative; 
+            word-wrap: break-word;
+            cursor: pointer;
+        }
+        .msg-time { 
+            font-size: 9px; 
+            opacity: 0.5; 
+            display: block;
+            text-align: right;
+            margin-top: 4px;
+        }
+        .msg-author { 
+            font-size: 11px; 
+            color: var(--gold); 
+            font-weight: bold; 
+            display: block; 
+            margin-bottom: 4px; 
+        }
+        .my { 
+            align-self: flex-end; 
+            background: var(--p); 
+            border-bottom-right-radius: 4px; 
+        }
+        .msg img { 
+            max-width: 100%; 
+            border-radius: 12px; 
+            margin-top: 5px; 
+        }
 
-        /* Эффект Сияющего Ника (Глобальный) */
+        /* ЭФФЕКТ BOSS */
         .shiny-nick {
             background: linear-gradient(to right, #f1c40f, #ffeb3b, #f1c40f);
             -webkit-background-clip: text;
@@ -43,55 +175,86 @@
             text-shadow: 0 0 10px rgba(241, 196, 15, 0.5);
             font-weight: 800;
         }
-        @keyframes shine { 0% { background-position: 0% 50%; } 100% { background-position: 200% 50%; } }
+        @keyframes shine { 
+            0% { background-position: 0% 50%; } 
+            100% { background-position: 200% 50%; } 
+        }
 
-        /* Админ-кнопка */
-        #admin-btn { position: fixed; top: 22px; right: 80px; font-size: 22px; background: none; border: none; cursor: pointer; z-index: 200; display: none; filter: drop-shadow(0 0 5px var(--gold)); }
+        #admin-btn { 
+            position: fixed; 
+            top: 22px; 
+            right: 80px; 
+            font-size: 22px; 
+            background: none; 
+            border: none; 
+            cursor: pointer; 
+            z-index: 200; 
+            display: none; 
+            filter: drop-shadow(0 0 5px var(--gold)); 
+        }
         
-        #admin-panel { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 300; padding: 30px; overflow-y: auto; }
-        .admin-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 20px; }
-        .admin-card { background: rgba(255,255,255,0.1); padding: 20px; border-radius: 20px; text-align: center; cursor: pointer; border: 1px solid var(--p); transition: 0.2s; }
-        .admin-card:active { transform: scale(0.95); background: var(--p); }
-        .admin-icon { font-size: 30px; display: block; margin-bottom: 10px; }
+        #admin-panel { 
+            display: none; 
+            position: fixed; 
+            top: 0; 
+            left: 0; 
+            width: 100%; 
+            height: 100%; 
+            background: rgba(0,0,0,0.95); 
+            z-index: 300; 
+            padding: 30px; 
+            overflow-y: auto; 
+        }
 
-        #attach-panel { display: none; background: rgba(20, 20, 45, 0.98); border-radius: 25px 25px 0 0; padding: 20px; position: fixed; bottom: 85px; left: 0; right: 0; z-index: 100; backdrop-filter: blur(15px); }
-        .attach-grid { display: flex; gap: 20px; justify-content: space-around; }
-        .attach-item { display: flex; flex-direction: column; align-items: center; gap: 8px; cursor: pointer; }
-        .attach-icon { width: 60px; height: 60px; border-radius: 20px; background: rgba(255,255,255,0.1); display: flex; align-items: center; justify-content: center; font-size: 24px; }
+        #attach-panel { 
+            display: none; 
+            background: rgba(20, 20, 45, 0.98); 
+            border-radius: 25px 25px 0 0; 
+            padding: 20px; 
+            position: fixed; 
+            bottom: 85px; 
+            left: 0; 
+            right: 0; 
+            z-index: 100; 
+            backdrop-filter: blur(15px); 
+        }
     </style>
 </head>
 <body>
 
     <div id="admin-panel">
-        <h2 style="text-align:center; color: var(--gold)">👑 Admin</h2>
-        <div class="admin-grid">
-            <div class="admin-card" onclick="toggleShinyNickDB()">
-                <span class="admin-icon">✨</span>Ник: <span id="shiny-status">...</span>
+        <h2 style="text-align:center; color: var(--gold); margin-bottom: 20px;">👑 BOSS Управление</h2>
+        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:15px;">
+            <div class="glass-card" onclick="toggleShinyNickDB()" style="max-width:none; margin:0;">
+                <span style="font-size:30px; display:block">✨</span>
+                Ник: <span id="shiny-status">...</span>
             </div>
-            <div class="admin-card" onclick="spyEye()">
-                <span class="admin-icon">👁️</span>Шпион
+            <div class="glass-card" onclick="spyEye()" style="max-width:none; margin:0;">
+                <span style="font-size:30px; display:block">👁️</span>
+                Шпион
             </div>
-            <div class="admin-card" onclick="alert('Бан скоро!')"><span class="admin-icon">🔨</span>Бан</div>
         </div>
-        <button onclick="document.getElementById('admin-panel').style.display='none'" style="width:100%; padding:15px; margin-top:30px; background:var(--red); border:none; border-radius:15px; color:white; font-weight:bold">Закрыть</button>
+        <button onclick="document.getElementById('admin-panel').style.display='none'" class="btn-p" style="margin-top:30px; background:var(--red)">ЗАКРЫТЬ</button>
     </div>
 
     <button id="admin-btn" onclick="openAdmin()">👑</button>
 
     <div id="auth-screen">
-        <div class="glass-card"><h1>GrigorovChat</h1>
-            <input type="email" id="u-email" placeholder="Email">
-            <input type="text" id="u-nick" placeholder="Имя" style="display:none">
+        <div class="glass-card">
+            <h1 style="margin-bottom:10px">GrigorovChat</h1>
+            <p style="opacity:0.5; margin-bottom:20px; font-size:12px">v1.3.1 Full Power</p>
+            <input type="email" id="u-email" placeholder="Электронная почта">
+            <input type="text" id="u-nick" placeholder="Твое имя" style="display:none">
             <input type="password" id="pass" placeholder="Пароль">
-            <button class="btn-p" onclick="handleAuth()">Войти</button>
-            <p onclick="toggleMode()" id="toggle-text" style="margin-top:20px; cursor:pointer; opacity:0.5">Регистрация</p>
+            <button class="btn-p" onclick="handleAuth()">ВОЙТИ</button>
+            <p onclick="toggleMode()" id="toggle-text" style="margin-top:20px; cursor:pointer; opacity:0.5">У меня нет аккаунта</p>
         </div>
     </div>
 
     <div id="contacts-screen">
         <header style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
-            <h1>Чаты</h1>
-            <button onclick="logout()" style="opacity:0.6; background:none; border:none; color:white; font-size: 14px;">Выход</button>
+            <h1 style="font-size:32px; font-weight:800">Чаты</h1>
+            <button onclick="logout()" style="opacity:0.6; background:none; border:none; color:white; font-weight:bold">Выход</button>
         </header>
         <div id="user-list"></div>
     </div>
@@ -99,24 +262,24 @@
     <div id="chat-screen">
         <header style="margin-bottom:20px; display:flex; align-items:center; gap:15px">
             <div onclick="closeChat()" style="cursor:pointer; background:rgba(255,255,255,0.1); width:40px; height:40px; border-radius:15px; display:flex; align-items:center; justify-content:center">←</div>
-            <b id="active-chat-name">Чат</b>
+            <b id="active-chat-name" style="font-size:20px">Чат</b>
         </header>
         <div id="messages"></div>
         
         <div id="attach-panel">
-            <div class="attach-grid">
-                <label class="attach-item">
+            <div style="display:flex; justify-content:space-around;">
+                <label style="text-align:center; cursor:pointer">
                     <input type="file" id="file-inp" accept="image/*" style="display:none" onchange="uploadPhoto(this)">
-                    <div class="attach-icon">🖼️</div>
-                    <div class="attach-label">Фото</div>
+                    <div style="width:65px; height:65px; background:rgba(255,255,255,0.1); border-radius:20px; display:flex; align-items:center; justify-content:center; font-size:28px; margin-bottom:5px">🖼️</div>
+                    <span style="font-size:12px">Галерея</span>
                 </label>
             </div>
         </div>
 
-        <div style="position:fixed; bottom:25px; left:20px; right:20px; display:flex; gap:10px; align-items: center;">
-            <button onclick="toggleAttach()" style="background:none; border:none; font-size:24px; color:white;">📎</button>
-            <input type="text" id="msg-inp" placeholder="Сообщение..." style="margin:0; flex:1">
-            <button onclick="sendMsg()" style="background:var(--p); border:none; width:55px; height:55px; border-radius:20px; color:white">➤</button>
+        <div style="position:fixed; bottom:25px; left:20px; right:20px; display:flex; gap:12px; align-items: center;">
+            <button onclick="toggleAttach()" style="background:none; border:none; font-size:28px; color:white;">📎</button>
+            <input type="text" id="msg-inp" placeholder="Написать..." style="margin:0; flex:1">
+            <button onclick="sendMsg()" style="background:var(--p); border:none; width:55px; height:55px; border-radius:20px; color:white; font-size:20px">➤</button>
         </div>
     </div>
 
@@ -126,48 +289,26 @@
     const acc = new Account(client), db = new Databases(client), storage = new Storage(client);
     
     const D_ID = '695825270032517f8888', C_MSGS = 'messages', C_USERS = 'users', B_ID = '696289e3001b875d11ad';
-    const FAMILY_ID = 'family_group';
-    const ADMIN_EMAIL = 'daniilgrigorov26@gmail.com';
+    const FAMILY_ID = 'family_group', ADMIN_EMAIL = 'daniilgrigorov26@gmail.com';
 
-    let me = null, opponent = null, isFamily = false;
-    let allUsersData = {}; // Храним полные объекты пользователей (с атрибутами)
-    let myUserDocId = null;
+    let me = null, opponent = null, isFamily = false, allUsersData = {}, myUserDocId = null;
 
     async function init() {
         try {
             me = await acc.get();
             if (me.email === ADMIN_EMAIL) document.getElementById('admin-btn').style.display = 'block';
-            
             show('contacts-screen');
-            
-            // 1. Загружаем и ищем мой документ в users
             await initialLoadUsers();
-            
-            // 2. Запускаем "Сердцебиение" (Online статус)
             startHeartbeat();
 
-            // 3. Подписки (Realtime)
-            // Слушаем сообщения
-            client.subscribe(`databases.${D_ID}.collections.${C_MSGS}.documents`, res => {
-                const m = res.payload;
-                if (isFamily && m.receiver === FAMILY_ID) loadMessages();
-                else if (opponent && (m.sender === opponent.email || m.sender === me.email)) loadMessages();
-            });
-            
-            // Слушаем изменения в пользователях (кто-то зашел в сеть или сменил статус)
+            // REALTIME ПОДПИСКИ (БЕЗ СОКРАЩЕНИЙ)
+            client.subscribe(`databases.${D_ID}.collections.${C_MSGS}.documents`, () => { loadMessages(); });
             client.subscribe(`databases.${D_ID}.collections.${C_USERS}.documents`, res => {
-                // Обновляем данные конкретного пользователя
-                if (res.payload.$id) {
-                    allUsersData[res.payload.email] = res.payload; 
-                    renderUserList(); // Перерисовываем точки
-                    if (isFamily) loadMessages(); // Перерисовываем чат, если вдруг сменился ник
-                }
+                allUsersData[res.payload.email] = res.payload;
+                renderUserList();
             });
-
         } catch (e) { show('auth-screen'); }
     }
-
-    // --- LOGIC: ONLINE & USERS ---
 
     async function initialLoadUsers() {
         const res = await db.listDocuments(D_ID, C_USERS);
@@ -179,197 +320,147 @@
     }
 
     function renderUserList() {
-        const list = document.getElementById('user-list'); list.innerHTML = "";
+        const list = document.getElementById('user-list'); 
+        list.innerHTML = "";
         
-        // Фэмели Группа
-        const familyCard = document.createElement('div');
-        familyCard.className = 'contact-card';
-        familyCard.onclick = () => openChat(FAMILY_ID, 'Фэмели', true);
-        familyCard.innerHTML = `<div class="avatar avatar-family">Ф</div><div><b>Фэмели</b><p style="font-size:10px; opacity:0.6">Общий чат</p></div>`;
-        list.appendChild(familyCard);
+        // ФЭМЕЛИ
+        const fCard = document.createElement('div');
+        fCard.className = 'contact-card';
+        fCard.onclick = () => openChat(FAMILY_ID, 'Фэмели', true);
+        fCard.innerHTML = `<div class="avatar avatar-family">Ф</div><div><b>Фэмели</b><p style="font-size:10px; opacity:0.5">Общий семейный чат</p></div>`;
+        list.appendChild(fCard);
 
-        // Остальные пользователи
+        // ПОЛЬЗОВАТЕЛИ
         Object.values(allUsersData).forEach(u => {
             if (u.email === me.email) return;
-            
-            // Проверка онлайна (2 минуты = 120000 мс)
-            let isOnline = false;
-            if (u.last_seen) {
-                const diff = new Date() - new Date(u.last_seen);
-                if (diff < 12000) isOnline = true;
-            }
-
+            let isOnline = u.last_seen && (new Date() - new Date(u.last_seen) < 120000);
             const card = document.createElement('div');
             card.className = 'contact-card';
             card.onclick = () => openChat(u.email, u.name, false);
-            
-            // Если включен Shiny Mode у пользователя, показываем крутой ник и в списке (опционально)
-            // Но пока оставим простым. Добавим точку.
             card.innerHTML = `
                 <div class="avatar">
                     ${u.name[0].toUpperCase()}
-                    <div class="status-dot ${isOnline ? 'online' : 'offline'}"></div>
+                    <div class="status-dot ${isOnline?'online':'offline'}"></div>
                 </div>
-                <div><b>${u.name}</b></div>`;
+                <b>${u.name}</b>`;
             list.appendChild(card);
         });
     }
 
     async function startHeartbeat() {
         if (!myUserDocId) return;
-        
-        const beat = async () => {
-            try {
-                // Обновляем last_seen на текущее время
-                await db.updateDocument(D_ID, C_USERS, myUserDocId, { 
-                    last_seen: new Date().toISOString() 
-                });
-            } catch (e) { console.error("Err update status:", e); }
-        };
-        
-        await beat(); // Сразу
-        setInterval(beat, 60000); // И каждые 60 сек
+        const beat = () => db.updateDocument(D_ID, C_USERS, myUserDocId, { last_seen: new Date().toISOString() });
+        beat(); setInterval(beat, 60000);
     }
 
-    // --- LOGIC: ADMIN & MESSAGES ---
-
-    function openAdmin() {
-        document.getElementById('admin-panel').style.display = 'block';
-        // Обновляем статус кнопки при открытии (читаем из моих локальных данных)
-        const myData = allUsersData[me.email];
-        const isS = myData && myData.is_shiny;
-        updateAdminUI(isS);
-    }
-
-    async function toggleShinyNickDB() {
-        if (!myUserDocId) return;
-        const currentStatus = allUsersData[me.email].is_shiny || false;
-        const newStatus = !currentStatus;
-        
-        // Оптимистичное обновление UI
-        updateAdminUI(newStatus);
-        
-        try {
-            await db.updateDocument(D_ID, C_USERS, myUserDocId, { is_shiny: newStatus });
-        } catch(e) { 
-            alert("Ошибка сохранения статуса! Проверь, добавил ли ты атрибут 'is_shiny' (boolean) в базу данных?");
-            updateAdminUI(currentStatus); // Откат
-        }
-    }
-
-    function updateAdminUI(stat) {
-        const el = document.getElementById('shiny-status');
-        el.innerText = stat ? "ON" : "OFF";
-        el.style.color = stat ? "var(--gold)" : "white";
-    }
-
-    async function spyEye() {
-        try {
-            const files = await storage.listFiles(B_ID, [Query.orderDesc('$createdAt'), Query.limit(1)]);
-            if (files.files.length > 0) {
-                const url = `https://cloud.appwrite.io/v1/storage/buckets/${B_ID}/files/${files.files[0].$id}/view?project=${client.config.project}`;
-                window.open(url, '_blank');
-            } else { alert("Файлов нет!"); }
-        } catch(e) { alert(e.message); }
-    }
-
-    // --- STANDARD CHAT LOGIC ---
-
+    // ЛОГИКА ЧАТА (ВРЕМЯ + УДАЛЕНИЕ + РЕДАКТ)
     async function openChat(id, name, isFam) {
-        opponent = isFam ? { email: FAMILY_ID } : { email: id };
-        isFamily = isFam;
+        opponent = { email: id }; isFamily = isFam;
         document.getElementById('active-chat-name').innerText = name;
         show('chat-screen');
         loadMessages();
     }
 
     async function loadMessages() {
-        let queries = isFamily ? [Query.equal('receiver', FAMILY_ID)] : [];
-        const res = await db.listDocuments(D_ID, C_MSGS, [...queries, Query.orderDesc("$createdAt"), Query.limit(50)]);
-        const box = document.getElementById('messages'); box.innerHTML = '';
+        const res = await db.listDocuments(D_ID, C_MSGS, [Query.orderDesc("$createdAt"), Query.limit(50)]);
+        const box = document.getElementById('messages'); 
+        box.innerHTML = '';
         
-        let filtered = isFamily ? res.documents : res.documents.filter(m => 
-            (m.sender === me.email && m.receiver === opponent.email) || 
-            (m.sender === opponent.email && m.receiver === me.email)
-        );
+        let filtered = isFamily ? res.documents.filter(m => m.receiver === FAMILY_ID) : res.documents.filter(m => (m.sender === me.email && m.receiver === opponent.email) || (m.sender === opponent.email && m.receiver === me.email));
 
         filtered.reverse().forEach(m => {
             const d = document.createElement('div');
             const isMy = m.sender === me.email;
-            d.className = `msg ${isMy ? 'my' : ''}`;
+            const sData = allUsersData[m.sender];
+            const timeStr = new Date(m.$createdAt).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
             
-            // Проверяем статус отправителя через allUsersData
-            const senderData = allUsersData[m.sender];
-            const isShinyUser = senderData && senderData.is_shiny; // Проверяем поле из БД
+            d.className = `msg ${isMy ? 'my' : ''}`;
+            d.onclick = () => handleMsgAction(m);
 
-            let nameClass = "msg-author";
-            let displayName = senderData ? senderData.name : 'Участник';
-
-            // Если отправитель "Сияющий"
-            if (isShinyUser) {
-                nameClass = "msg-author shiny-nick";
-                // Если это Админ (ты), можно писать BOSS, или оставить имя
-                if (m.sender === ADMIN_EMAIL) displayName = "Даниил"; 
-            }
-
-            let authorHtml = (isFamily && !isMy) ? `<span class="${nameClass}">${displayName}</span>` : '';
-            // Мне мое имя тоже показывать, если я BOSS
-            if (isFamily && isMy && isShinyUser) {
-                authorHtml = `<span class="${nameClass}" style="text-align:right">${displayName}</span>`;
-            }
-
-            if (m.text.startsWith('IMG:')) {
-                d.innerHTML = `${authorHtml}<img src="${m.text.replace('IMG:', '')}" onclick="window.open(this.src)">`;
-            } else { 
-                d.innerHTML = `${authorHtml}${m.text}`; 
-            }
+            let author = (isFamily && !isMy) ? `<span class="msg-author ${sData?.is_shiny?'shiny-nick':''}">${sData?.name||'Участник'}</span>` : '';
+            let content = m.text.startsWith('IMG:') ? `<img src="${m.text.replace('IMG:', '')}">` : m.text;
+            
+            d.innerHTML = `${author}${content}<span class="msg-time">${timeStr}</span>`;
             box.appendChild(d);
         });
         box.scrollTop = box.scrollHeight;
+    }
+
+    // ТВОИ ПОЛНОМОЧИЯ (УДАЛЕНИЕ И ИЗМЕНЕНИЕ)
+    async function handleMsgAction(msg) {
+        const isMy = msg.sender === me.email;
+        const isBoss = me.email === ADMIN_EMAIL;
+
+        if (!isMy && !isBoss) return;
+
+        if (isBoss) {
+            let choice = confirm("BOSS ДЕЙСТВИЕ:\n[ОК] - Изменить текст\n[Отмена] - Удалить сообщение");
+            if (choice) {
+                let t = prompt("Введите новый текст:", msg.text);
+                if (t && t !== msg.text) await db.updateDocument(D_ID, C_MSGS, msg.$id, { text: t });
+            } else {
+                if (confirm("Удалить это сообщение навсегда?")) await db.deleteDocument(D_ID, C_MSGS, msg.$id);
+            }
+        } else {
+            if (confirm("Удалить ваше сообщение?")) await db.deleteDocument(D_ID, C_MSGS, msg.$id);
+        }
     }
 
     async function sendMsg() {
         const inp = document.getElementById('msg-inp');
         if(!inp.value.trim() || !opponent) return;
         await db.createDocument(D_ID, C_MSGS, ID.unique(), { text: inp.value, sender: me.email, receiver: opponent.email });
-        inp.value = ""; 
-        // loadMessages вызовется сам через Realtime
+        inp.value = "";
     }
 
     async function uploadPhoto(el) {
         if (!el.files[0] || !opponent) return;
-        try {
-            const file = await storage.createFile(B_ID, ID.unique(), el.files[0]);
-            const url = `https://cloud.appwrite.io/v1/storage/buckets/${B_ID}/files/${file.$id}/view?project=${client.config.project}`;
-            await db.createDocument(D_ID, C_MSGS, ID.unique(), { text: `IMG:${url}`, sender: me.email, receiver: opponent.email });
-            document.getElementById('attach-panel').style.display = 'none';
-        } catch(e) { alert("Ошибка!"); }
+        const f = await storage.createFile(B_ID, ID.unique(), el.files[0]);
+        const url = `https://cloud.appwrite.io/v1/storage/buckets/${B_ID}/files/${f.$id}/view?project=${client.config.project}`;
+        await db.createDocument(D_ID, C_MSGS, ID.unique(), { text: `IMG:${url}`, sender: me.email, receiver: opponent.email });
+        document.getElementById('attach-panel').style.display = 'none';
     }
 
+    // ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ
     async function handleAuth() {
         const e = document.getElementById('u-email').value, p = document.getElementById('pass').value, n = document.getElementById('u-nick').value;
         try {
             if (document.getElementById('u-nick').style.display === 'block') {
                 await acc.create(ID.unique(), e, p, n);
                 await acc.createEmailSession(e, p);
-                // При регистрации создаем юзера сразу с пустыми новыми полями
-                await db.createDocument(D_ID, C_USERS, ID.unique(), { 
-                    name: n, 
-                    email: e,
-                    last_seen: new Date().toISOString(),
-                    is_shiny: false 
-                });
+                await db.createDocument(D_ID, C_USERS, ID.unique(), { name: n, email: e, last_seen: new Date().toISOString(), is_shiny: false });
             } else { await acc.createEmailSession(e, p); }
             location.reload();
         } catch (err) { alert(err.message); }
     }
 
-    function toggleMode() { const n = document.getElementById('u-nick'); n.style.display = n.style.display === 'none' ? 'block' : 'none'; }
-    function toggleAttach() { const p = document.getElementById('attach-panel'); p.style.display = p.style.display === 'block' ? 'none' : 'block'; }
-    function show(id) { ['auth-screen', 'contacts-screen', 'chat-screen'].forEach(s => document.getElementById(s).style.display = 'none'); document.getElementById(id).style.display = 'flex'; }
-    function closeChat() { opponent = null; isFamily = false; document.getElementById('attach-panel').style.display = 'none'; show('contacts-screen'); }
+    async function toggleShinyNickDB() {
+        const curr = allUsersData[me.email].is_shiny || false;
+        await db.updateDocument(D_ID, C_USERS, myUserDocId, { is_shiny: !curr });
+        document.getElementById('shiny-status').innerText = !curr ? "ВКЛ" : "ВЫКЛ";
+    }
+
+    function toggleMode() { 
+        document.getElementById('u-nick').style.display = 'block'; 
+        document.getElementById('toggle-text').innerText = "У меня есть аккаунт";
+    }
+    function toggleAttach() { 
+        const p = document.getElementById('attach-panel'); 
+        p.style.display = p.style.display === 'block' ? 'none' : 'block'; 
+    }
+    function show(id) { 
+        ['auth-screen', 'contacts-screen', 'chat-screen'].forEach(s => document.getElementById(s).style.display = 'none'); 
+        document.getElementById(id).style.display = 'flex'; 
+    }
+    function closeChat() { opponent = null; show('contacts-screen'); }
     function logout() { acc.deleteSession('current'); location.reload(); }
+    function openAdmin() { 
+        document.getElementById('admin-panel').style.display = 'block'; 
+        document.getElementById('shiny-status').innerText = allUsersData[me.email].is_shiny ? "ВКЛ" : "ВЫКЛ";
+    }
+
     init();
 </script>
 </body>
 </html>
+
