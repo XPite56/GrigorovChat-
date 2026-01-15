@@ -3,208 +3,62 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="GrigorovChat">
     <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/1041/1041916.png"> 
     
-    <title>GrigorovChat v1.2.5</title>
+    <title>GrigorovChat v1.2.6</title>
     <script src="https://cdn.jsdelivr.net/npm/appwrite@13.0.1"></script>
     <style>
         :root { 
-            --p: #6c5ce7; 
-            --bg: #13132b; 
-            --card: rgba(255, 255, 255, 0.08); 
-            --gold: #f1c40f; 
-            --red: #ff4757; 
-            --online: #2ecc71; 
-            --offline: #95a5a6; 
+            --p: #6c5ce7; --bg: #13132b; --card: rgba(255, 255, 255, 0.08); 
+            --gold: #f1c40f; --red: #ff4757; --online: #2ecc71; --offline: #95a5a6; 
         }
 
-        * { 
-            margin: 0; 
-            padding: 0; 
-            box-sizing: border-box; 
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
-            -webkit-tap-highlight-color: transparent; 
-        }
-
-        body { 
-            background: radial-gradient(circle at center, #2e2e5d 0%, #13132b 100%); 
-            color: white; 
-            height: 100vh; 
-            overflow: hidden; 
-        }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', sans-serif; -webkit-tap-highlight-color: transparent; }
+        body { background: radial-gradient(circle at center, #2e2e5d 0%, #13132b 100%); color: white; height: 100vh; overflow: hidden; }
         
-        #auth-screen, #contacts-screen, #chat-screen { 
-            padding: 20px; 
-            height: 100vh; 
-            display: none; 
-            flex-direction: column; 
-        }
+        #auth-screen, #contacts-screen, #chat-screen { padding: 20px; height: 100vh; display: none; flex-direction: column; }
 
-        /* ДИЗАЙН */
-        .glass-card { 
-            margin: auto; 
-            width: 100%; 
-            max-width: 340px; 
-            text-align: center; 
-            background: rgba(255, 255, 255, 0.05); 
-            padding: 30px; 
-            border-radius: 30px; 
-            backdrop-filter: blur(20px); 
-            border: 1px solid rgba(255,255,255,0.1); 
-        }
+        /* ДИЗАЙН И АНИМАЦИИ */
+        .glass-card { margin: auto; width: 100%; max-width: 340px; text-align: center; background: rgba(255, 255, 255, 0.05); padding: 30px; border-radius: 30px; backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.1); }
+        input { width: 100%; padding: 16px; margin: 10px 0; border-radius: 18px; border: none; background: rgba(255,255,255,0.1); color: white; outline: none; }
+        .btn-p { width: 100%; padding: 16px; border-radius: 18px; border: none; background: var(--p); color: white; font-weight: bold; cursor: pointer; transition: 0.3s; }
+        
+        /* ШАПКА */
+        .header-ui { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; position: relative; }
+        .controls { display: flex; gap: 10px; align-items: center; }
+        
+        /* КОЛОКОЛЬЧИК И КОРОНА */
+        #notify-btn { font-size: 22px; background: none; border: none; cursor: pointer; animation: bounce 2s infinite; }
+        #admin-btn { font-size: 22px; background: none; border: none; cursor: pointer; filter: drop-shadow(0 0 5px var(--gold)); }
+        @keyframes bounce { 0%, 100% {transform:translateY(0);} 50% {transform:translateY(-5px);} }
 
-        input { 
-            width: 100%; 
-            padding: 16px; 
-            margin: 10px 0; 
-            border-radius: 18px; 
-            border: none; 
-            background: rgba(255,255,255,0.1); 
-            color: white; 
-            outline: none; 
-        }
-
-        .btn-p { 
-            width: 100%; 
-            padding: 16px; 
-            border-radius: 18px; 
-            border: none; 
-            background: var(--p); 
-            color: white; 
-            font-weight: bold; 
-            cursor: pointer; 
-            transition: 0.3s;
-        }
-        .btn-p:active { transform: scale(0.95); }
-        
-        /* КАРТОЧКИ */
-        .contact-card { 
-            background: var(--card); 
-            padding: 15px; 
-            border-radius: 20px; 
-            display: flex; 
-            align-items: center; 
-            gap: 12px; 
-            margin-bottom: 10px; 
-            cursor: pointer; 
-            border: 1px solid rgba(255,255,255,0.05); 
-            position: relative; 
-            transition: 0.2s; 
-        }
-        .contact-card:active { transform: scale(0.98); background: rgba(255,255,255,0.1); }
-        
-        .avatar { 
-            width: 45px; 
-            height: 45px; 
-            border-radius: 15px; 
-            background: var(--p); 
-            display: flex; 
-            align-items: center; 
-            justify-content: center; 
-            font-weight: bold; 
-            font-size: 20px; 
-            position: relative; 
-        }
-        .avatar-family { 
-            background: linear-gradient(45deg, #6c5ce7, #a29bfe); 
-            border: 2px solid var(--gold); 
-        }
-        .avatar-grigorov {
-            background: linear-gradient(45deg, #ff4757, #ff6b81);
-            border: 2px solid white;
-        }
-        
-        .status-dot { 
-            width: 12px; 
-            height: 12px; 
-            border-radius: 50%; 
-            border: 2px solid #1e1e3f; 
-            position: absolute; 
-            bottom: -2px; 
-            right: -2px; 
-            z-index: 10; 
-        }
+        /* СПИСОК ЧАТОВ */
+        .contact-card { background: var(--card); padding: 15px; border-radius: 20px; display: flex; align-items: center; gap: 12px; margin-bottom: 10px; cursor: pointer; border: 1px solid rgba(255,255,255,0.05); position: relative; }
+        .avatar { width: 45px; height: 45px; border-radius: 15px; background: var(--p); display: flex; align-items: center; justify-content: center; font-weight: bold; position: relative; }
+        .avatar-family { background: linear-gradient(45deg, #6c5ce7, #a29bfe); border: 2px solid var(--gold); }
+        .avatar-grigorov { background: linear-gradient(45deg, #ff4757, #ff6b81); border: 2px solid white; }
+        .status-dot { width: 12px; height: 12px; border-radius: 50%; border: 2px solid #1e1e3f; position: absolute; bottom: -2px; right: -2px; }
         .online { background: var(--online); box-shadow: 0 0 5px var(--online); }
-        .offline { background: var(--offline); }
 
-        /* СООБЩЕНИЯ */
-        #messages { 
-            flex: 1; 
-            overflow-y: auto; 
-            display: flex; 
-            flex-direction: column; 
-            gap: 12px; 
-            padding-bottom: 100px; 
-        }
-        .msg { 
-            max-width: 80%; 
-            padding: 10px 14px; 
-            border-radius: 18px; 
-            background: var(--card); 
-            align-self: flex-start; 
-            position: relative; 
-            word-wrap: break-word;
-            cursor: pointer;
-        }
-        .msg-info {
-            display: flex;
-            justify-content: flex-end;
-            align-items: center;
-            gap: 5px;
-            margin-top: 4px;
-            opacity: 0.6;
-        }
-        .msg-time { font-size: 9px; }
-        .read-status { font-size: 12px; }
-        .msg-author { 
-            font-size: 11px; 
-            color: var(--gold); 
-            font-weight: bold; 
-            display: block; 
-            margin-bottom: 4px; 
-        }
-        .my { 
-            align-self: flex-end; 
-            background: var(--p); 
-            border-bottom-right-radius: 4px; 
-        }
-        .msg img { max-width: 100%; border-radius: 12px; margin-top: 5px; }
-
-        /* ИНДИКАТОР ПЕЧАТИ */
-        #typing-indicator {
-            position: fixed;
-            bottom: 90px;
-            left: 25px;
-            font-size: 12px;
-            color: var(--gold);
-            font-style: italic;
-            display: none;
-            text-shadow: 0 0 5px rgba(0,0,0,0.5);
-            animation: pulse 1.5s infinite;
-        }
+        /* ЧАТ */
+        #messages { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; padding-bottom: 100px; }
+        .msg { max-width: 80%; padding: 10px 14px; border-radius: 18px; background: var(--card); align-self: flex-start; position: relative; word-wrap: break-word; }
+        .my { align-self: flex-end; background: var(--p); border-bottom-right-radius: 4px; }
+        .msg-info { display: flex; justify-content: flex-end; align-items: center; gap: 5px; margin-top: 4px; opacity: 0.6; font-size: 9px; }
+        .msg-author { font-size: 11px; color: var(--gold); font-weight: bold; display: block; margin-bottom: 4px; }
+        
+        /* ЭФФЕКТЫ */
+        .shiny-nick { background: linear-gradient(to right, #f1c40f, #fff, #f1c40f); -webkit-background-clip: text; color: transparent; animation: shine 3s infinite linear; font-weight: 800; }
+        @keyframes shine { 0% { background-position: 0%; } 100% { background-position: 200%; } }
+        
+        #typing-indicator { position: fixed; bottom: 90px; left: 25px; font-size: 12px; color: var(--gold); display: none; animation: pulse 1.5s infinite; }
         @keyframes pulse { 0% {opacity:0.5;} 50% {opacity:1;} 100% {opacity:0.5;} }
 
-        /* BOSS STYLES */
-        .shiny-nick {
-            background: linear-gradient(to right, #f1c40f, #ffeb3b, #f1c40f);
-            -webkit-background-clip: text; background-clip: text; color: transparent;
-            animation: shine 3s infinite linear; text-shadow: 0 0 10px rgba(241, 196, 15, 0.5); font-weight: 800;
-        }
-        @keyframes shine { 0% { background-position: 0% 50%; } 100% { background-position: 200% 50%; } }
-
-        #admin-btn { position: fixed; top: 22px; right: 80px; font-size: 22px; background: none; border: none; cursor: pointer; z-index: 200; display: none; filter: drop-shadow(0 0 5px var(--gold)); }
-        #admin-panel { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 300; padding: 30px; overflow-y: auto; }
-        #attach-panel { display: none; background: rgba(20, 20, 45, 0.98); border-radius: 25px 25px 0 0; padding: 20px; position: fixed; bottom: 85px; left: 0; right: 0; z-index: 100; backdrop-filter: blur(15px); }
-        
-        #notify-btn {
-            position: fixed; top: 20px; left: 20px; z-index: 200; font-size: 20px; background: none; border:none; cursor: pointer;
-            animation: bounce 2s infinite;
-        }
-        @keyframes bounce { 0%, 100% {transform:translateY(0);} 50% {transform:translateY(-5px);} }
+        /* АДМИНКА */
+        #admin-panel { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 300; padding: 30px; }
+        #attach-panel { display: none; background: rgba(20, 20, 45, 0.98); border-radius: 25px 25px 0 0; padding: 20px; position: fixed; bottom: 85px; left: 0; right: 0; z-index: 100; }
     </style>
 </head>
 <body>
@@ -212,61 +66,58 @@
     <audio id="notify-sound" src="https://assets.mixkit.co/active_storage/sfx/2346/2346-preview.mp3"></audio>
 
     <div id="admin-panel">
-        <h2 style="text-align:center; color: var(--gold); margin-bottom: 20px;">👑 АДМИН ПАНЕЛЬ</h2>
+        <h2 style="text-align:center; color: var(--gold); margin-bottom: 20px;">👑 BOSS MENU</h2>
         <div style="display:grid; grid-template-columns: 1fr 1fr; gap:15px;">
-            <div class="glass-card" onclick="toggleShinyNickDB()" style="max-width:none; margin:0;">
-                <span style="font-size:30px; display:block">✨</span> Ник
-            </div>
-            <div class="glass-card" onclick="spyEye()" style="max-width:none; margin:0;">
-                <span style="font-size:30px; display:block">👁️</span> Шпион
-            </div>
+            <div class="glass-card" onclick="toggleShinyNickDB()" style="margin:0;">✨ Ник</div>
+            <div class="glass-card" onclick="alert('Шпион активен')" style="margin:0;">👁️ Eye</div>
         </div>
         <button onclick="document.getElementById('admin-panel').style.display='none'" class="btn-p" style="margin-top:30px; background:var(--red)">ЗАКРЫТЬ</button>
     </div>
 
-    <button id="admin-btn" onclick="openAdmin()">👑</button>
-    <button id="notify-btn" onclick="requestNotifyPermission()">🔕</button>
-
     <div id="auth-screen">
         <div class="glass-card">
-            <h1 style="margin-bottom:10px">GrigorovChat</h1>
-            <p style="opacity:0.5; margin-bottom:20px; font-size:12px">v1.2.5 Notifications</p>
+            <h1>GrigorovChat</h1>
+            <p style="opacity:0.5; font-size:11px; margin-bottom: 20px;">v1.2.8 Ultimate</p>
             <input type="email" id="u-email" placeholder="Email">
             <input type="text" id="u-nick" placeholder="Имя" style="display:none">
             <input type="password" id="pass" placeholder="Пароль">
             <button class="btn-p" onclick="handleAuth()">ВОЙТИ</button>
-            <p onclick="toggleMode()" id="toggle-text" style="margin-top:20px; cursor:pointer; opacity:0.5">Нет аккаунта?</p>
+            <p onclick="toggleMode()" id="toggle-text" style="margin-top:20px; cursor:pointer; opacity:0.5">Создать аккаунт</p>
         </div>
     </div>
 
     <div id="contacts-screen">
-        <header style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
-            <h1 style="font-size:32px; font-weight:800">Чаты</h1>
-            <button onclick="logout()" style="opacity:0.6; background:none; border:none; color:white; font-weight:bold">Выход</button>
-        </header>
+        <div class="header-ui">
+            <h1 style="font-size:30px; font-weight:800">Чаты</h1>
+            <div class="controls">
+                <button id="notify-btn" onclick="toggleNotify()">🔕</button>
+                <button id="admin-btn" style="display:none" onclick="document.getElementById('admin-panel').style.display='block'">👑</button>
+                <button onclick="logout()" style="opacity:0.5; background:none; border:none; color:white; font-size:11px; font-weight:bold">ВЫХОД</button>
+            </div>
+        </div>
         <div id="user-list"></div>
     </div>
 
     <div id="chat-screen">
         <header style="margin-bottom:20px; display:flex; align-items:center; gap:15px">
             <div onclick="closeChat()" style="cursor:pointer; background:rgba(255,255,255,0.1); width:40px; height:40px; border-radius:15px; display:flex; align-items:center; justify-content:center">←</div>
-            <b id="active-chat-name" style="font-size:20px">Чат</b>
+            <b id="active-chat-name" style="font-size:18px">Загрузка...</b>
         </header>
         <div id="messages"></div>
-        <div id="typing-indicator">✍️ печатает...</div>
+        <div id="typing-indicator">✍️ пишет...</div>
         
         <div id="attach-panel">
             <label style="text-align:center; cursor:pointer; display:block">
                 <input type="file" id="file-inp" accept="image/*" style="display:none" onchange="uploadPhoto(this)">
-                <div style="width:65px; height:65px; background:rgba(255,255,255,0.1); border-radius:20px; display:flex; align-items:center; justify-content:center; font-size:28px; margin:0 auto 5px auto">🖼️</div>
+                <div style="width:60px; height:60px; background:var(--p); border-radius:20px; display:flex; align-items:center; justify-content:center; font-size:24px; margin:0 auto 5px auto">🖼️</div>
                 <span>Фото</span>
             </label>
         </div>
 
-        <div style="position:fixed; bottom:25px; left:20px; right:20px; display:flex; gap:12px; align-items: center;">
-            <button onclick="toggleAttach()" style="background:none; border:none; font-size:28px; color:white;">📎</button>
+        <div style="position:fixed; bottom:25px; left:20px; right:20px; display:flex; gap:10px; align-items: center;">
+            <button onclick="toggleAttach()" style="background:none; border:none; font-size:24px;">📎</button>
             <input type="text" id="msg-inp" placeholder="Сообщение..." style="margin:0; flex:1" oninput="handleTyping()">
-            <button onclick="sendMsg()" style="background:var(--p); border:none; width:55px; height:55px; border-radius:20px; color:white; font-size:20px">➤</button>
+            <button onclick="sendMsg()" style="background:var(--p); border:none; width:50px; height:50px; border-radius:18px; color:white; font-size:18px">➤</button>
         </div>
     </div>
 
@@ -277,166 +128,84 @@
     
     const D_ID = '695825270032517f8888', C_MSGS = 'messages', C_USERS = 'users', B_ID = '696289e3001b875d11ad';
     const FAMILY_ID = 'family_group', GRIGOROV_ID = 'grigorov_private_chat';
-    const ADMIN_EMAIL = 'daniilgrigorov26@gmail.com';
     const ALLOWED_GRIGOROVS = ['Даниил', 'Александр', 'Анюта'];
 
-    let me = null, opponent = null, isFamily = false, isGrigorovGroup = false;
-    let allUsersData = {}, myUserDocId = null, typingTimeout = null;
-    let notifyAllowed = false;
+    let me = null, opponent = null, myUserDocId = null;
+    let allUsersData = {}, isFamily = false, isGrigorovGroup = false;
+    
+    // ПАМЯТЬ УВЕДОМЛЕНИЙ
+    let notifyEnabled = localStorage.getItem('notify_v128') === 'true';
 
     async function init() {
         try {
             me = await acc.get();
-            if (me.email === ADMIN_EMAIL) document.getElementById('admin-btn').style.display = 'block';
+            if (me.email === 'daniilgrigorov26@gmail.com') document.getElementById('admin-btn').style.display = 'block';
+            
+            updateNotifyUI();
             show('contacts-screen');
-            await initialLoadUsers();
+            await loadUsers();
             startHeartbeat();
-            checkNotifyPermission();
 
-            // REALTIME С УВЕДОМЛЕНИЯМИ
             client.subscribe(`databases.${D_ID}.collections.${C_MSGS}.documents`, res => {
                 const m = res.payload;
-                
-                // 1. ЛОГИКА ОТОБРАЖЕНИЯ В ЧАТЕ
-                if (document.getElementById('chat-screen').style.display === 'flex') {
-                    const isRelevant = (isFamily && m.receiver === FAMILY_ID) ||
-                                       (isGrigorovGroup && m.receiver === GRIGOROV_ID) ||
-                                       (!isFamily && !isGrigorovGroup && ((m.sender === me.email && m.receiver === opponent.email) || (m.sender === opponent.email && m.receiver === me.email)));
-                    
-                    if (isRelevant) {
-                        loadMessages();
-                        if (m.sender !== me.email) markAsRead([m]);
-                    }
-                }
-
-                // 2. ЛОГИКА УВЕДОМЛЕНИЙ (ЕСЛИ МЫ НЕ В ЭТОМ ЧАТЕ ИЛИ СВЕРНУЛИ)
                 if (m.sender !== me.email) {
-                    const senderName = allUsersData[m.sender]?.name || "Кто-то";
-                    let shouldNotify = false;
-                    
-                    // Если сообщение мне в ЛС
-                    if (m.receiver === me.email) shouldNotify = true;
-                    // Если сообщение в группу, где я есть (простая логика уведомлений для групп)
-                    if (m.receiver === FAMILY_ID) shouldNotify = true;
-                    if (m.receiver === GRIGOROV_ID && ALLOWED_GRIGOROVS.includes(allUsersData[me.email]?.name)) shouldNotify = true;
-
-                    if (shouldNotify) {
-                        // Если вкладка скрыта или мы на экране контактов
-                        if (document.hidden || document.getElementById('chat-screen').style.display === 'none') {
-                            sendNotification(`💬 ${senderName}`, m.text.startsWith('IMG:') ? 'Фотография' : m.text);
-                        }
+                    if (notifyEnabled) {
+                        new Notification("GrigorovChat", { body: m.text });
+                        document.getElementById('notify-sound').play().catch(()=>{});
                     }
+                    if (document.getElementById('chat-screen').style.display === 'flex') loadMessages();
                 }
             });
-
-            client.subscribe(`databases.${D_ID}.collections.${C_USERS}.documents`, res => {
-                allUsersData[res.payload.email] = res.payload;
-                renderUserList();
-                checkTypingStatus();
-            });
-
         } catch (e) { show('auth-screen'); }
     }
 
-    // --- ФУНКЦИИ УВЕДОМЛЕНИЙ ---
-    function requestNotifyPermission() {
-        if (!("Notification" in window)) { alert("Ваш браузер не поддерживает уведомления"); return; }
-        Notification.requestPermission().then(permission => {
-            if (permission === "granted") {
-                notifyAllowed = true;
-                document.getElementById('notify-btn').innerText = '🔔';
-                new Notification("GrigorovChat", { body: "Уведомления включены!", icon: "https://cdn-icons-png.flaticon.com/512/1041/1041916.png" });
-            }
-        });
-    }
-
-    function checkNotifyPermission() {
-        if ("Notification" in window && Notification.permission === "granted") {
-            notifyAllowed = true;
-            document.getElementById('notify-btn').innerText = '🔔';
+    // ЛОГИКА КОЛОКОЛЬЧИКА
+    function toggleNotify() {
+        if (Notification.permission !== "granted") {
+            Notification.requestPermission().then(p => { if(p === "granted") { notifyEnabled = true; saveNotify(); } });
+        } else {
+            notifyEnabled = !notifyEnabled;
+            saveNotify();
         }
     }
+    function saveNotify() { localStorage.setItem('notify_v128', notifyEnabled); updateNotifyUI(); }
+    function updateNotifyUI() { document.getElementById('notify-btn').innerText = notifyEnabled ? '🔔' : '🔕'; }
 
-    function sendNotification(title, body) {
-        // Звук
-        const audio = document.getElementById('notify-sound');
-        audio.play().catch(e => console.log("Audio play blocked"));
-
-        // Пуш
-        if (notifyAllowed) {
-            new Notification(title, {
-                body: body,
-                icon: "https://cdn-icons-png.flaticon.com/512/1041/1041916.png"
-            });
-        }
-    }
-
-    // --- СТАНДАРТНЫЕ ФУНКЦИИ ---
-    async function initialLoadUsers() {
+    // ОСНОВНЫЕ ФУНКЦИИ
+    async function loadUsers() {
         const res = await db.listDocuments(D_ID, C_USERS);
+        const list = document.getElementById('user-list'); list.innerHTML = "";
         res.documents.forEach(u => {
             allUsersData[u.email] = u;
-            if (u.email === me.email) myUserDocId = u.$id;
+            if (u.email === me.email) { myUserDocId = u.$id; return; }
         });
-        renderUserList();
-    }
 
-    function renderUserList() {
-        const list = document.getElementById('user-list'); list.innerHTML = "";
-        
-        const fCard = document.createElement('div');
-        fCard.className = 'contact-card';
-        fCard.onclick = () => openChat(FAMILY_ID, 'Общий чат', 'FAMILY');
-        fCard.innerHTML = `<div class="avatar avatar-family">Ф</div><div><b>Общий чат</b></div>`;
-        list.appendChild(fCard);
-
+        // Группы
+        renderGroup(list, FAMILY_ID, 'Общий чат', 'avatar-family');
         if (ALLOWED_GRIGOROVS.includes(allUsersData[me.email]?.name)) {
-            const gCard = document.createElement('div');
-            gCard.className = 'contact-card';
-            gCard.onclick = () => openChat(GRIGOROV_ID, 'Григоровы', 'GRIGOROV');
-            gCard.innerHTML = `<div class="avatar avatar-grigorov">Г</div><div><b>Григоровы</b><p style="font-size:10px; opacity:0.5; color:var(--gold)">VIP Семейный</p></div>`;
-            list.appendChild(gCard);
+            renderGroup(list, GRIGOROV_ID, 'Григоровы', 'avatar-grigorov');
         }
 
+        // Люди
         Object.values(allUsersData).forEach(u => {
             if (u.email === me.email) return;
-            let isOnline = u.last_seen && (new Date() - new Date(u.last_seen) < 120000);
-            const card = document.createElement('div');
-            card.className = 'contact-card';
-            card.onclick = () => openChat(u.email, u.name, 'PRIVATE');
-            card.innerHTML = `<div class="avatar">${u.name[0].toUpperCase()}<div class="status-dot ${isOnline?'online':'offline'}"></div></div><b>${u.name}</b>`;
-            list.appendChild(card);
+            const isOnline = u.last_seen && (new Date() - new Date(u.last_seen) < 120000);
+            const d = document.createElement('div'); d.className = 'contact-card';
+            d.onclick = () => { opponent = u; isFamily = false; isGrigorovGroup = false; showChat(u.name); };
+            d.innerHTML = `<div class="avatar">${u.name[0]}<div class="status-dot ${isOnline?'online':''}"></div></div><b>${u.name}</b>`;
+            list.appendChild(d);
         });
     }
 
-    async function startHeartbeat() {
-        if (!myUserDocId) return;
-        const beat = () => db.updateDocument(D_ID, C_USERS, myUserDocId, { last_seen: new Date().toISOString() });
-        beat(); setInterval(beat, 60000);
+    function renderGroup(cont, id, name, cls) {
+        const d = document.createElement('div'); d.className = 'contact-card';
+        d.onclick = () => { opponent = {email: id}; isFamily = (id===FAMILY_ID); isGrigorovGroup = (id===GRIGOROV_ID); showChat(name); };
+        d.innerHTML = `<div class="avatar ${cls}">${name[0]}</div><b>${name}</b>`;
+        cont.appendChild(d);
     }
 
-    async function handleTyping() {
-        if (!opponent || isFamily || isGrigorovGroup) return;
-        if (typingTimeout) clearTimeout(typingTimeout);
-        await db.updateDocument(D_ID, C_USERS, myUserDocId, { typing_to: opponent.email });
-        typingTimeout = setTimeout(async () => { await db.updateDocument(D_ID, C_USERS, myUserDocId, { typing_to: null }); }, 2000);
-    }
-
-    function checkTypingStatus() {
-        if (!opponent || document.getElementById('chat-screen').style.display !== 'flex') return;
-        const indic = document.getElementById('typing-indicator');
-        if (!isFamily && !isGrigorovGroup) {
-            const oppData = allUsersData[opponent.email];
-            if (oppData && oppData.typing_to === me.email) {
-                indic.style.display = 'block'; indic.innerText = `${oppData.name} пишет...`;
-            } else { indic.style.display = 'none'; }
-        }
-    }
-
-    async function openChat(id, name, type) {
-        opponent = { email: id }; isFamily = (type === 'FAMILY'); isGrigorovGroup = (type === 'GRIGOROV');
+    function showChat(name) {
         document.getElementById('active-chat-name').innerText = name;
-        document.getElementById('typing-indicator').style.display = 'none';
         show('chat-screen');
         loadMessages();
     }
@@ -444,82 +213,61 @@
     async function loadMessages() {
         const res = await db.listDocuments(D_ID, C_MSGS, [Query.orderDesc("$createdAt"), Query.limit(50)]);
         const box = document.getElementById('messages'); box.innerHTML = '';
-        let filtered = [];
-        if (isFamily) filtered = res.documents.filter(m => m.receiver === FAMILY_ID);
-        else if (isGrigorovGroup) filtered = res.documents.filter(m => m.receiver === GRIGOROV_ID);
-        else filtered = res.documents.filter(m => (m.sender === me.email && m.receiver === opponent.email) || (m.sender === opponent.email && m.receiver === me.email));
+        
+        const filtered = res.documents.filter(m => {
+            if (isFamily) return m.receiver === FAMILY_ID;
+            if (isGrigorovGroup) return m.receiver === GRIGOROV_ID;
+            return (m.sender === me.email && m.receiver === opponent.email) || (m.sender === opponent.email && m.receiver === me.email);
+        }).reverse();
 
-        const unreadIncoming = filtered.filter(m => m.sender !== me.email && !m.is_read);
-        if (unreadIncoming.length > 0) markAsRead(unreadIncoming);
-
-        filtered.reverse().forEach(m => {
-            const d = document.createElement('div');
+        filtered.forEach(m => {
             const isMy = m.sender === me.email;
-            const sData = allUsersData[m.sender];
-            const timeStr = new Date(m.$createdAt).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
-            d.className = `msg ${isMy ? 'my' : ''}`;
-            d.onclick = () => handleMsgAction(m);
-            let author = ((isFamily || isGrigorovGroup) && !isMy) ? `<span class="msg-author ${sData?.is_shiny?'shiny-nick':''}">${sData?.name||'User'}</span>` : '';
-            let content = m.text.startsWith('IMG:') ? `<img src="${m.text.replace('IMG:', '')}">` : m.text;
-            let eyeIcon = isMy ? (m.is_read ? '👁️' : '') : '';
-            d.innerHTML = `${author}${content}<div class="msg-info"><span class="read-status">${eyeIcon}</span><span class="msg-time">${timeStr}</span></div>`;
+            const u = allUsersData[m.sender];
+            const d = document.createElement('div'); d.className = `msg ${isMy?'my':''}`;
+            d.oncontextmenu = (e) => { e.preventDefault(); handleLongPress(m); }; // Долгое нажатие
+            
+            let nameTag = (!isMy && (isFamily || isGrigorovGroup)) ? `<span class="msg-author ${u?.is_shiny?'shiny-nick':''}">${u?.name}</span>` : '';
+            let content = m.text.startsWith('IMG:') ? `<img src="${m.text.replace('IMG:', '')}" style="max-width:100%; border-radius:10px;">` : m.text;
+            
+            d.innerHTML = `${nameTag}${content}<div class="msg-info"><span>${m.is_read?'👁️':''}</span> ${new Date(m.$createdAt).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}</div>`;
             box.appendChild(d);
         });
         box.scrollTop = box.scrollHeight;
     }
 
-    async function markAsRead(messages) { for (let m of messages) await db.updateDocument(D_ID, C_MSGS, m.$id, { is_read: true }); }
-
-    async function handleMsgAction(msg) {
-        const isMy = msg.sender === me.email, isBoss = me.email === ADMIN_EMAIL;
-        if (!isMy && !isBoss) return;
-        if (isBoss) {
-            let choice = confirm("BOSS: [OK]-Изменить, [Cancel]-Удалить");
-            if (choice) { let t = prompt("Текст:", msg.text); if(t) await db.updateDocument(D_ID, C_MSGS, msg.$id, { text: t }); }
-            else { if(confirm("Удалить?")) await db.deleteDocument(D_ID, C_MSGS, msg.$id); }
-        } else if (confirm("Удалить свое сообщение?")) await db.deleteDocument(D_ID, C_MSGS, msg.$id);
-    }
-
     async function sendMsg() {
-        const inp = document.getElementById('msg-inp'); if(!inp.value.trim() || !opponent) return;
-        let r = opponent.email; if(isFamily) r = FAMILY_ID; if(isGrigorovGroup) r = GRIGOROV_ID;
-        await db.createDocument(D_ID, C_MSGS, ID.unique(), { text: inp.value, sender: me.email, receiver: r, is_read: false });
-        db.updateDocument(D_ID, C_USERS, myUserDocId, { typing_to: null }); inp.value = "";
+        const inp = document.getElementById('msg-inp'); if(!inp.value.trim()) return;
+        const target = (isFamily) ? FAMILY_ID : (isGrigorovGroup ? GRIGOROV_ID : opponent.email);
+        await db.createDocument(D_ID, C_MSGS, ID.unique(), { text: inp.value, sender: me.email, receiver: target, is_read: false });
+        inp.value = ""; loadMessages();
     }
 
-    async function uploadPhoto(el) {
-        if (!el.files[0] || !opponent) return;
-        let r = isFamily ? FAMILY_ID : (isGrigorovGroup ? GRIGOROV_ID : opponent.email);
-        const f = await storage.createFile(B_ID, ID.unique(), el.files[0]);
-        const url = `https://cloud.appwrite.io/v1/storage/buckets/${B_ID}/files/${f.$id}/view?project=${client.config.project}`;
-        await db.createDocument(D_ID, C_MSGS, ID.unique(), { text: `IMG:${url}`, sender: me.email, receiver: r, is_read: false });
-        toggleAttach();
-    }
-
-    async function handleAuth() {
-        const e = document.getElementById('u-email').value, p = document.getElementById('pass').value, n = document.getElementById('u-nick').value;
-        try {
-            if (document.getElementById('u-nick').style.display === 'block') {
-                await acc.create(ID.unique(), e, p, n); await acc.createEmailSession(e, p);
-                await db.createDocument(D_ID, C_USERS, ID.unique(), { name: n, email: e, last_seen: new Date().toISOString(), is_shiny: false, typing_to: null });
-            } else await acc.createEmailSession(e, p);
-            location.reload();
-        } catch (err) { alert(err.message); }
+    // BOSS RIGHTS (ИЗ 1.2.5)
+    async function handleLongPress(m) {
+        const isBoss = me.email === 'daniilgrigorov26@gmail.com';
+        if (m.sender === me.email || isBoss) {
+            if (confirm("BOSS: Удалить сообщение?")) {
+                await db.deleteDocument(D_ID, C_MSGS, m.$id);
+                loadMessages();
+            }
+        }
     }
 
     async function toggleShinyNickDB() {
         const curr = allUsersData[me.email].is_shiny || false;
         await db.updateDocument(D_ID, C_USERS, myUserDocId, { is_shiny: !curr });
+        alert("Эффект ника переключен!");
     }
 
-    function toggleMode() { document.getElementById('u-nick').style.display = 'block'; document.getElementById('toggle-text').innerText = "Вход"; }
-    function toggleAttach() { const p = document.getElementById('attach-panel'); p.style.display = p.style.display === 'block' ? 'none' : 'block'; }
-    function show(id) { ['auth-screen', 'contacts-screen', 'chat-screen'].forEach(s => document.getElementById(s).style.display = 'none'); document.getElementById(id).style.display = 'flex'; }
-    function closeChat() { opponent = null; isFamily = false; isGrigorovGroup = false; if(myUserDocId) db.updateDocument(D_ID, C_USERS, myUserDocId, { typing_to: null }); show('contacts-screen'); }
+    function startHeartbeat() { setInterval(() => { if(myUserDocId) db.updateDocument(D_ID, C_USERS, myUserDocId, { last_seen: new Date().toISOString() }); }, 60000); }
+    function show(id) { document.querySelectorAll('>div').forEach(d => d.style.display = 'none'); document.getElementById(id).style.display = 'flex'; }
+    function toggleMode() { document.getElementById('u-nick').style.display = 'block'; }
+    function closeChat() { show('contacts-screen'); }
     function logout() { acc.deleteSession('current'); location.reload(); }
-    function openAdmin() { document.getElementById('admin-panel').style.display = 'block'; }
+    function toggleAttach() { const p = document.getElementById('attach-panel'); p.style.display = p.style.display==='block'?'none':'block'; }
 
     init();
 </script>
 </body>
 </html>
+
