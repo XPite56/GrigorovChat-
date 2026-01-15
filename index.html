@@ -386,7 +386,7 @@
         
         const fCard = document.createElement('div');
         fCard.className = 'contact-card';
-        fCard.onclick = () => openChat(FAMILY_ID, 'Общий чат', 'FAMILY');
+        fCard.onclick = () => openChat(FAMILY_ID, 'Фэмели, 'FAMILY');
         fCard.innerHTML = `<div class="avatar avatar-family">Ф</div><div><b>Общий чат</b></div>`;
         list.appendChild(fCard);
 
@@ -394,7 +394,7 @@
             const gCard = document.createElement('div');
             gCard.className = 'contact-card';
             gCard.onclick = () => openChat(GRIGOROV_ID, 'Григоровы', 'GRIGOROV');
-            gCard.innerHTML = `<div class="avatar avatar-grigorov">Г</div><div><b>Григоровы</b><p style="font-size:10px; opacity:0.5; color:var(--gold)">VIP Семейный</p></div>`;
+            gCard.innerHTML = `<div class="avatar avatar-grigorov">Г</div><div><b>Григоровы</b><p style="font-size:10px; opacity:0.5; color:var(--gold)">Семейный чат</p></div>`;
             list.appendChild(gCard);
         }
 
