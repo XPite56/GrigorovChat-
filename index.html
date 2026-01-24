@@ -3,11 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    
+    <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/1041/1041916.png">
+    <meta name="theme-color" content="#13132b">
+    <link rel="icon" type="image/png" href="https://cdn-icons-png.flaticon.com/512/1041/1041916.png">
     
-    <title>GrigorovChat v1.2.5</title>
+    <title>GrigorovChat Full v1.3.4</title>
     <script src="https://cdn.jsdelivr.net/npm/appwrite@13.0.1"></script>
     
     <script>(function(w,d, s, id) {if(typeof(w.webpushr)!=='undefined') return;w.webpushr=w.webpushr||function(){(w.webpushr.q=w.webpushr.q||[]).push(arguments)};var js, fjs = d.getElementsByTagName(s)[0];js = d.createElement(s); js.id = id;js.async=1;js.src = "https://cdn.webpushr.com/app.min.js";fjs.parentNode.appendChild(js);}(window,document, 'script', 'webpushr-jssdk'));webpushr('setup',{'key':'BDqbqwHum1NhlSMY96oDE6FpE-kwQtJwXrRgxmyUhLJVJkqiZB3STu7FeoyF_iPC1ZJutMVWyYlJsmxK_v553hM' });</script>
@@ -17,7 +20,7 @@
             --gold: #f1c40f; --red: #ff4757; --online: #2ecc71; --offline: #95a5a6; 
         }
 
-        * { margin: 0; padding: 0; box-sizing: border-box; font-family: -apple-system, sans-serif; -webkit-tap-highlight-color: transparent; }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: -apple-system, system-ui, sans-serif; -webkit-tap-highlight-color: transparent; }
         body { background: radial-gradient(circle at center, #2e2e5d 0%, #13132b 100%); color: white; height: 100vh; overflow: hidden; }
         
         #auth-screen, #contacts-screen, #chat-screen { padding: 20px; height: 100vh; display: none; flex-direction: column; padding-top: env(safe-area-inset-top); }
@@ -58,7 +61,7 @@
         <h2 style="text-align:center; color: var(--gold); margin-bottom: 30px;">👑 АДМИН-ЦЕНТР</h2>
         <div style="display:grid; grid-template-columns: 1fr 1fr; gap:20px;">
             <div class="glass-card" onclick="toggleShinyNickDB()" style="max-width:none; margin:0;"><span style="font-size:35px; display:block">✨</span> Ник</div>
-            <div class="glass-card" onclick="alert('Логи шпиона активны')" style="max-width:none; margin:0;"><span style="font-size:35px; display:block">👁️</span> Шпион</div>
+            <div class="glass-card" onclick="alert('Логи активны')" style="max-width:none; margin:0;"><span style="font-size:35px; display:block">👁️</span> Шпион</div>
         </div>
         <button onclick="document.getElementById('admin-panel').style.display='none'" class="btn-p" style="margin-top:40px; background:var(--red)">ЗАКРЫТЬ</button>
     </div>
@@ -66,7 +69,7 @@
     <div id="auth-screen">
         <div class="glass-card">
             <h1>GrigorovChat</h1>
-            <p style="opacity:0.5; margin-bottom:25px; font-size:11px">v1.2.5</p>
+            <p style="opacity:0.5; margin-bottom:25px; font-size:11px">v1.3.4 | Multi-Platform | No Typing</p>
             <input type="email" id="u-email" placeholder="Email">
             <input type="text" id="u-nick" placeholder="Имя" style="display:none">
             <input type="password" id="pass" placeholder="Пароль">
@@ -200,7 +203,7 @@
             d.onclick = () => { if(isMy || me.email === ADMIN_EMAIL) if(confirm("Удалить?")) db.deleteDocument(D_ID, C_MSGS, m.$id); };
             let author = ((isFamily || isGrigorovGroup) && !isMy) ? `<span class="msg-author ${sData?.is_shiny?'shiny-nick':''}">${sData?.name}</span>` : '';
             let content = m.text.startsWith('IMG:') ? `<img src="${m.text.replace('IMG:', '')}">` : m.text;
-            d.innerHTML = `${author}${content}<div class="msg-info"><span>${isMy?(m.is_read?'👁️':''):''}</span><span>${new Date(m.$createdAt).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}</span></div>`;
+            d.innerHTML = `${author}${content}<div class="msg-info"><span>${isMy?(m.is_read?'👁️':'😌'):''}</span><span>${new Date(m.$createdAt).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}</span></div>`;
             box.appendChild(d);
         });
         box.scrollTop = box.scrollHeight;
@@ -234,7 +237,7 @@
     }
 
     async function markAsRead(msgs) { for (let m of msgs) if(!m.is_read) await db.updateDocument(D_ID, C_MSGS, m.$id, { is_read: true }); }
-    async function toggleShinyNickDB() { const curr = allUsersData[me.email].is_shiny || false; await db.updateDocument(D_ID, C_USERS, myUserDocId, { is_shiny: !curr }); alert(" ✨ Статус обновлен"); }
+    async function toggleShinyNickDB() { const curr = allUsersData[me.email].is_shiny || false; await db.updateDocument(D_ID, C_USERS, myUserDocId, { is_shiny: !curr }); alert("Статус обновлен"); }
     function toggleMode() { document.getElementById('u-nick').style.display = 'block'; document.getElementById('toggle-text').innerText = "Войти"; }
     function toggleAttach() { const p = document.getElementById('attach-panel'); p.style.display = p.style.display === 'block' ? 'none' : 'block'; }
     function show(id) { ['auth-screen', 'contacts-screen', 'chat-screen'].forEach(s => document.getElementById(s).style.display = 'none'); document.getElementById(id).style.display = 'flex'; }
@@ -246,4 +249,3 @@
 </script>
 </body>
 </html>
-
