@@ -268,7 +268,7 @@
             d.className = `msg ${isMy ? 'my' : ''}`;
             let author = ((isFamily || isGrigorovGroup) && !isMy) ? `<span class="msg-author ${sData?.is_shiny?'shiny-nick':''}">${sData?.name||'User'}</span>` : '';
             let content = m.text.startsWith('IMG:') ? `<img src="${m.text.replace('IMG:', '')}">` : m.text;
-            d.innerHTML = `${author}${content}<div class="msg-info"><span class="read-status">${isMy?(m.is_read?'👁️':'😌'):''}</span><span class="msg-time">${new Date(m.$createdAt).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}</span></div>`;
+            d.innerHTML = `${author}${content}<div class="msg-info"><span class="read-status">${isMy?(m.is_read?'👁️':''):''}</span><span class="msg-time">${new Date(m.$createdAt).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}</span></div>`;
             box.appendChild(d);
         });
         box.scrollTop = box.scrollHeight;
