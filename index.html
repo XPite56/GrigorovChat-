@@ -5,9 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/1041/1041916.png"> 
-    
     <title>GrigorovChat v1.2.5</title>
+    
     <script src="https://cdn.jsdelivr.net/npm/appwrite@13.0.1"></script>
     
     <style>
@@ -21,11 +20,14 @@
         
         #auth-screen, #contacts-screen, #chat-screen { padding: 20px; height: 100vh; display: none; flex-direction: column; }
 
+        /* ДИЗАЙН */
         .glass-card { margin: auto; width: 100%; max-width: 340px; text-align: center; background: rgba(255, 255, 255, 0.05); padding: 30px; border-radius: 30px; backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.1); }
-        input { width: 100%; padding: 16px; margin: 10px 0; border-radius: 18px; border: none; background: rgba(255,255,255,0.1); color: white; outline: none; }
-        .btn-p { width: 100%; padding: 16px; border-radius: 18px; border: none; background: var(--p); color: white; font-weight: bold; cursor: pointer; }
+        input { width: 100%; padding: 16px; margin: 10px 0; border-radius: 18px; border: none; background: rgba(255,255,255,0.1); color: white; outline: none; font-size: 16px; }
+        .btn-p { width: 100%; padding: 16px; border-radius: 18px; border: none; background: var(--p); color: white; font-weight: bold; cursor: pointer; transition: 0.3s; }
+        .btn-p:active { transform: scale(0.95); }
         
-        .contact-card { background: var(--card); padding: 15px; border-radius: 22px; display: flex; align-items: center; gap: 15px; margin-bottom: 12px; cursor: pointer; border: 1px solid rgba(255,255,255,0.05); position: relative; }
+        .contact-card { background: var(--card); padding: 15px; border-radius: 22px; display: flex; align-items: center; gap: 15px; margin-bottom: 12px; cursor: pointer; border: 1px solid rgba(255,255,255,0.05); transition: 0.2s; position: relative; }
+        .contact-card:active { transform: scale(0.98); background: rgba(255,255,255,0.1); }
         
         .avatar { width: 50px; height: 50px; border-radius: 16px; background: var(--p); display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 22px; position: relative; }
         .avatar-family { background: linear-gradient(45deg, #6c5ce7, #a29bfe); border: 2px solid var(--gold); }
@@ -36,9 +38,11 @@
         .offline { background: var(--offline); }
 
         #messages { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; padding-bottom: 110px; }
-        .msg { max-width: 82%; padding: 12px 16px; border-radius: 20px; background: var(--card); align-self: flex-start; word-wrap: break-word; }
+        .msg { max-width: 82%; padding: 12px 16px; border-radius: 20px; background: var(--card); align-self: flex-start; word-wrap: break-word; position: relative; }
         .my { align-self: flex-end; background: var(--p); border-bottom-right-radius: 4px; }
-        .msg-info { display: flex; justify-content: flex-end; align-items: center; gap: 6px; margin-top: 5px; opacity: 0.7; font-size: 10px; }
+        .msg-info { display: flex; justify-content: flex-end; align-items: center; gap: 6px; margin-top: 5px; opacity: 0.7; }
+        .msg-time { font-size: 10px; }
+        .read-status { font-size: 12px; }
         .msg-author { font-size: 11px; color: var(--gold); font-weight: bold; display: block; margin-bottom: 5px; }
         .msg img { max-width: 100%; border-radius: 14px; margin-top: 8px; }
 
@@ -46,7 +50,8 @@
         @keyframes shine { 0% { background-position: 0% 50%; } 100% { background-position: 200% 50%; } }
 
         #typing-indicator { font-size: 13px; color: var(--gold); font-style: italic; margin-bottom: 10px; display: none; }
-        #notify-btn { background: none; border: none; font-size: 26px; cursor: pointer; margin-right: 10px; }
+        #notify-btn { background: none; border: none; font-size: 26px; cursor: pointer; }
+
         #admin-panel { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(10,10,25,0.98); z-index: 500; padding: 40px 20px; }
         #attach-panel { display: none; background: rgba(25, 25, 50, 0.95); border-radius: 30px 30px 0 0; padding: 25px; position: fixed; bottom: 85px; left: 0; right: 0; z-index: 100; backdrop-filter: blur(20px); border-top: 1px solid rgba(255,255,255,0.1); }
     </style>
@@ -56,10 +61,10 @@
     <audio id="notify-sound" src="Keylimba_260124162943.mp3" preload="auto"></audio>
 
     <div id="admin-panel">
-        <h2 style="text-align:center; color: var(--gold); margin-bottom: 30px;">👑 АДМИН ПАНЕЛЬ</h2>
+        <h2 style="text-align:center; color: var(--gold); margin-bottom: 30px;">👑 УПРАВЛЕНИЕ</h2>
         <div style="display:grid; grid-template-columns: 1fr 1fr; gap:20px;">
             <div class="glass-card" onclick="toggleShinyNickDB()" style="max-width:none; margin:0;"><span style="font-size:35px; display:block">✨</span> Ник</div>
-            <div class="glass-card" onclick="alert('Логи шпиона в консоли')" style="max-width:none; margin:0;"><span style="font-size:35px; display:block">👁️</span> Шпион</div>
+            <div class="glass-card" onclick="alert('Режим шпиона активирован')" style="max-width:none; margin:0;"><span style="font-size:35px; display:block">👁️</span> Шпион</div>
         </div>
         <button onclick="document.getElementById('admin-panel').style.display='none'" class="btn-p" style="margin-top:40px; background:var(--red)">ЗАКРЫТЬ</button>
     </div>
@@ -74,19 +79,19 @@
             <input type="text" id="u-nick" placeholder="Имя" style="display:none">
             <input type="password" id="pass" placeholder="Пароль">
             <button class="btn-p" onclick="handleAuth()">ВОЙТИ</button>
-            <p onclick="toggleMode()" id="toggle-text" style="margin-top:20px; cursor:pointer; opacity:0.6">Создать аккаунт</p>
+            <p onclick="toggleMode()" id="toggle-text" style="margin-top:20px; cursor:pointer; opacity:0.6">Нет аккаунта?</p>
         </div>
     </div>
 
     <div id="contacts-screen">
         <header style="display:flex; justify-content:space-between; align-items:center; margin-bottom:25px;">
-            <div style="display:flex; align-items:center;">
+            <div style="display:flex; align-items:center; gap:10px;">
                 <button id="notify-btn" onclick="requestNotifyPermission()">🔕</button>
                 <h1 style="font-size:34px; font-weight:900">Чаты</h1>
             </div>
             <button onclick="logout()" style="opacity:0.7; background:none; border:none; color:white; font-weight:bold">Выход</button>
         </header>
-        <div id="user-list" style="overflow-y: auto; flex: 1;"></div>
+        <div id="user-list"></div>
     </div>
 
     <div id="chat-screen">
@@ -129,13 +134,16 @@
             if (me.email === ADMIN_EMAIL) document.getElementById('admin-btn').style.display = 'block';
             show('contacts-screen');
             await initialLoadUsers();
-            startHeartbeat(); // ЗАПУСК ПРОВЕРКИ 5 СЕКУНД
+            
+            // HEARTBEAT РАЗ В 5 СЕКУНД (КАК ТЫ И ПРОСИЛ)
+            startHeartbeat(); 
+
             checkNotifyPermission();
 
             client.subscribe(`databases.${D_ID}.collections.${C_MSGS}.documents`, res => {
                 const m = res.payload;
-                const isCurrent = (isFamily && m.receiver === FAMILY_ID) || (isGrigorovGroup && m.receiver === GRIGOROV_ID) || (!isFamily && !isGrigorovGroup && ((m.sender === me.email && m.receiver === opponent?.email) || (m.sender === opponent?.email && m.receiver === me.email)));
-                if (document.getElementById('chat-screen').style.display === 'flex' && isCurrent) {
+                const isRel = (isFamily && m.receiver === FAMILY_ID) || (isGrigorovGroup && m.receiver === GRIGOROV_ID) || (!isFamily && !isGrigorovGroup && ((m.sender === me.email && m.receiver === opponent?.email) || (m.sender === opponent?.email && m.receiver === me.email)));
+                if (document.getElementById('chat-screen').style.display === 'flex' && isRel) {
                     loadMessages(); if (m.sender !== me.email) markAsRead([m]);
                 }
                 if (m.sender !== me.email) {
@@ -152,19 +160,19 @@
         } catch (e) { show('auth-screen'); }
     }
 
-    // --- ПРОВЕРКА ОНЛАЙН РАЗ В 5 СЕКУНД ---
     async function startHeartbeat() {
         if (!myUserDocId) return;
         const beat = async () => {
-            await db.updateDocument(D_ID, C_USERS, myUserDocId, { last_seen: new Date().toISOString() });
-            renderUserList(); // Перерисовываем точки онлайна каждые 5 сек
+            try {
+                await db.updateDocument(D_ID, C_USERS, myUserDocId, { last_seen: new Date().toISOString() });
+            } catch(e) {}
         };
-        beat(); 
-        setInterval(beat, 5000); // 5000 мс = 5 сек
+        beat(); setInterval(beat, 5000); 
     }
 
     function renderUserList() {
         const list = document.getElementById('user-list'); list.innerHTML = "";
+        
         const groups = [
             { id: FAMILY_ID, name: 'Общий чат', type: 'FAMILY', class: 'avatar-family', icon: 'Ф' },
             { id: GRIGOROV_ID, name: 'Григоровы', type: 'GRIGOROV', class: 'avatar-grigorov', icon: 'Г', vip: true }
@@ -181,8 +189,8 @@
 
         Object.values(allUsersData).forEach(u => {
             if (u.email === me.email) return;
-            // Онлайн, если последнее обновление было меньше 15 секунд назад (с запасом на лаги)
-            let isOnline = u.last_seen && (new Date() - new Date(u.last_seen) < 15000);
+            // Статус онлайн, если последнее обновление было менее 12 секунд назад
+            let isOnline = u.last_seen && (new Date() - new Date(u.last_seen) < 12000);
             const card = document.createElement('div');
             card.className = 'contact-card';
             card.onclick = () => openChat(u.email, u.name, 'PRIVATE');
@@ -191,26 +199,21 @@
         });
     }
 
-    // --- УВЕДОМЛЕНИЯ И ЗВУК ---
     function requestNotifyPermission() {
         const audio = document.getElementById('notify-sound');
         audio.play().then(() => { audio.pause(); audio.currentTime = 0; }).catch(() => {});
         Notification.requestPermission().then(p => {
             if (p === "granted") {
                 notifyAllowed = true; document.getElementById('notify-btn').innerText = '🔔';
-                new Notification("GrigorovChat", { body: "Уведомления включены!" });
             }
         });
     }
-
-    function checkNotifyPermission() { if (Notification.permission === "granted") { notifyAllowed = true; document.getElementById('notify-btn').innerText = '🔔'; } }
 
     function triggerNotify(m) {
         document.getElementById('notify-sound').play().catch(() => {});
         if (notifyAllowed) new Notification(allUsersData[m.sender]?.name || "Чат", { body: m.text.startsWith('IMG:') ? 'Фотография' : m.text });
     }
 
-    // --- ОСТАЛЬНАЯ ЛОГИКА ---
     async function initialLoadUsers() {
         const res = await db.listDocuments(D_ID, C_USERS);
         res.documents.forEach(u => { allUsersData[u.email] = u; if (u.email === me.email) myUserDocId = u.$id; });
@@ -230,6 +233,7 @@
         filtered.reverse().forEach(m => {
             const isMy = m.sender === me.email; const sData = allUsersData[m.sender];
             const d = document.createElement('div'); d.className = `msg ${isMy ? 'my' : ''}`;
+            d.onclick = () => deleteMsg(m);
             let author = ((isFamily || isGrigorovGroup) && !isMy) ? `<span class="msg-author ${sData?.is_shiny?'shiny-nick':''}">${sData?.name}</span>` : '';
             let content = m.text.startsWith('IMG:') ? `<img src="${m.text.replace('IMG:', '')}">` : m.text;
             d.innerHTML = `${author}${content}<div class="msg-info"><span>${isMy?(m.is_read?'👁️':''):''}</span><span>${new Date(m.$createdAt).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}</span></div>`;
@@ -238,11 +242,29 @@
         box.scrollTop = box.scrollHeight;
     }
 
+    async function deleteMsg(m) {
+        if (m.sender === me.email || me.email === ADMIN_EMAIL) {
+            if (confirm("Удалить сообщение?")) {
+                await db.deleteDocument(D_ID, C_MSGS, m.$id);
+                loadMessages();
+            }
+        }
+    }
+
     async function sendMsg() {
         const inp = document.getElementById('msg-inp'); if(!inp.value.trim()) return;
         let t = isFamily ? FAMILY_ID : (isGrigorovGroup ? GRIGOROV_ID : opponent.email);
         await db.createDocument(D_ID, C_MSGS, ID.unique(), { text: inp.value, sender: me.email, receiver: t, is_read: false });
         inp.value = "";
+    }
+
+    async function uploadPhoto(el) {
+        if (!el.files[0]) return;
+        const f = await storage.createFile(B_ID, ID.unique(), el.files[0]);
+        const url = `https://cloud.appwrite.io/v1/storage/buckets/${B_ID}/files/${f.$id}/view?project=${client.config.project}`;
+        let t = isFamily ? FAMILY_ID : (isGrigorovGroup ? GRIGOROV_ID : opponent.email);
+        await db.createDocument(D_ID, C_MSGS, ID.unique(), { text: `IMG:${url}`, sender: me.email, receiver: t, is_read: false });
+        toggleAttach();
     }
 
     async function handleTyping() {
@@ -254,7 +276,8 @@
 
     function checkTypingStatus() {
         const i = document.getElementById('typing-indicator');
-        if (allUsersData[opponent.email]?.typing_to === me.email) { i.style.display = 'block'; } else { i.style.display = 'none'; }
+        if (allUsersData[opponent.email]?.typing_to === me.email) i.style.display = 'block';
+        else i.style.display = 'none';
     }
 
     async function handleAuth() {
@@ -265,19 +288,12 @@
                 await db.createDocument(D_ID, C_USERS, ID.unique(), { name: n, email: e, last_seen: new Date().toISOString() });
             } else await acc.createEmailSession(e, p);
             location.reload();
-        } catch (err) { alert(err.message); }
-    }
-
-    async function uploadPhoto(el) {
-        const f = await storage.createFile(B_ID, ID.unique(), el.files[0]);
-        const url = `https://cloud.appwrite.io/v1/storage/buckets/${B_ID}/files/${f.$id}/view?project=${client.config.project}`;
-        let t = isFamily ? FAMILY_ID : (isGrigorovGroup ? GRIGOROV_ID : opponent.email);
-        await db.createDocument(D_ID, C_MSGS, ID.unique(), { text: `IMG:${url}`, sender: me.email, receiver: t, is_read: false });
-        toggleAttach();
+        } catch (err) { alert("Ошибка!"); }
     }
 
     async function markAsRead(msgs) { for (let m of msgs) if(!m.is_read) await db.updateDocument(D_ID, C_MSGS, m.$id, { is_read: true }); }
     async function toggleShinyNickDB() { const curr = allUsersData[me.email].is_shiny || false; await db.updateDocument(D_ID, C_USERS, myUserDocId, { is_shiny: !curr }); }
+    function checkNotifyPermission() { if (Notification.permission === "granted") { notifyAllowed = true; document.getElementById('notify-btn').innerText = '🔔'; } }
     function toggleMode() { document.getElementById('u-nick').style.display = 'block'; document.getElementById('toggle-text').innerText = "Войти"; }
     function toggleAttach() { const p = document.getElementById('attach-panel'); p.style.display = p.style.display === 'block' ? 'none' : 'block'; }
     function show(id) { ['auth-screen', 'contacts-screen', 'chat-screen'].forEach(s => document.getElementById(s).style.display = 'none'); document.getElementById(id).style.display = 'flex'; }
@@ -285,15 +301,11 @@
     function logout() { acc.deleteSession('current'); location.reload(); }
     function openAdmin() { document.getElementById('admin-panel').style.display = 'block'; }
 
-    // РЕГИСТРАЦИЯ SERVICE WORKER
     if ('serviceWorker' in navigator) {
-        window.addEventListener('load', () => {
-            navigator.serviceWorker.register('/sw.js').then(reg => console.log('SW OK')).catch(err => console.log('SW Error'));
-        });
+        window.addEventListener('load', () => { navigator.serviceWorker.register('/sw.js'); });
     }
 
     init();
 </script>
 </body>
 </html>
-
