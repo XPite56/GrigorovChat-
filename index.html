@@ -7,9 +7,10 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/1041/1041916.png">
     
-    <title>GrigorovChat Full v1.2.9</title>
+    <title>GrigorovChat v1.2.5</title>
     <script src="https://cdn.jsdelivr.net/npm/appwrite@13.0.1"></script>
     
+    <script>(function(w,d, s, id) {if(typeof(w.webpushr)!=='undefined') return;w.webpushr=w.webpushr||function(){(w.webpushr.q=w.webpushr.q||[]).push(arguments)};var js, fjs = d.getElementsByTagName(s)[0];js = d.createElement(s); js.id = id;js.async=1;js.src = "https://cdn.webpushr.com/app.min.js";fjs.parentNode.appendChild(js);}(window,document, 'script', 'webpushr-jssdk'));webpushr('setup',{'key':'BDqbqwHum1NhlSMY96oDE6FpE-kwQtJwXrRgxmyUhLJVJkqiZB3STu7FeoyF_iPC1ZJutMVWyYlJsmxK_v553hM' });</script>
     <style>
         :root { 
             --p: #6c5ce7; --bg: #13132b; --card: rgba(255, 255, 255, 0.08); 
@@ -45,8 +46,6 @@
         .shiny-nick { background: linear-gradient(to right, #f1c40f, #ffeb3b, #f1c40f); -webkit-background-clip: text; color: transparent; animation: shine 3s infinite linear; font-weight: 800; }
         @keyframes shine { 0% { background-position: 0% 50%; } 100% { background-position: 200% 50%; } }
 
-        #typing-indicator { font-size: 13px; color: var(--gold); font-style: italic; margin-bottom: 10px; display: none; }
-        #notify-btn { background: none; border: none; font-size: 26px; cursor: pointer; margin-right: 10px; }
         #admin-panel { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(10,10,25,0.98); z-index: 500; padding: 40px 20px; }
         #attach-panel { display: none; background: rgba(25, 25, 50, 0.95); border-radius: 30px 30px 0 0; padding: 25px; position: fixed; bottom: 85px; left: 0; right: 0; z-index: 100; backdrop-filter: blur(20px); border-top: 1px solid rgba(255,255,255,0.1); }
     </style>
@@ -59,17 +58,15 @@
         <h2 style="text-align:center; color: var(--gold); margin-bottom: 30px;">👑 АДМИН-ЦЕНТР</h2>
         <div style="display:grid; grid-template-columns: 1fr 1fr; gap:20px;">
             <div class="glass-card" onclick="toggleShinyNickDB()" style="max-width:none; margin:0;"><span style="font-size:35px; display:block">✨</span> Ник</div>
-            <div class="glass-card" onclick="alert('Логи шпиона в консоли')" style="max-width:none; margin:0;"><span style="font-size:35px; display:block">👁️</span> Шпион</div>
+            <div class="glass-card" onclick="alert('Логи шпиона активны')" style="max-width:none; margin:0;"><span style="font-size:35px; display:block">👁️</span> Шпион</div>
         </div>
         <button onclick="document.getElementById('admin-panel').style.display='none'" class="btn-p" style="margin-top:40px; background:var(--red)">ЗАКРЫТЬ</button>
     </div>
 
-    <button id="admin-btn" onclick="openAdmin()" style="position:fixed; top:55px; right:20px; background:none; border:none; font-size:24px; display:none; z-index:200;">👑</button>
-
     <div id="auth-screen">
         <div class="glass-card">
             <h1>GrigorovChat</h1>
-            <p style="opacity:0.5; margin-bottom:25px; font-size:13px">v1.2.9 | 5s Live iOS</p>
+            <p style="opacity:0.5; margin-bottom:25px; font-size:11px">v1.2.5</p>
             <input type="email" id="u-email" placeholder="Email">
             <input type="text" id="u-nick" placeholder="Имя" style="display:none">
             <input type="password" id="pass" placeholder="Пароль">
@@ -80,11 +77,11 @@
 
     <div id="contacts-screen">
         <header style="display:flex; justify-content:space-between; align-items:center; margin-bottom:25px;">
-            <div style="display:flex; align-items:center;">
-                <button id="notify-btn" onclick="requestNotifyPermission()">🔕</button>
-                <h1 style="font-size:34px; font-weight:900">Чаты</h1>
+            <h1 style="font-size:34px; font-weight:900">Чаты</h1>
+            <div style="display:flex; align-items:center; gap:15px">
+                <button id="admin-btn" onclick="openAdmin()" style="display:none; background:none; border:none; font-size:28px;">👑</button>
+                <button onclick="logout()" style="opacity:0.7; background:none; border:none; color:white; font-weight:bold">Выход</button>
             </div>
-            <button onclick="logout()" style="opacity:0.7; background:none; border:none; color:white; font-weight:bold">Выход</button>
         </header>
         <div id="user-list" style="overflow-y: auto; flex: 1;"></div>
     </div>
@@ -95,7 +92,6 @@
             <b id="active-chat-name" style="font-size:20px">Чат</b>
         </header>
         <div id="messages"></div>
-        <div id="typing-indicator">✍️ печатает...</div>
         <div id="attach-panel">
             <label style="text-align:center; cursor:pointer; display:block">
                 <input type="file" id="file-inp" accept="image/*" style="display:none" onchange="uploadPhoto(this)">
@@ -105,7 +101,7 @@
         </div>
         <div style="position:fixed; bottom:25px; left:20px; right:20px; display:flex; gap:12px; align-items: center; z-index:110;">
             <button onclick="toggleAttach()" style="background:rgba(255,255,255,0.1); border:none; width:55px; height:55px; border-radius:20px; font-size:26px; color:white;">📎</button>
-            <input type="text" id="msg-inp" placeholder="Сообщение..." style="margin:0; flex:1; height:55px" oninput="handleTyping()">
+            <input type="text" id="msg-inp" placeholder="Сообщение..." style="margin:0; flex:1; height:55px">
             <button onclick="sendMsg()" style="background:var(--p); border:none; width:55px; height:55px; border-radius:20px; color:white; font-size:22px">➤</button>
         </div>
     </div>
@@ -121,10 +117,7 @@
     const ALLOWED_GRIGOROVS = ['Даниил', 'Александр', 'Анюта'];
 
     let me = null, opponent = null, isFamily = false, isGrigorovGroup = false;
-    let allUsersData = {}, myUserDocId = null, typingTimeout = null, audioUnlocked = false;
-
-    // ФИКС ДЛЯ IOS (Запоминание колокольчика)
-    let notifyAllowed = localStorage.getItem('notifyEnabled') === 'true';
+    let allUsersData = {}, myUserDocId = null, audioUnlocked = false;
 
     async function init() {
         try {
@@ -133,9 +126,10 @@
             show('contacts-screen');
             await initialLoadUsers();
             
-            // HEARTBEAT 5 SECONDS
-            startHeartbeat(); 
-            checkNotifyPermission();
+            // Heartbeat 5s
+            setInterval(async () => {
+                if(myUserDocId) await db.updateDocument(D_ID, C_USERS, myUserDocId, { last_seen: new Date().toISOString() }).catch(()=>{});
+            }, 5000);
 
             client.subscribe(`databases.${D_ID}.collections.${C_MSGS}.documents`, res => {
                 const m = res.payload;
@@ -144,15 +138,13 @@
                     loadMessages(); if (m.sender !== me.email) markAsRead([m]);
                 }
                 if (m.sender !== me.email) {
-                    const isForMe = m.receiver === me.email || m.receiver === FAMILY_ID || (m.receiver === GRIGOROV_ID && ALLOWED_GRIGOROVS.includes(allUsersData[me.email]?.name));
-                    if (isForMe && (document.hidden || document.getElementById('chat-screen').style.display === 'none')) triggerNotify(m);
+                    document.getElementById('notify-sound').play().catch(()=>{});
                 }
             });
 
             client.subscribe(`databases.${D_ID}.collections.${C_USERS}.documents`, res => {
                 allUsersData[res.payload.email] = res.payload;
                 renderUserList();
-                if (opponent && res.payload.email === opponent.email) checkTypingStatus();
             });
         } catch (e) { show('auth-screen'); }
     }
@@ -161,14 +153,6 @@
         if (audioUnlocked) return;
         const a = document.getElementById('notify-sound');
         a.play().then(() => { a.pause(); a.currentTime = 0; audioUnlocked = true; }).catch(()=>{});
-    }
-
-    async function startHeartbeat() {
-        if (!myUserDocId) return;
-        const beat = async () => {
-            try { await db.updateDocument(D_ID, C_USERS, myUserDocId, { last_seen: new Date().toISOString() }); } catch(e) {}
-        };
-        beat(); setInterval(beat, 5000); 
     }
 
     function renderUserList() {
@@ -192,29 +176,6 @@
             card.innerHTML = `<div class="avatar">${u.name[0].toUpperCase()}<div class="status-dot ${isOnline?'online':'offline'}"></div></div><b class="${u.is_shiny?'shiny-nick':''}">${u.name}</b>`;
             list.appendChild(card);
         });
-    }
-
-    function checkNotifyPermission() {
-        if (Notification.permission === "granted" && notifyAllowed) {
-            document.getElementById('notify-btn').innerText = '🔔';
-        }
-    }
-
-    async function requestNotifyPermission() {
-        const permission = await Notification.requestPermission();
-        if (permission === "granted") {
-            notifyAllowed = true;
-            localStorage.setItem('notifyEnabled', 'true');
-            document.getElementById('notify-btn').innerText = '🔔';
-            new Notification("GrigorovChat", { body: "Уведомления включены!" });
-        }
-    }
-
-    function triggerNotify(m) {
-        document.getElementById('notify-sound').play().catch(() => {});
-        if (Notification.permission === "granted" && notifyAllowed) {
-            new Notification(allUsersData[m.sender]?.name || "Чат", { body: m.text.startsWith('IMG:') ? 'Фотография' : m.text });
-        }
     }
 
     async function initialLoadUsers() {
@@ -253,24 +214,12 @@
     }
 
     async function uploadPhoto(el) {
+        if(!el.files[0]) return;
         const f = await storage.createFile(B_ID, ID.unique(), el.files[0]);
         const url = `https://cloud.appwrite.io/v1/storage/buckets/${B_ID}/files/${f.$id}/view?project=${client.config.project}`;
         let t = isFamily ? FAMILY_ID : (isGrigorovGroup ? GRIGOROV_ID : opponent.email);
         await db.createDocument(D_ID, C_MSGS, ID.unique(), { text: `IMG:${url}`, sender: me.email, receiver: t, is_read: false });
         toggleAttach();
-    }
-
-    async function handleTyping() {
-        if (!opponent || isFamily || isGrigorovGroup) return;
-        db.updateDocument(D_ID, C_USERS, myUserDocId, { typing_to: opponent.email });
-        if (typingTimeout) clearTimeout(typingTimeout);
-        typingTimeout = setTimeout(() => { db.updateDocument(D_ID, C_USERS, myUserDocId, { typing_to: null }); }, 2000);
-    }
-
-    function checkTypingStatus() {
-        const i = document.getElementById('typing-indicator');
-        if (allUsersData[opponent.email]?.typing_to === me.email) i.style.display = 'block';
-        else i.style.display = 'none';
     }
 
     async function handleAuth() {
@@ -281,11 +230,11 @@
                 await db.createDocument(D_ID, C_USERS, ID.unique(), { name: n, email: e, last_seen: new Date().toISOString() });
             } else await acc.createEmailSession(e, p);
             location.reload();
-        } catch (err) { alert(err.message); }
+        } catch (err) { alert("Ошибка!"); }
     }
 
     async function markAsRead(msgs) { for (let m of msgs) if(!m.is_read) await db.updateDocument(D_ID, C_MSGS, m.$id, { is_read: true }); }
-    async function toggleShinyNickDB() { const curr = allUsersData[me.email].is_shiny || false; await db.updateDocument(D_ID, C_USERS, myUserDocId, { is_shiny: !curr }); }
+    async function toggleShinyNickDB() { const curr = allUsersData[me.email].is_shiny || false; await db.updateDocument(D_ID, C_USERS, myUserDocId, { is_shiny: !curr }); alert(" ✨ Статус обновлен"); }
     function toggleMode() { document.getElementById('u-nick').style.display = 'block'; document.getElementById('toggle-text').innerText = "Войти"; }
     function toggleAttach() { const p = document.getElementById('attach-panel'); p.style.display = p.style.display === 'block' ? 'none' : 'block'; }
     function show(id) { ['auth-screen', 'contacts-screen', 'chat-screen'].forEach(s => document.getElementById(s).style.display = 'none'); document.getElementById(id).style.display = 'flex'; }
@@ -293,10 +242,8 @@
     function logout() { acc.deleteSession('current'); location.reload(); }
     function openAdmin() { document.getElementById('admin-panel').style.display = 'block'; }
 
-    if ('serviceWorker' in navigator) {
-        window.addEventListener('load', () => { navigator.serviceWorker.register('/sw.js'); });
-    }
     init();
 </script>
 </body>
 </html>
+
