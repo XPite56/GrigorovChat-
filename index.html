@@ -3,69 +3,52 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="GrigorovChat">
     <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/1041/1041916.png"> 
     
     <title>GrigorovChat v1.2.5</title>
     <script src="https://cdn.jsdelivr.net/npm/appwrite@13.0.1"></script>
+    
     <style>
         :root { 
-            --p: #6c5ce7; 
-            --bg: #13132b; 
-            --card: rgba(255, 255, 255, 0.08); 
-            --gold: #f1c40f; 
-            --red: #ff4757; 
-            --online: #2ecc71; 
-            --offline: #95a5a6; 
+            --p: #6c5ce7; --bg: #13132b; --card: rgba(255, 255, 255, 0.08); 
+            --gold: #f1c40f; --red: #ff4757; --online: #2ecc71; --offline: #95a5a6; 
         }
 
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', sans-serif; -webkit-tap-highlight-color: transparent; }
         body { background: radial-gradient(circle at center, #2e2e5d 0%, #13132b 100%); color: white; height: 100vh; overflow: hidden; }
         
-        #auth-screen { display: flex; } /* Показываем сразу, чтобы не было синего экрана */
-        #contacts-screen, #chat-screen { display: none; }
-        #auth-screen, #contacts-screen, #chat-screen { padding: 20px; height: 100vh; flex-direction: column; }
+        #auth-screen, #contacts-screen, #chat-screen { padding: 20px; height: 100vh; display: none; flex-direction: column; }
 
         .glass-card { margin: auto; width: 100%; max-width: 340px; text-align: center; background: rgba(255, 255, 255, 0.05); padding: 30px; border-radius: 30px; backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.1); }
         input { width: 100%; padding: 16px; margin: 10px 0; border-radius: 18px; border: none; background: rgba(255,255,255,0.1); color: white; outline: none; }
-        .btn-p { width: 100%; padding: 16px; border-radius: 18px; border: none; background: var(--p); color: white; font-weight: bold; cursor: pointer; transition: 0.3s; }
-        .btn-p:active { transform: scale(0.95); }
+        .btn-p { width: 100%; padding: 16px; border-radius: 18px; border: none; background: var(--p); color: white; font-weight: bold; cursor: pointer; }
         
-        .contact-card { background: var(--card); padding: 15px; border-radius: 20px; display: flex; align-items: center; gap: 12px; margin-bottom: 10px; cursor: pointer; border: 1px solid rgba(255,255,255,0.05); position: relative; transition: 0.2s; }
-        .contact-card:active { transform: scale(0.98); background: rgba(255,255,255,0.1); }
+        .contact-card { background: var(--card); padding: 15px; border-radius: 22px; display: flex; align-items: center; gap: 15px; margin-bottom: 12px; cursor: pointer; border: 1px solid rgba(255,255,255,0.05); position: relative; }
         
-        .avatar { width: 45px; height: 45px; border-radius: 15px; background: var(--p); display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 20px; position: relative; }
+        .avatar { width: 50px; height: 50px; border-radius: 16px; background: var(--p); display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 22px; position: relative; }
         .avatar-family { background: linear-gradient(45deg, #6c5ce7, #a29bfe); border: 2px solid var(--gold); }
         .avatar-grigorov { background: linear-gradient(45deg, #ff4757, #ff6b81); border: 2px solid white; }
         
-        .status-dot { width: 12px; height: 12px; border-radius: 50%; border: 2px solid #1e1e3f; position: absolute; bottom: -2px; right: -2px; z-index: 10; }
-        .online { background: var(--online); box-shadow: 0 0 5px var(--online); }
+        .status-dot { width: 14px; height: 14px; border-radius: 50%; border: 2.5px solid #1e1e3f; position: absolute; bottom: -3px; right: -3px; }
+        .online { background: var(--online); box-shadow: 0 0 8px var(--online); }
         .offline { background: var(--offline); }
 
-        #messages { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; padding-bottom: 100px; }
-        .msg { max-width: 80%; padding: 10px 14px; border-radius: 18px; background: var(--card); align-self: flex-start; position: relative; word-wrap: break-word; }
-        .msg-info { display: flex; justify-content: flex-end; align-items: center; gap: 5px; margin-top: 4px; opacity: 0.6; }
-        .msg-time { font-size: 9px; }
-        .read-status { font-size: 12px; }
-        .msg-author { font-size: 11px; color: var(--gold); font-weight: bold; display: block; margin-bottom: 4px; }
+        #messages { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; padding-bottom: 110px; }
+        .msg { max-width: 82%; padding: 12px 16px; border-radius: 20px; background: var(--card); align-self: flex-start; word-wrap: break-word; }
         .my { align-self: flex-end; background: var(--p); border-bottom-right-radius: 4px; }
-        .msg img { max-width: 100%; border-radius: 12px; margin-top: 5px; }
+        .msg-info { display: flex; justify-content: flex-end; align-items: center; gap: 6px; margin-top: 5px; opacity: 0.7; font-size: 10px; }
+        .msg-author { font-size: 11px; color: var(--gold); font-weight: bold; display: block; margin-bottom: 5px; }
+        .msg img { max-width: 100%; border-radius: 14px; margin-top: 8px; }
 
-        #typing-indicator { position: fixed; bottom: 90px; left: 25px; font-size: 12px; color: var(--gold); font-style: italic; display: none; animation: pulse 1.5s infinite; }
-        @keyframes pulse { 0%, 100% {opacity:0.5;} 50% {opacity:1;} }
-
-        .shiny-nick { background: linear-gradient(to right, #f1c40f, #ffeb3b, #f1c40f); -webkit-background-clip: text; background-clip: text; color: transparent; animation: shine 3s infinite linear; font-weight: 800; }
+        .shiny-nick { background: linear-gradient(to right, #f1c40f, #ffeb3b, #f1c40f); -webkit-background-clip: text; color: transparent; animation: shine 3s infinite linear; font-weight: 800; }
         @keyframes shine { 0% { background-position: 0% 50%; } 100% { background-position: 200% 50%; } }
 
-        #admin-btn { position: fixed; top: 22px; right: 80px; font-size: 22px; background: none; border: none; cursor: pointer; z-index: 200; display: none; }
-        #notify-btn { background: none; border: none; font-size: 24px; cursor: pointer; transition: 0.3s; margin-right: 10px; }
-        #notify-btn:active { transform: scale(1.2); }
-
-        #admin-panel { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 300; padding: 30px; overflow-y: auto; }
-        #attach-panel { display: none; background: rgba(20, 20, 45, 0.98); border-radius: 25px 25px 0 0; padding: 20px; position: fixed; bottom: 85px; left: 0; right: 0; z-index: 100; backdrop-filter: blur(15px); }
+        #typing-indicator { font-size: 13px; color: var(--gold); font-style: italic; margin-bottom: 10px; display: none; }
+        #notify-btn { background: none; border: none; font-size: 26px; cursor: pointer; margin-right: 10px; }
+        #admin-panel { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(10,10,25,0.98); z-index: 500; padding: 40px 20px; }
+        #attach-panel { display: none; background: rgba(25, 25, 50, 0.95); border-radius: 30px 30px 0 0; padding: 25px; position: fixed; bottom: 85px; left: 0; right: 0; z-index: 100; backdrop-filter: blur(20px); border-top: 1px solid rgba(255,255,255,0.1); }
     </style>
 </head>
 <body>
@@ -73,59 +56,57 @@
     <audio id="notify-sound" src="Keylimba_260124162943.mp3" preload="auto"></audio>
 
     <div id="admin-panel">
-        <h2 style="text-align:center; color: var(--gold); margin-bottom: 20px;">👑 АДМИН ПАНЕЛЬ</h2>
-        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:15px;">
-            <div class="glass-card" onclick="toggleShinyNickDB()" style="max-width:none; margin:0;"><span style="font-size:30px; display:block">✨</span> Ник</div>
-            <div class="glass-card" onclick="alert('Режим шпиона активирован')" style="max-width:none; margin:0;"><span style="font-size:30px; display:block">👁️</span> Шпион</div>
+        <h2 style="text-align:center; color: var(--gold); margin-bottom: 30px;">👑 АДМИН-ЦЕНТР</h2>
+        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:20px;">
+            <div class="glass-card" onclick="toggleShinyNickDB()" style="max-width:none; margin:0;"><span style="font-size:35px; display:block">✨</span> Ник</div>
+            <div class="glass-card" onclick="alert('Логи шпиона в консоли')" style="max-width:none; margin:0;"><span style="font-size:35px; display:block">👁️</span> Шпион</div>
         </div>
-        <button onclick="document.getElementById('admin-panel').style.display='none'" class="btn-p" style="margin-top:30px; background:var(--red)">ЗАКРЫТЬ</button>
+        <button onclick="document.getElementById('admin-panel').style.display='none'" class="btn-p" style="margin-top:40px; background:var(--red)">ЗАКРЫТЬ</button>
     </div>
 
-    <button id="admin-btn" onclick="openAdmin()">👑</button>
+    <button id="admin-btn" onclick="openAdmin()" style="position:fixed; top:22px; right:85px; background:none; border:none; font-size:24px; display:none; z-index:200;">👑</button>
 
     <div id="auth-screen">
         <div class="glass-card">
             <h1>GrigorovChat</h1>
-            <p style="opacity:0.5; margin-bottom:20px; font-size:12px">v1.2.5</p>
+            <p style="opacity:0.5; margin-bottom:25px; font-size:13px">v1.2.5 | 5s Live Status</p>
             <input type="email" id="u-email" placeholder="Email">
             <input type="text" id="u-nick" placeholder="Имя" style="display:none">
             <input type="password" id="pass" placeholder="Пароль">
             <button class="btn-p" onclick="handleAuth()">ВОЙТИ</button>
-            <p onclick="toggleMode()" id="toggle-text" style="margin-top:20px; cursor:pointer; opacity:0.5">Нет аккаунта?</p>
+            <p onclick="toggleMode()" id="toggle-text" style="margin-top:20px; cursor:pointer; opacity:0.6">Создать аккаунт</p>
         </div>
     </div>
 
     <div id="contacts-screen">
-        <header style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+        <header style="display:flex; justify-content:space-between; align-items:center; margin-bottom:25px;">
             <div style="display:flex; align-items:center;">
-                <button id="notify-btn" onclick="requestNotifyPermission()">🔔</button>
-                <h1 style="font-size:32px; font-weight:800">Чаты</h1>
+                <button id="notify-btn" onclick="requestNotifyPermission()">🔕</button>
+                <h1 style="font-size:34px; font-weight:900">Чаты</h1>
             </div>
-            <button onclick="logout()" style="opacity:0.6; background:none; border:none; color:white; font-weight:bold">Выход</button>
+            <button onclick="logout()" style="opacity:0.7; background:none; border:none; color:white; font-weight:bold">Выход</button>
         </header>
-        <div id="user-list"></div>
+        <div id="user-list" style="overflow-y: auto; flex: 1;"></div>
     </div>
 
     <div id="chat-screen">
         <header style="margin-bottom:20px; display:flex; align-items:center; gap:15px">
-            <div onclick="closeChat()" style="cursor:pointer; background:rgba(255,255,255,0.1); width:40px; height:40px; border-radius:15px; display:flex; align-items:center; justify-content:center">←</div>
+            <div onclick="closeChat()" style="cursor:pointer; background:rgba(255,255,255,0.1); width:45px; height:45px; border-radius:18px; display:flex; align-items:center; justify-content:center">←</div>
             <b id="active-chat-name" style="font-size:20px">Чат</b>
         </header>
         <div id="messages"></div>
         <div id="typing-indicator">✍️ печатает...</div>
-        
         <div id="attach-panel">
             <label style="text-align:center; cursor:pointer; display:block">
                 <input type="file" id="file-inp" accept="image/*" style="display:none" onchange="uploadPhoto(this)">
-                <div style="width:65px; height:65px; background:rgba(255,255,255,0.1); border-radius:20px; display:flex; align-items:center; justify-content:center; font-size:28px; margin:0 auto 5px auto">🖼️</div>
+                <div style="width:70px; height:70px; background:var(--p); border-radius:24px; display:flex; align-items:center; justify-content:center; font-size:32px; margin:0 auto 10px auto">🖼️</div>
                 <span>Фото</span>
             </label>
         </div>
-
-        <div style="position:fixed; bottom:25px; left:20px; right:20px; display:flex; gap:12px; align-items: center;">
-            <button onclick="toggleAttach()" style="background:none; border:none; font-size:28px; color:white;">📎</button>
-            <input type="text" id="msg-inp" placeholder="Сообщение..." style="margin:0; flex:1" oninput="handleTyping()">
-            <button onclick="sendMsg()" style="background:var(--p); border:none; width:55px; height:55px; border-radius:20px; color:white; font-size:20px">➤</button>
+        <div style="position:fixed; bottom:25px; left:20px; right:20px; display:flex; gap:12px; align-items: center; z-index:110;">
+            <button onclick="toggleAttach()" style="background:rgba(255,255,255,0.1); border:none; width:55px; height:55px; border-radius:20px; font-size:26px; color:white;">📎</button>
+            <input type="text" id="msg-inp" placeholder="Сообщение..." style="margin:0; flex:1; height:55px" oninput="handleTyping()">
+            <button onclick="sendMsg()" style="background:var(--p); border:none; width:55px; height:55px; border-radius:20px; color:white; font-size:22px">➤</button>
         </div>
     </div>
 
@@ -148,58 +129,38 @@
             if (me.email === ADMIN_EMAIL) document.getElementById('admin-btn').style.display = 'block';
             show('contacts-screen');
             await initialLoadUsers();
-            startHeartbeat();
+            startHeartbeat(); // ЗАПУСК ПРОВЕРКИ 5 СЕКУНД
             checkNotifyPermission();
 
             client.subscribe(`databases.${D_ID}.collections.${C_MSGS}.documents`, res => {
                 const m = res.payload;
-                if (document.getElementById('chat-screen').style.display === 'flex') {
-                    const isRelevant = (isFamily && m.receiver === FAMILY_ID) || (isGrigorovGroup && m.receiver === GRIGOROV_ID) || (!isFamily && !isGrigorovGroup && ((m.sender === me.email && m.receiver === opponent.email) || (m.sender === opponent.email && m.receiver === me.email)));
-                    if (isRelevant) { loadMessages(); if (m.sender !== me.email) markAsRead([m]); }
+                const isCurrent = (isFamily && m.receiver === FAMILY_ID) || (isGrigorovGroup && m.receiver === GRIGOROV_ID) || (!isFamily && !isGrigorovGroup && ((m.sender === me.email && m.receiver === opponent?.email) || (m.sender === opponent?.email && m.receiver === me.email)));
+                if (document.getElementById('chat-screen').style.display === 'flex' && isCurrent) {
+                    loadMessages(); if (m.sender !== me.email) markAsRead([m]);
                 }
                 if (m.sender !== me.email) {
-                    let shouldNotify = (m.receiver === me.email || m.receiver === FAMILY_ID || (m.receiver === GRIGOROV_ID && ALLOWED_GRIGOROVS.includes(allUsersData[me.email]?.name)));
-                    if (shouldNotify && (document.hidden || document.getElementById('chat-screen').style.display === 'none')) {
-                        sendNotification(`💬 ${allUsersData[m.sender]?.name || "Кто-то"}`, m.text.startsWith('IMG:') ? 'Фотография' : m.text);
-                    }
+                    const isForMe = m.receiver === me.email || m.receiver === FAMILY_ID || (m.receiver === GRIGOROV_ID && ALLOWED_GRIGOROVS.includes(allUsersData[me.email]?.name));
+                    if (isForMe && (document.hidden || document.getElementById('chat-screen').style.display === 'none')) triggerNotify(m);
                 }
             });
 
             client.subscribe(`databases.${D_ID}.collections.${C_USERS}.documents`, res => {
                 allUsersData[res.payload.email] = res.payload;
                 renderUserList();
-                checkTypingStatus();
+                if (opponent && res.payload.email === opponent.email) checkTypingStatus();
             });
         } catch (e) { show('auth-screen'); }
     }
 
-    function requestNotifyPermission() {
-        if (!("Notification" in window)) return;
-        Notification.requestPermission().then(permission => {
-            if (permission === "granted") {
-                notifyAllowed = true;
-                document.getElementById('notify-btn').innerText = '🔔';
-                new Notification("GrigorovChat", { body: "Уведомления включены!" });
-            }
-        });
-    }
-
-    function checkNotifyPermission() {
-        if ("Notification" in window && Notification.permission === "granted") {
-            notifyAllowed = true;
-            document.getElementById('notify-btn').innerText = '🔔';
-        }
-    }
-
-    function sendNotification(title, body) {
-        document.getElementById('notify-sound').play().catch(e => {});
-        if (notifyAllowed) new Notification(title, { body: body, icon: "https://cdn-icons-png.flaticon.com/512/1041/1041916.png" });
-    }
-
-    async function initialLoadUsers() {
-        const res = await db.listDocuments(D_ID, C_USERS);
-        res.documents.forEach(u => { allUsersData[u.email] = u; if (u.email === me.email) myUserDocId = u.$id; });
-        renderUserList();
+    // --- ПРОВЕРКА ОНЛАЙН РАЗ В 5 СЕКУНД ---
+    async function startHeartbeat() {
+        if (!myUserDocId) return;
+        const beat = async () => {
+            await db.updateDocument(D_ID, C_USERS, myUserDocId, { last_seen: new Date().toISOString() });
+            renderUserList(); // Перерисовываем точки онлайна каждые 5 сек
+        };
+        beat(); 
+        setInterval(beat, 5000); // 5000 мс = 5 сек
     }
 
     function renderUserList() {
@@ -214,13 +175,14 @@
             const card = document.createElement('div');
             card.className = 'contact-card';
             card.onclick = () => openChat(g.id, g.name, g.type);
-            card.innerHTML = `<div class="avatar ${g.class}">${g.icon}</div><div><b>${g.name}</b>${g.vip?'<p style="font-size:10px;opacity:0.5;color:var(--gold)">VIP Семейный</p>':''}</div>`;
+            card.innerHTML = `<div class="avatar ${g.class}">${g.icon}</div><div><b>${g.name}</b>${g.vip?'<p style="font-size:10px;color:var(--gold)">VIP</p>':''}</div>`;
             list.appendChild(card);
         });
 
         Object.values(allUsersData).forEach(u => {
             if (u.email === me.email) return;
-            let isOnline = u.last_seen && (new Date() - new Date(u.last_seen) < 120000);
+            // Онлайн, если последнее обновление было меньше 15 секунд назад (с запасом на лаги)
+            let isOnline = u.last_seen && (new Date() - new Date(u.last_seen) < 15000);
             const card = document.createElement('div');
             card.className = 'contact-card';
             card.onclick = () => openChat(u.email, u.name, 'PRIVATE');
@@ -229,25 +191,30 @@
         });
     }
 
-    async function startHeartbeat() {
-        if (!myUserDocId) return;
-        const beat = () => db.updateDocument(D_ID, C_USERS, myUserDocId, { last_seen: new Date().toISOString() });
-        beat(); setInterval(beat, 60000);
+    // --- УВЕДОМЛЕНИЯ И ЗВУК ---
+    function requestNotifyPermission() {
+        const audio = document.getElementById('notify-sound');
+        audio.play().then(() => { audio.pause(); audio.currentTime = 0; }).catch(() => {});
+        Notification.requestPermission().then(p => {
+            if (p === "granted") {
+                notifyAllowed = true; document.getElementById('notify-btn').innerText = '🔔';
+                new Notification("GrigorovChat", { body: "Уведомления включены!" });
+            }
+        });
     }
 
-    async function handleTyping() {
-        if (!opponent || isFamily || isGrigorovGroup) return;
-        if (typingTimeout) clearTimeout(typingTimeout);
-        db.updateDocument(D_ID, C_USERS, myUserDocId, { typing_to: opponent.email });
-        typingTimeout = setTimeout(() => { db.updateDocument(D_ID, C_USERS, myUserDocId, { typing_to: null }); }, 2000);
+    function checkNotifyPermission() { if (Notification.permission === "granted") { notifyAllowed = true; document.getElementById('notify-btn').innerText = '🔔'; } }
+
+    function triggerNotify(m) {
+        document.getElementById('notify-sound').play().catch(() => {});
+        if (notifyAllowed) new Notification(allUsersData[m.sender]?.name || "Чат", { body: m.text.startsWith('IMG:') ? 'Фотография' : m.text });
     }
 
-    function checkTypingStatus() {
-        if (!opponent || document.getElementById('chat-screen').style.display !== 'flex') return;
-        const indic = document.getElementById('typing-indicator');
-        const oppData = allUsersData[opponent.email];
-        if (oppData && oppData.typing_to === me.email) { indic.style.display = 'block'; indic.innerText = `${oppData.name} пишет...`; }
-        else { indic.style.display = 'none'; }
+    // --- ОСТАЛЬНАЯ ЛОГИКА ---
+    async function initialLoadUsers() {
+        const res = await db.listDocuments(D_ID, C_USERS);
+        res.documents.forEach(u => { allUsersData[u.email] = u; if (u.email === me.email) myUserDocId = u.$id; });
+        renderUserList();
     }
 
     async function openChat(id, name, type) {
@@ -260,36 +227,34 @@
         const res = await db.listDocuments(D_ID, C_MSGS, [Query.orderDesc("$createdAt"), Query.limit(50)]);
         const box = document.getElementById('messages'); box.innerHTML = '';
         let filtered = res.documents.filter(m => isFamily ? m.receiver === FAMILY_ID : (isGrigorovGroup ? m.receiver === GRIGOROV_ID : ((m.sender === me.email && m.receiver === opponent.email) || (m.sender === opponent.email && m.receiver === me.email))));
-
         filtered.reverse().forEach(m => {
-            const d = document.createElement('div');
-            const isMy = m.sender === me.email;
-            const sData = allUsersData[m.sender];
-            d.className = `msg ${isMy ? 'my' : ''}`;
-            let author = ((isFamily || isGrigorovGroup) && !isMy) ? `<span class="msg-author ${sData?.is_shiny?'shiny-nick':''}">${sData?.name||'User'}</span>` : '';
+            const isMy = m.sender === me.email; const sData = allUsersData[m.sender];
+            const d = document.createElement('div'); d.className = `msg ${isMy ? 'my' : ''}`;
+            let author = ((isFamily || isGrigorovGroup) && !isMy) ? `<span class="msg-author ${sData?.is_shiny?'shiny-nick':''}">${sData?.name}</span>` : '';
             let content = m.text.startsWith('IMG:') ? `<img src="${m.text.replace('IMG:', '')}">` : m.text;
-            d.innerHTML = `${author}${content}<div class="msg-info"><span class="read-status">${isMy?(m.is_read?'👁️':''):''}</span><span class="msg-time">${new Date(m.$createdAt).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}</span></div>`;
+            d.innerHTML = `${author}${content}<div class="msg-info"><span>${isMy?(m.is_read?'👁️':''):''}</span><span>${new Date(m.$createdAt).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}</span></div>`;
             box.appendChild(d);
         });
         box.scrollTop = box.scrollHeight;
     }
 
-    async function markAsRead(messages) { for (let m of messages) if(!m.is_read) await db.updateDocument(D_ID, C_MSGS, m.$id, { is_read: true }); }
-
     async function sendMsg() {
         const inp = document.getElementById('msg-inp'); if(!inp.value.trim()) return;
-        let r = isFamily ? FAMILY_ID : (isGrigorovGroup ? GRIGOROV_ID : opponent.email);
-        await db.createDocument(D_ID, C_MSGS, ID.unique(), { text: inp.value, sender: me.email, receiver: r, is_read: false });
+        let t = isFamily ? FAMILY_ID : (isGrigorovGroup ? GRIGOROV_ID : opponent.email);
+        await db.createDocument(D_ID, C_MSGS, ID.unique(), { text: inp.value, sender: me.email, receiver: t, is_read: false });
         inp.value = "";
     }
 
-    async function uploadPhoto(el) {
-        if (!el.files[0]) return;
-        let r = isFamily ? FAMILY_ID : (isGrigorovGroup ? GRIGOROV_ID : opponent.email);
-        const f = await storage.createFile(B_ID, ID.unique(), el.files[0]);
-        const url = `https://cloud.appwrite.io/v1/storage/buckets/${B_ID}/files/${f.$id}/view?project=${client.config.project}`;
-        await db.createDocument(D_ID, C_MSGS, ID.unique(), { text: `IMG:${url}`, sender: me.email, receiver: r, is_read: false });
-        toggleAttach();
+    async function handleTyping() {
+        if (!opponent || isFamily || isGrigorovGroup) return;
+        db.updateDocument(D_ID, C_USERS, myUserDocId, { typing_to: opponent.email });
+        if (typingTimeout) clearTimeout(typingTimeout);
+        typingTimeout = setTimeout(() => { db.updateDocument(D_ID, C_USERS, myUserDocId, { typing_to: null }); }, 2000);
+    }
+
+    function checkTypingStatus() {
+        const i = document.getElementById('typing-indicator');
+        if (allUsersData[opponent.email]?.typing_to === me.email) { i.style.display = 'block'; } else { i.style.display = 'none'; }
     }
 
     async function handleAuth() {
@@ -297,25 +262,38 @@
         try {
             if (document.getElementById('u-nick').style.display === 'block') {
                 await acc.create(ID.unique(), e, p, n); await acc.createEmailSession(e, p);
-                await db.createDocument(D_ID, C_USERS, ID.unique(), { name: n, email: e, last_seen: new Date().toISOString(), is_shiny: false });
+                await db.createDocument(D_ID, C_USERS, ID.unique(), { name: n, email: e, last_seen: new Date().toISOString() });
             } else await acc.createEmailSession(e, p);
             location.reload();
         } catch (err) { alert(err.message); }
     }
 
-    async function toggleShinyNickDB() {
-        const curr = allUsersData[me.email].is_shiny || false;
-        await db.updateDocument(D_ID, C_USERS, myUserDocId, { is_shiny: !curr });
+    async function uploadPhoto(el) {
+        const f = await storage.createFile(B_ID, ID.unique(), el.files[0]);
+        const url = `https://cloud.appwrite.io/v1/storage/buckets/${B_ID}/files/${f.$id}/view?project=${client.config.project}`;
+        let t = isFamily ? FAMILY_ID : (isGrigorovGroup ? GRIGOROV_ID : opponent.email);
+        await db.createDocument(D_ID, C_MSGS, ID.unique(), { text: `IMG:${url}`, sender: me.email, receiver: t, is_read: false });
+        toggleAttach();
     }
 
-    function toggleMode() { document.getElementById('u-nick').style.display = 'block'; document.getElementById('toggle-text').innerText = "Вход"; }
+    async function markAsRead(msgs) { for (let m of msgs) if(!m.is_read) await db.updateDocument(D_ID, C_MSGS, m.$id, { is_read: true }); }
+    async function toggleShinyNickDB() { const curr = allUsersData[me.email].is_shiny || false; await db.updateDocument(D_ID, C_USERS, myUserDocId, { is_shiny: !curr }); }
+    function toggleMode() { document.getElementById('u-nick').style.display = 'block'; document.getElementById('toggle-text').innerText = "Войти"; }
     function toggleAttach() { const p = document.getElementById('attach-panel'); p.style.display = p.style.display === 'block' ? 'none' : 'block'; }
     function show(id) { ['auth-screen', 'contacts-screen', 'chat-screen'].forEach(s => document.getElementById(s).style.display = 'none'); document.getElementById(id).style.display = 'flex'; }
-    function closeChat() { opponent = null; if(myUserDocId) db.updateDocument(D_ID, C_USERS, myUserDocId, { typing_to: null }); show('contacts-screen'); }
+    function closeChat() { opponent = null; show('contacts-screen'); }
     function logout() { acc.deleteSession('current'); location.reload(); }
     function openAdmin() { document.getElementById('admin-panel').style.display = 'block'; }
+
+    // РЕГИСТРАЦИЯ SERVICE WORKER
+    if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+            navigator.serviceWorker.register('/sw.js').then(reg => console.log('SW OK')).catch(err => console.log('SW Error'));
+        });
+    }
 
     init();
 </script>
 </body>
 </html>
+
