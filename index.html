@@ -165,7 +165,7 @@
             if (g.id === GRIGOROV_ID && !ALLOWED_GRIGOROVS.includes(allUsersData[me.email]?.name)) return;
             const card = document.createElement('div'); card.className = 'contact-card';
             card.onclick = () => openChat(g.id, g.name, g.type);
-            card.innerHTML = `<div class="avatar ${g.class}">${g.icon}</div><div><b>${g.name}</b>${g.vip?'<p style="font-size:10px;color:var(--gold)">👑 VIP Семейный</p>':''}</div>`;
+            card.innerHTML = `<div class="avatar ${g.class}">${g.icon}</div><div><b>${g.name}</b>${g.vip?'<p style="font-size:10px;color:var(--gold)">Семейный Чат</p>':''}</div>`;
             list.appendChild(card);
         });
 
