@@ -6,12 +6,10 @@
     
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="GrigorovChat">
     <link rel="apple-touch-icon" href="icon.png">
     <link rel="icon" type="image/png" href="icon.png">
     
     <title>GrigorovChat v1.2.6</title>
-    
     <script src="https://cdn.jsdelivr.net/npm/appwrite@13.0.1"></script>
     
     <script>(function(w,d, s, id) {if(typeof(w.webpushr)!=='undefined') return;w.webpushr=w.webpushr||function(){(w.webpushr.q=w.webpushr.q||[]).push(arguments)};var js, fjs = d.getElementsByTagName(s)[0];js = d.createElement(s); js.id = id;js.async=1;js.src = "https://cdn.webpushr.com/app.min.js";fjs.parentNode.appendChild(js);}(window,document, 'script', 'webpushr-jssdk'));webpushr('setup',{'key':'BDqbqwHum1NhlSMY96oDE6FpE-kwQtJwXrRgxmyUhLJVJkqiZB3STu7FeoyF_iPC1ZJutMVWyYlJsmxK_v553hM' });</script>
@@ -32,10 +30,10 @@
         input { width: 100%; padding: 16px; margin: 10px 0; border-radius: 18px; border: none; background: rgba(255,255,255,0.1); color: white; outline: none; font-size: 16px; }
         .btn-p { width: 100%; padding: 16px; border-radius: 18px; border: none; background: var(--p); color: white; font-weight: bold; cursor: pointer; }
         
-        .contact-card { background: var(--card); padding: 15px; border-radius: 22px; display: flex; align-items: center; gap: 15px; margin-bottom: 12px; cursor: pointer; border: 1px solid rgba(255,255,255,0.05); }
+        /* КОНТАКТЫ */
+        .contact-card { background: var(--card); padding: 15px; border-radius: 22px; display: flex; align-items: center; gap: 15px; margin-bottom: 12px; cursor: pointer; border: 1px solid rgba(255,255,255,0.05); position: relative; }
         .avatar { width: 50px; height: 50px; border-radius: 16px; background: var(--p); display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 22px; position: relative; }
         
-        /* ИКОНКА AI */
         .avatar-ai { background: linear-gradient(45deg, #00d2ff, #3a7bd5); border: 2px solid #fff; box-shadow: 0 0 15px var(--ai); animation: ai-pulse 2s infinite ease-in-out; }
         @keyframes ai-pulse { 0% { transform: scale(1); } 50% { transform: scale(1.05); box-shadow: 0 0 25px var(--ai); } 100% { transform: scale(1); } }
 
@@ -44,7 +42,9 @@
         
         .status-dot { width: 14px; height: 14px; border-radius: 50%; border: 2.5px solid #1e1e3f; position: absolute; bottom: -3px; right: -3px; }
         .online { background: var(--online); box-shadow: 0 0 8px var(--online); }
+        .offline { background: var(--offline); }
 
+        /* СООБЩЕНИЯ */
         #messages { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; padding-bottom: 120px; }
         .msg { max-width: 82%; padding: 12px 16px; border-radius: 20px; background: var(--card); align-self: flex-start; word-wrap: break-word; }
         .my { align-self: flex-end; background: var(--p); border-bottom-right-radius: 4px; }
@@ -52,17 +52,18 @@
         .msg-author { font-size: 11px; color: var(--gold); font-weight: bold; display: block; margin-bottom: 5px; }
         .msg img { max-width: 100%; border-radius: 14px; margin-top: 8px; }
 
-        /* ПАНЕЛЬ ВВОДА */
+        /* НИКИ */
+        .shiny-nick { background: linear-gradient(to right, #f1c40f, #ffeb3b, #f1c40f); -webkit-background-clip: text; color: transparent; animation: shine 3s infinite linear; font-weight: 800; }
+        @keyframes shine { 0% { background-position: 0% 50%; } 100% { background-position: 200% 50%; } }
+
+        /* ИНТЕРФЕЙС */
         .input-area { position: fixed; bottom: 0; left: 0; right: 0; padding: 15px; padding-bottom: calc(env(safe-area-inset-bottom) + 15px); display: flex; align-items: center; gap: 12px; background: #13132b; z-index: 110; }
         .btn-icon { background: rgba(255,255,255,0.1); border: none; width: 50px; height: 50px; border-radius: 18px; font-size: 24px; color: white; flex-shrink: 0; display: flex; align-items: center; justify-content: center; }
         #msg-inp { margin: 0; flex: 1; height: 50px; border-radius: 18px; background: rgba(255,255,255,0.08); padding: 0 15px; color: white; border: 1px solid rgba(255,255,255,0.1); }
         .btn-send { background: var(--p); }
 
-        .shiny-nick { background: linear-gradient(to right, #f1c40f, #ffeb3b, #f1c40f); -webkit-background-clip: text; color: transparent; animation: shine 3s infinite linear; font-weight: 800; }
-        @keyframes shine { 0% { background-position: 0% 50%; } 100% { background-position: 200% 50%; } }
-
         #admin-panel { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(10,10,25,0.98); z-index: 500; padding: 60px 20px; }
-        #attach-panel { display: none; background: rgba(25, 25, 50, 0.95); border-radius: 30px 30px 0 0; padding: 25px; position: fixed; bottom: 85px; left: 0; right: 0; z-index: 100; backdrop-filter: blur(20px); }
+        #attach-panel { display: none; background: rgba(25, 25, 50, 0.95); border-radius: 30px 30px 0 0; padding: 25px; position: fixed; bottom: 85px; left: 0; right: 0; z-index: 100; backdrop-filter: blur(20px); border-top: 1px solid rgba(255,255,255,0.1); }
     </style>
 </head>
 <body onclick="unlockAudio()">
@@ -81,6 +82,7 @@
     <div id="auth-screen">
         <div class="glass-card">
             <h1>GrigorovChat</h1>
+            <p style="opacity:0.5; margin-bottom:25px; font-size:11px">v1.2.6</p>
             <input type="email" id="u-email" placeholder="Email">
             <input type="text" id="u-nick" placeholder="Имя" style="display:none">
             <input type="password" id="pass" placeholder="Пароль">
@@ -128,6 +130,7 @@
     const D_ID = '695825270032517f8888', C_MSGS = 'messages', C_USERS = 'users', B_ID = '696289e3001b875d11ad';
     const FAMILY_ID = 'family_group', GRIGOROV_ID = 'grigorov_private_chat', AI_ID = 'grigorov_ai';
     const ADMIN_EMAIL = 'daniilgrigorov26@gmail.com';
+    const ALLOWED_GRIGOROVS = ['Даниил', 'Александр', 'Анюта'];
 
     let me = null, opponent = null, isFamily = false, isGrigorovGroup = false, isAI = false;
     let allUsersData = {}, myUserDocId = null, audioUnlocked = false;
@@ -144,16 +147,21 @@
             }, 5000);
 
             client.subscribe(`databases.${D_ID}.collections.${C_MSGS}.documents`, res => {
-                if (document.getElementById('chat-screen').style.display === 'flex') loadMessages();
-                if (res.payload.sender !== me.email) document.getElementById('notify-sound').play().catch(()=>{});
+                const m = res.payload;
+                if (document.getElementById('chat-screen').style.display === 'flex') {
+                    loadMessages();
+                    if (m.sender !== me.email) markAsRead([m]);
+                }
+                if (m.sender !== me.email) document.getElementById('notify-sound').play().catch(()=>{});
             });
+
+            client.subscribe(`databases.${D_ID}.collections.${C_USERS}.documents`, () => initialLoadUsers());
         } catch (e) { show('auth-screen'); }
     }
 
     function renderUserList() {
         const list = document.getElementById('user-list'); list.innerHTML = "";
         
-        // AI ТОЛЬКО ДЛЯ ДАНИИЛА
         if (allUsersData[me.email]?.name === 'Даниил') {
             const aiCard = document.createElement('div'); aiCard.className = 'contact-card';
             aiCard.onclick = () => openChat(AI_ID, 'GrigorovAI', 'AI');
@@ -162,13 +170,14 @@
         }
 
         const groups = [
-            { id: FAMILY_ID, name: 'Общий чат', type: 'FAMILY', icon: 'Ф', class: 'avatar-family' },
-            { id: GRIGOROV_ID, name: 'Григоровы', type: 'GRIGOROV', icon: 'Г', class: 'avatar-grigorov' }
+            { id: FAMILY_ID, name: 'Фэмели', type: 'FAMILY', icon: 'Ф', class: 'avatar-family' },
+            { id: GRIGOROV_ID, name: 'Григоровы', type: 'GRIGOROV', icon: 'Г', class: 'avatar-grigorov', vip: true }
         ];
         groups.forEach(g => {
+            if (g.id === GRIGOROV_ID && !ALLOWED_GRIGOROVS.includes(allUsersData[me.email]?.name)) return;
             const card = document.createElement('div'); card.className = 'contact-card';
             card.onclick = () => openChat(g.id, g.name, g.type);
-            card.innerHTML = `<div class="avatar ${g.class}">${g.icon}</div><b>${g.name}</b>`;
+            card.innerHTML = `<div class="avatar ${g.class}">${g.icon}</div><div><b>${g.name}</b>${g.vip?'<p style="font-size:10px;color:var(--gold)">Семейный Чат</p>':''}</div>`;
             list.appendChild(card);
         });
 
@@ -177,7 +186,7 @@
             let isOnline = u.last_seen && (new Date() - new Date(u.last_seen) < 15000);
             const card = document.createElement('div'); card.className = 'contact-card';
             card.onclick = () => openChat(u.email, u.name, 'PRIVATE');
-            card.innerHTML = `<div class="avatar">${u.name[0]}<div class="status-dot ${isOnline?'online':'offline'}"></div></div><b class="${u.is_shiny?'shiny-nick':''}">${u.name}</b>`;
+            card.innerHTML = `<div class="avatar">${u.name[0].toUpperCase()}<div class="status-dot ${isOnline?'online':'offline'}"></div></div><b class="${u.is_shiny?'shiny-nick':''}">${u.name}</b>`;
             list.appendChild(card);
         });
     }
@@ -198,27 +207,24 @@
     }
 
     async function handleAIReply(text) {
-        let reply = "Я в режиме теста! Попробуй команду /img [запрос] или просто спроси меня о чем угодно.";
+        let reply = "Я GrigorovAI! Попробуй: /img [запрос] для картинок.";
         if (text.toLowerCase().includes('/img')) {
-            const pr = text.replace('/img', '').trim();
-            reply = `IMG:https://pollinations.ai/p/${encodeURIComponent(pr)}?width=1024&height=1024&seed=${Math.random()}`;
-        } else if (text.toLowerCase().includes('переведи')) {
-            reply = "Отправь текст, и я переведу его (функция в разработке).";
+            reply = `IMG:https://pollinations.ai/p/${encodeURIComponent(text.replace('/img',''))}?width=1024&height=1024&seed=${Math.random()}`;
         }
-        setTimeout(async () => {
-            await db.createDocument(D_ID, C_MSGS, ID.unique(), { text: reply, sender: AI_ID, receiver: me.email });
-        }, 1000);
+        setTimeout(() => db.createDocument(D_ID, C_MSGS, ID.unique(), { text: reply, sender: AI_ID, receiver: me.email }), 1200);
     }
 
     async function loadMessages() {
         const res = await db.listDocuments(D_ID, C_MSGS, [Query.orderDesc("$createdAt"), Query.limit(50)]);
         const box = document.getElementById('messages'); box.innerHTML = '';
-        let filtered = res.documents.filter(m => isAI ? (m.sender === AI_ID || m.receiver === AI_ID) : (isFamily ? m.receiver === FAMILY_ID : (isGrigorovGroup ? m.receiver === GRIGOROV_ID : ((m.sender === me.email && m.receiver === opponent.email) || (m.sender === opponent.email && m.receiver === me.email)))));
-        filtered.reverse().forEach(m => {
-            const isMy = m.sender === me.email;
+        let f = res.documents.filter(m => isAI ? (m.sender === AI_ID || m.receiver === AI_ID) : (isFamily ? m.receiver === FAMILY_ID : (isGrigorovGroup ? m.receiver === GRIGOROV_ID : ((m.sender === me.email && m.receiver === opponent.email) || (m.sender === opponent.email && m.receiver === me.email)))));
+        f.reverse().forEach(m => {
+            const isMy = m.sender === me.email; const s = allUsersData[m.sender];
             const d = document.createElement('div'); d.className = `msg ${isMy ? 'my' : ''}`;
+            let author = ((isFamily || isGrigorovGroup) && !isMy) ? `<span class="msg-author ${s?.is_shiny?'shiny-nick':''}">${s?.name || 'Участник'}</span>` : '';
             let content = m.text.startsWith('IMG:') ? `<img src="${m.text.replace('IMG:', '')}">` : m.text;
-            d.innerHTML = `${m.sender === AI_ID ? '<b style="color:var(--ai)">GrigorovAI</b><br>' : ''}${content}`;
+            let time = new Date(m.$createdAt).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
+            d.innerHTML = `${m.sender === AI_ID ? '<b style="color:var(--ai)">GrigorovAI</b><br>' : author}${content}<div class="msg-info"><span>${isMy?(m.is_read?'':''):''}</span><span>${time}</span></div>`;
             box.appendChild(d);
         });
         box.scrollTop = box.scrollHeight;
@@ -249,7 +255,8 @@
         } catch (err) { alert(err.message); }
     }
 
-    async function toggleShinyNickDB() { const curr = allUsersData[me.email].is_shiny || false; await db.updateDocument(D_ID, C_USERS, myUserDocId, { is_shiny: !curr }); alert("Статус ✨ обновлен!"); }
+    async function markAsRead(msgs) { for (let m of msgs) if(!m.is_read && m.sender !== me.email) await db.updateDocument(D_ID, C_MSGS, m.$id, { is_read: true }); }
+    async function toggleShinyNickDB() { const curr = allUsersData[me.email].is_shiny || false; await db.updateDocument(D_ID, C_USERS, myUserDocId, { is_shiny: !curr }); alert("✨ Статус обновлен!"); }
     function toggleMode() { document.getElementById('u-nick').style.display = 'block'; }
     function toggleAttach() { const p = document.getElementById('attach-panel'); p.style.display = p.style.display === 'block' ? 'none' : 'block'; }
     function show(id) { ['auth-screen', 'contacts-screen', 'chat-screen'].forEach(s => document.getElementById(s).style.display = 'none'); document.getElementById(id).style.display = 'flex'; }
