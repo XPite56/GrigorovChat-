@@ -183,14 +183,14 @@
     function renderUserList() {
         const list = document.getElementById('user-list'); list.innerHTML = "";
         const groups = [
-            { id: FAMILY_ID, name: 'Общий чат', type: 'FAMILY', icon: 'Ф', class: 'avatar-family' },
-            { id: GRIGOROV_ID, name: 'Григоровы', type: 'GRIGOROV', icon: 'Г', class: 'avatar-grigorov', vip: true }
+            { id: FAMILY_ID, name: 'Фэмели', type: 'FAMILY', icon: 'Ф', class: 'avatar-family' },
+            { id: GRIGOROV_ID, name: 'Григоровы 👨‍👩‍👦', type: 'GRIGOROV', icon: 'Г', class: 'avatar-grigorov', vip: true }
         ];
         groups.forEach(g => {
             if (g.id === GRIGOROV_ID && !ALLOWED_GRIGOROVS.includes(allUsersData[me.email]?.name)) return;
             const card = document.createElement('div'); card.className = 'contact-card';
             card.onclick = () => openChat(g.id, g.name, g.type);
-            card.innerHTML = `<div class="avatar ${g.class}">${g.icon}</div><div><b>${g.name}</b>${g.vip?'<p style="font-size:10px;color:var(--gold)">VIP Семейный</p>':''}</div>`;
+            card.innerHTML = `<div class="avatar ${g.class}">${g.icon}</div><div><b>${g.name}</b>${g.vip?'<p style="font-size:10px;color:var(--gold)">Семейный Чат</p>':''}</div>`;
             list.appendChild(card);
         });
         Object.values(allUsersData).forEach(u => {
