@@ -7,12 +7,12 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="ГригоровЧат">
-    <link rel="apple-touch-icon" href="icon.png">
-    <link rel="icon" type="image/png" href="icon.png">
-    <title>GrigorovChat v1.2.5</title>
+    <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/1041/1041916.png">
+    
+    <title>GrigorovChat v1.2.6</title>
     <script src="https://cdn.jsdelivr.net/npm/appwrite@13.0.1"></script>
     
-    <script>(function(w,d, s, id) {if(typeof(w.webpushr)!=='undefined') return;w.webpushr=w.webpushrfunction(){(w.webpushr.q=w.webpushr.q[]).push(arguments)};var js, fjs = d.getElementsByTagName(s)[0];js = d.createElement(s); js.id = id;js.async=1;js.src = "https://cdn.webpushr.com/app.min.js";fjs.parentNode.appendChild(js);}(window,document, 'script', 'webpushr-jssdk'));webpushr('setup',{'key':'BDqbqwHum1NhlSMY96oDE6FpE-kwQtJwXrRgxmyUhLJVJkqiZB3STu7FeoyF_iPC1ZJutMVWyYlJsmxK_v553hM' });</script>
+    <script>(function(w,d, s, id) {if(typeof(w.webpushr)!=='undefined') return;w.webpushr=w.webpushr||function(){(w.webpushr.q=w.webpushr.q||[]).push(arguments)};var js, fjs = d.getElementsByTagName(s)[0];js = d.createElement(s); js.id = id;js.async=1;js.src = "https://cdn.webpushr.com/app.min.js";fjs.parentNode.appendChild(js);}(window,document, 'script', 'webpushr-jssdk'));webpushr('setup',{'key':'BDqbqwHum1NhlSMY96oDE6FpE-kwQtJwXrRgxmyUhLJVJkqiZB3STu7FeoyF_iPC1ZJutMVWyYlJsmxK_v553hM' });</script>
     <style>
         :root { 
             --p: #6c5ce7; --bg: #13132b; --card: rgba(255, 255, 255, 0.08); 
@@ -46,7 +46,8 @@
 
         #messages { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; padding-bottom: 120px; -webkit-overflow-scrolling: touch; }
         .msg { max-width: 82%; padding: 12px 16px; border-radius: 20px; background: var(--card); align-self: flex-start; word-wrap: break-word; }
-        .my { align-self: flex-end; background: var(--p); border-bottom-right-radius: 4px; }.msg-info { display: flex; justify-content: flex-end; align-items: center; gap: 6px; margin-top: 5px; opacity: 0.7; font-size: 10px; }
+        .my { align-self: flex-end; background: var(--p); border-bottom-right-radius: 4px; }
+        .msg-info { display: flex; justify-content: flex-end; align-items: center; gap: 6px; margin-top: 5px; opacity: 0.7; font-size: 10px; }
         .msg-author { font-size: 11px; color: var(--gold); font-weight: bold; display: block; margin-bottom: 5px; }
         .msg img { max-width: 100%; border-radius: 14px; margin-top: 8px; }
 
@@ -91,7 +92,7 @@
     <div id="auth-screen">
         <div class="glass-card">
             <h1>GrigorovChat</h1>
-            <p style="opacity:0.5; margin-bottom:25px; font-size:11px">v1.2.5</p>
+            <p style="opacity:0.5; margin-bottom:25px; font-size:11px">v1.2.6</p>
             <input type="email" id="u-email" placeholder="Email">
             <input type="text" id="u-nick" placeholder="Имя" style="display:none">
             <input type="password" id="pass" placeholder="Пароль">
@@ -104,7 +105,8 @@
         <header style="display:flex; justify-content:space-between; align-items:center; margin-bottom:25px;">
             <h1 style="font-size:34px; font-weight:900">Чаты</h1>
             <div style="display:flex; align-items:center; gap:15px">
-                <button id="admin-btn" onclick="openAdmin()" style="display:none; background:none; border:none; font-size:28px;">👑</button><button onclick="logout()" style="opacity:0.7; background:none; border:none; color:white; font-weight:bold">Выход</button>
+                <button id="admin-btn" onclick="openAdmin()" style="display:none; background:none; border:none; font-size:28px;">👑</button>
+                <button onclick="logout()" style="opacity:0.7; background:none; border:none; color:white; font-weight:bold">Выход</button>
             </div>
         </header>
         <div id="user-list" style="overflow-y: auto; flex: 1;"></div>
@@ -154,9 +156,9 @@
                 if(myUserDocId) await db.updateDocument(D_ID, C_USERS, myUserDocId, { last_seen: new Date().toISOString() }).catch(()=>{});
             }, 5000);
 
-            client.subscribe(databases.${D_ID}.collections.${C_MSGS}.documents, res => {
+            client.subscribe(`databases.${D_ID}.collections.${C_MSGS}.documents`, res => {
                 const m = res.payload;
-                const isRel = (isFamily && m.receiver === FAMILY_ID)  (isGrigorovGroup && m.receiver === GRIGOROV_ID)  (!isFamily && !isGrigorovGroup && ((m.sender === me.email && m.receiver === opponent?.email) || (m.sender === opponent?.email && m.receiver === me.email)));
+                const isRel = (isFamily && m.receiver === FAMILY_ID) || (isGrigorovGroup && m.receiver === GRIGOROV_ID) || (!isFamily && !isGrigorovGroup && ((m.sender === me.email && m.receiver === opponent?.email) || (m.sender === opponent?.email && m.receiver === me.email)));
                 if (document.getElementById('chat-screen').style.display === 'flex' && isRel) {
                     loadMessages(); if (m.sender !== me.email) markAsRead([m]);
                 }
@@ -165,7 +167,7 @@
                 }
             });
 
-            client.subscribe(databases.${D_ID}.collections.${C_USERS}.documents, res => {
+            client.subscribe(`databases.${D_ID}.collections.${C_USERS}.documents`, res => {
                 allUsersData[res.payload.email] = res.payload;
                 renderUserList();
             });
@@ -176,17 +178,19 @@
         if (audioUnlocked) return;
         const a = document.getElementById('notify-sound');
         a.play().then(() => { a.pause(); a.currentTime = 0; audioUnlocked = true; }).catch(()=>{});
-    }function renderUserList() {
+    }
+
+    function renderUserList() {
         const list = document.getElementById('user-list'); list.innerHTML = "";
         const groups = [
-            { id: FAMILY_ID, name: 'Фэмели', type: 'FAMILY', icon: 'Ф', class: 'avatar-family' },
+            { id: FAMILY_ID, name: 'Общий чат', type: 'FAMILY', icon: 'Ф', class: 'avatar-family' },
             { id: GRIGOROV_ID, name: 'Григоровы', type: 'GRIGOROV', icon: 'Г', class: 'avatar-grigorov', vip: true }
         ];
         groups.forEach(g => {
             if (g.id === GRIGOROV_ID && !ALLOWED_GRIGOROVS.includes(allUsersData[me.email]?.name)) return;
             const card = document.createElement('div'); card.className = 'contact-card';
             card.onclick = () => openChat(g.id, g.name, g.type);
-            card.innerHTML = <div class="avatar ${g.class}">${g.icon}</div><div><b>${g.name}</b>${g.vip?'<p style="font-size:10px;color:var(--gold)">Семейный Чат</p>':''}</div>;
+            card.innerHTML = `<div class="avatar ${g.class}">${g.icon}</div><div><b>${g.name}</b>${g.vip?'<p style="font-size:10px;color:var(--gold)">VIP Семейный</p>':''}</div>`;
             list.appendChild(card);
         });
         Object.values(allUsersData).forEach(u => {
@@ -194,7 +198,7 @@
             let isOnline = u.last_seen && (new Date() - new Date(u.last_seen) < 15000);
             const card = document.createElement('div'); card.className = 'contact-card';
             card.onclick = () => openChat(u.email, u.name, 'PRIVATE');
-            card.innerHTML = <div class="avatar">${u.name[0].toUpperCase()}<div class="status-dot ${isOnline?'online':'offline'}"></div></div><b class="${u.is_shiny?'shiny-nick':''}">${u.name}</b>;
+            card.innerHTML = `<div class="avatar">${u.name[0].toUpperCase()}<div class="status-dot ${isOnline?'online':'offline'}"></div></div><b class="${u.is_shiny?'shiny-nick':''}">${u.name}</b>`;
             list.appendChild(card);
         });
     }
@@ -217,11 +221,11 @@
         let filtered = res.documents.filter(m => isFamily ? m.receiver === FAMILY_ID : (isGrigorovGroup ? m.receiver === GRIGOROV_ID : ((m.sender === me.email && m.receiver === opponent.email) || (m.sender === opponent.email && m.receiver === me.email))));
         filtered.reverse().forEach(m => {
             const isMy = m.sender === me.email; const sData = allUsersData[m.sender];
-            const d = document.createElement('div'); d.className = msg ${isMy ? 'my' : ''};
+            const d = document.createElement('div'); d.className = `msg ${isMy ? 'my' : ''}`;
             d.onclick = () => { if(isMy || me.email === ADMIN_EMAIL) if(confirm("Удалить?")) db.deleteDocument(D_ID, C_MSGS, m.$id); };
-            let author = ((isFamily || isGrigorovGroup) && !isMy) ? <span class="msg-author ${sData?.is_shiny?'shiny-nick':''}">${sData?.name}</span> : '';
-            let content = m.text.startsWith('IMG:') ? <img src="${m.text.replace('IMG:', '')}"> : m.text;
-            d.innerHTML = ${author}${content}<div class="msg-info"><span>${isMy?(m.is_read?'':''):''}</span><span>${new Date(m.$createdAt).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}</span></div>;
+            let author = ((isFamily || isGrigorovGroup) && !isMy) ? `<span class="msg-author ${sData?.is_shiny?'shiny-nick':''}">${sData?.name}</span>` : '';
+            let content = m.text.startsWith('IMG:') ? `<img src="${m.text.replace('IMG:', '')}">` : m.text;
+            d.innerHTML = `${author}${content}<div class="msg-info"><span>${isMy?(m.is_read?'':''):''}</span><span>${new Date(m.$createdAt).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}</span></div>`;
             box.appendChild(d);
         });
         box.scrollTop = box.scrollHeight;
@@ -234,11 +238,12 @@
         inp.value = "";
     }
 
-    async function uploadPhoto(el) {if(!el.files[0]) return;
+    async function uploadPhoto(el) {
+        if(!el.files[0]) return;
         const f = await storage.createFile(B_ID, ID.unique(), el.files[0]);
-        const url = https://cloud.appwrite.io/v1/storage/buckets/${B_ID}/files/${f.$id}/view?project=${client.config.project};
+        const url = `https://cloud.appwrite.io/v1/storage/buckets/${B_ID}/files/${f.$id}/view?project=${client.config.project}`;
         let t = isFamily ? FAMILY_ID : (isGrigorovGroup ? GRIGOROV_ID : opponent.email);
-        await db.createDocument(D_ID, C_MSGS, ID.unique(), { text: IMG:${url}, sender: me.email, receiver: t, is_read: false });
+        await db.createDocument(D_ID, C_MSGS, ID.unique(), { text: `IMG:${url}`, sender: me.email, receiver: t, is_read: false });
         toggleAttach();
     }
 
