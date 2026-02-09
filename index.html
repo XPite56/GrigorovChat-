@@ -9,7 +9,7 @@
     <meta name="apple-mobile-web-app-title" content="GrigorovChat">
     <link rel="apple-touch-icon" href="https://i127.fastpic.org/big/2026/0209/6d/fa33f92b6a5bdf0c853010d17ddb446d.png">
     
-    <title>GrigorovChat v1.2.7</title>
+    <title>GrigorovChat 1.2.6</title>
     <script src="https://cdn.jsdelivr.net/npm/appwrite@13.0.1"></script>
     
     <script>(function(w,d, s, id) {if(typeof(w.webpushr)!=='undefined') return;w.webpushr=w.webpushr||function(){(w.webpushr.q=w.webpushr.q||[]).push(arguments)};var js, fjs = d.getElementsByTagName(s)[0];js = d.createElement(s); js.id = id;js.async=1;js.src = "https://cdn.webpushr.com/app.min.js";fjs.parentNode.appendChild(js);}(window,document, 'script', 'webpushr-jssdk'));webpushr('setup',{'key':'BDqbqwHum1NhlSMY96oDE6FpE-kwQtJwXrRgxmyUhLJVJkqiZB3STu7FeoyF_iPC1ZJutMVWyYlJsmxK_v553hM' });</script>
@@ -32,7 +32,7 @@
         }
 
         .glass-card { margin: auto; width: 100%; max-width: 340px; text-align: center; background: rgba(255, 255, 255, 0.05); padding: 30px; border-radius: 30px; backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.1); }
-        input { width: 100%; padding: 16px; margin: 10px 0; border-radius: 18px; border: none; background: rgba(255,255,255,0.1); color: white; outline: none; font-size: 16px; }
+        input[type="text"], input[type="email"], input[type="password"] { width: 100%; padding: 16px; margin: 10px 0; border-radius: 18px; border: none; background: rgba(255,255,255,0.1); color: white; outline: none; font-size: 16px; }
         .btn-p { width: 100%; padding: 16px; border-radius: 18px; border: none; background: var(--p); color: white; font-weight: bold; cursor: pointer; }
         
         .contact-card { background: var(--card); padding: 15px; border-radius: 22px; display: flex; align-items: center; gap: 15px; margin-bottom: 12px; cursor: pointer; border: 1px solid rgba(255,255,255,0.05); position: relative; }
@@ -40,7 +40,7 @@
         .avatar { width: 50px; height: 50px; border-radius: 16px; background: var(--p); display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 22px; position: relative; flex-shrink: 0; }
         .avatar-family { background: linear-gradient(45deg, #6c5ce7, #a29bfe); border: 2px solid var(--gold); }
         .avatar-grigorov { background: linear-gradient(45deg, #ff4757, #ff6b81); border: 2px solid white; }
-        .avatar-new { background: linear-gradient(45deg, #00b894, #55efc4); } /* Цвет для новых групп */
+        .avatar-new { background: linear-gradient(45deg, #00b894, #55efc4); }
 
         .status-dot { width: 14px; height: 14px; border-radius: 50%; border: 2.5px solid #1e1e3f; position: absolute; bottom: -3px; right: -3px; }
         .online { background: var(--online); box-shadow: 0 0 8px var(--online); }
@@ -65,7 +65,7 @@
         .btn-send { background: var(--p); }
         #msg-inp { margin: 0; flex: 1; height: 50px; border-radius: 18px; background: rgba(255,255,255,0.08); padding: 0 15px; }
 
-        /* FAB - Floating Action Button */
+        /* FAB */
         .fab-add { 
             position: fixed; bottom: 30px; right: 25px; 
             width: 60px; height: 60px; 
@@ -76,9 +76,18 @@
             z-index: 200; display: none; 
             align-items: center; justify-content: center; 
             cursor: pointer; 
-            transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
         }
-        .fab-add:active { transform: scale(0.9); }
+
+        /* Checkbox List Styling */
+        #modal-users-list {
+            max-height: 250px; overflow-y: auto; text-align: left; margin: 15px 0;
+            background: rgba(0,0,0,0.2); border-radius: 15px; padding: 10px;
+        }
+        .user-checkbox-item {
+            display: flex; align-items: center; gap: 10px; padding: 10px;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+        }
+        .user-checkbox-item input { width: 20px; height: 20px; accent-color: var(--p); margin: 0; }
     </style>
 </head>
 <body onclick="unlockAudio()">
@@ -86,10 +95,12 @@
     <audio id="notify-sound" src="Keylimba_260124162943.mp3" preload="auto" playsinline></audio>
 
     <div id="create-modal">
-        <div class="glass-card" style="position: relative;">
+        <div class="glass-card" style="position: relative; max-width: 360px;">
             <button onclick="document.getElementById('create-modal').style.display='none'" style="position:absolute; top:15px; right:15px; background:none; border:none; color:white; font-size:20px;">✕</button>
-            <h2 style="margin-bottom:20px;">Новый чат</h2>
-            <input type="text" id="new-chat-name" placeholder="Название чата (например: Друзья)">
+            <h2 style="margin-bottom:10px;">Создать чат</h2>
+            <input type="text" id="new-chat-name" placeholder="Название чата">
+            <p style="text-align:left; font-size:12px; color:#aaa; margin-left:5px;">Выберите участников:</p>
+            <div id="modal-users-list"></div>
             <button class="btn-p" onclick="createNewChat()">СОЗДАТЬ</button>
         </div>
     </div>
@@ -108,7 +119,7 @@
     <div id="auth-screen">
         <div class="glass-card">
             <h1>GrigorovChat</h1>
-            <p style="opacity:0.5; margin-bottom:25px; font-size:11px">v1.2.7</p>
+            <p style="opacity:0.5; margin-bottom:25px; font-size:11px">v1.2.6</p>
             <input type="email" id="u-email" placeholder="Email">
             <input type="text" id="u-nick" placeholder="Имя" style="display:none">
             <input type="password" id="pass" placeholder="Пароль">
@@ -167,7 +178,7 @@
             me = await acc.get();
             if (me.email === ADMIN_EMAIL) {
                 document.getElementById('admin-btn').style.display = 'block';
-                document.getElementById('fab-add').style.display = 'flex'; // Показываем кнопку создания
+                document.getElementById('fab-add').style.display = 'flex';
             }
             show('contacts-screen');
             await initialLoadUsers();
@@ -178,19 +189,15 @@
 
             client.subscribe(`databases.${D_ID}.collections.${C_MSGS}.documents`, res => {
                 const m = res.payload;
-                // Проверка: относится ли сообщение к открытому чату
                 const isRel = (isGroup && m.receiver === currentChatId) || (!isGroup && ((m.sender === me.email && m.receiver === opponent?.email) || (m.sender === opponent?.email && m.receiver === me.email)));
-                
                 if (document.getElementById('chat-screen').style.display === 'flex' && isRel) {
                     loadMessages(); if (m.sender !== me.email) markAsRead([m]);
                 }
                 if (m.sender !== me.email) document.getElementById('notify-sound').play().catch(()=>{});
             });
 
-            // Обновляем список чатов если создали новый
-            if(me.email === ADMIN_EMAIL) {
-                client.subscribe(`databases.${D_ID}.collections.${C_CHATS}.documents`, () => renderUserList());
-            }
+            // Слушаем новые чаты
+            client.subscribe(`databases.${D_ID}.collections.${C_CHATS}.documents`, () => renderUserList());
 
         } catch (e) { show('auth-screen'); }
     }
@@ -198,19 +205,23 @@
     async function renderUserList() {
         const list = document.getElementById('user-list'); list.innerHTML = "";
         
-        // 1. Стандартные группы
+        // 1. Стандартные
         const groups = [
             { id: FAMILY_ID, name: 'Фэмели', type: 'FAMILY', icon: 'Ф', class: 'avatar-family' },
             { id: GRIGOROV_ID, name: 'Григоровы 👨‍👩‍👦', type: 'GRIGOROV', icon: 'Г', class: 'avatar-grigorov', vip: true }
         ];
 
-        // 2. Подгружаем созданные чаты (если коллекция существует)
+        // 2. Пользовательские чаты (фильтрация по участникам)
         try {
             const customChats = await db.listDocuments(D_ID, C_CHATS);
             customChats.documents.forEach(c => {
-                groups.push({ id: c.$id, name: c.name, type: 'CUSTOM', icon: c.name[0].toUpperCase(), class: 'avatar-new' });
+                // Показываем чат, если я админ ИЛИ если я есть в списке members
+                let amIMember = c.members && c.members.includes(me.email);
+                if (c.admin_email === me.email || amIMember) {
+                    groups.push({ id: c.$id, name: c.name, type: 'CUSTOM', icon: c.name[0].toUpperCase(), class: 'avatar-new' });
+                }
             });
-        } catch (err) { console.log('Коллекция chats пока не создана'); }
+        } catch (err) { console.log('Коллекция chats еще не готова или нет поля members'); }
 
         groups.forEach(g => {
             if (g.id === GRIGOROV_ID && !ALLOWED_GRIGOROVS.includes(allUsersData[me.email]?.name)) return;
@@ -220,7 +231,7 @@
             list.appendChild(card);
         });
 
-        // 3. Пользователи
+        // 3. Люди
         Object.values(allUsersData).forEach(u => {
             if (u.email === me.email) return;
             let isOnline = u.last_seen && (new Date() - new Date(u.last_seen) < 15000);
@@ -231,19 +242,40 @@
         });
     }
 
+    // Открытие окна создания и загрузка списка людей
+    function openCreateModal() {
+        document.getElementById('create-modal').style.display = 'flex';
+        const box = document.getElementById('modal-users-list');
+        box.innerHTML = '';
+        Object.values(allUsersData).forEach(u => {
+            if(u.email === me.email) return; // Себя не показываем
+            const item = document.createElement('div');
+            item.className = 'user-checkbox-item';
+            item.innerHTML = `<input type="checkbox" value="${u.email}" id="cb_${u.$id}"><label for="cb_${u.$id}">${u.name}</label>`;
+            box.appendChild(item);
+        });
+    }
+
     async function createNewChat() {
         const name = document.getElementById('new-chat-name').value.trim();
         if(!name) return alert('Введите название!');
+        
+        // Собираем выбранных людей
+        const checkboxes = document.querySelectorAll('#modal-users-list input:checked');
+        const members = [me.email]; // Админ всегда в чате
+        checkboxes.forEach(cb => members.push(cb.value));
+
         try {
             await db.createDocument(D_ID, C_CHATS, ID.unique(), { 
                 name: name, 
-                admin_email: me.email 
+                admin_email: me.email,
+                members: members // Сохраняем массив участников
             });
             document.getElementById('create-modal').style.display='none';
             document.getElementById('new-chat-name').value = '';
-            renderUserList(); // Обновить список
+            renderUserList();
         } catch(e) { 
-            alert('Ошибка! Создайте коллекцию "chats" в Appwrite с полями name и admin_email.'); 
+            alert('Ошибка! Убедитесь, что в коллекции chats есть атрибут members (String Array). ' + e.message); 
         }
     }
 
@@ -257,7 +289,6 @@
         currentChatId = id; 
         if (!group) opponent = { email: id };
         isGroup = group;
-
         document.getElementById('active-chat-name').innerText = name;
         show('chat-screen'); loadMessages();
     }
@@ -265,20 +296,16 @@
     async function loadMessages() {
         const res = await db.listDocuments(D_ID, C_MSGS, [Query.orderDesc("$createdAt"), Query.limit(50)]);
         const box = document.getElementById('messages'); box.innerHTML = '';
-        
         let filtered = res.documents.filter(m => {
             if (isGroup) return m.receiver === currentChatId;
             return (m.sender === me.email && m.receiver === opponent?.email) || (m.sender === opponent?.email && m.receiver === me.email);
         });
-
         filtered.reverse().forEach(m => {
             const isMy = m.sender === me.email; const sData = allUsersData[m.sender];
             const d = document.createElement('div'); d.className = `msg ${isMy ? 'my' : ''}`;
             d.onclick = () => { if(isMy || me.email === ADMIN_EMAIL) if(confirm("Удалить?")) db.deleteDocument(D_ID, C_MSGS, m.$id); };
-            
-            let author = (isGroup && !isMy) ? `<span class="msg-author ${sData?.is_shiny?'shiny-nick':''}">${sData?.name || 'Кто-то'}</span>` : '';
+            let author = (isGroup && !isMy) ? `<span class="msg-author ${sData?.is_shiny?'shiny-nick':''}">${sData?.name || 'Участник'}</span>` : '';
             let content = m.text.startsWith('IMG:') ? `<img src="${m.text.replace('IMG:', '')}">` : m.text;
-            
             d.innerHTML = `${author}${content}<div class="msg-info"><span>${new Date(m.$createdAt).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}</span></div>`;
             box.appendChild(d);
         });
@@ -320,10 +347,10 @@
     function closeChat() { opponent = null; currentChatId = null; show('contacts-screen'); }
     function logout() { acc.deleteSession('current'); location.reload(); }
     function openAdmin() { document.getElementById('admin-panel').style.display = 'flex'; }
-    function openCreateModal() { document.getElementById('create-modal').style.display = 'flex'; }
     function unlockAudio() { if (audioUnlocked) return; const a = document.getElementById('notify-sound'); a.play().then(() => { a.pause(); a.currentTime = 0; audioUnlocked = true; }).catch(()=>{}); }
 
     init();
 </script>
 </body>
 </html>
+
