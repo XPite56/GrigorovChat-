@@ -6,13 +6,14 @@
     
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="ГригоровЧат">
+    <meta name="apple-mobile-web-app-title" content="GrigorovChat">
     <link rel="apple-touch-icon" href="https://i127.fastpic.org/big/2026/0209/6d/fa33f92b6a5bdf0c853010d17ddb446d.png">
     
-    <title>GrigorovChat v1.2.6</title>
+    <title>GrigorovChat v1.2.7</title>
     <script src="https://cdn.jsdelivr.net/npm/appwrite@13.0.1"></script>
     
     <script>(function(w,d, s, id) {if(typeof(w.webpushr)!=='undefined') return;w.webpushr=w.webpushr||function(){(w.webpushr.q=w.webpushr.q||[]).push(arguments)};var js, fjs = d.getElementsByTagName(s)[0];js = d.createElement(s); js.id = id;js.async=1;js.src = "https://cdn.webpushr.com/app.min.js";fjs.parentNode.appendChild(js);}(window,document, 'script', 'webpushr-jssdk'));webpushr('setup',{'key':'BDqbqwHum1NhlSMY96oDE6FpE-kwQtJwXrRgxmyUhLJVJkqiZB3STu7FeoyF_iPC1ZJutMVWyYlJsmxK_v553hM' });</script>
+
     <style>
         :root { 
             --p: #6c5ce7; --bg: #13132b; --card: rgba(255, 255, 255, 0.08); 
@@ -36,10 +37,11 @@
         
         .contact-card { background: var(--card); padding: 15px; border-radius: 22px; display: flex; align-items: center; gap: 15px; margin-bottom: 12px; cursor: pointer; border: 1px solid rgba(255,255,255,0.05); position: relative; }
         
-        .avatar { width: 50px; height: 50px; border-radius: 16px; background: var(--p); display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 22px; position: relative; }
+        .avatar { width: 50px; height: 50px; border-radius: 16px; background: var(--p); display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 22px; position: relative; flex-shrink: 0; }
         .avatar-family { background: linear-gradient(45deg, #6c5ce7, #a29bfe); border: 2px solid var(--gold); }
         .avatar-grigorov { background: linear-gradient(45deg, #ff4757, #ff6b81); border: 2px solid white; }
-        
+        .avatar-new { background: linear-gradient(45deg, #00b894, #55efc4); } /* Цвет для новых групп */
+
         .status-dot { width: 14px; height: 14px; border-radius: 50%; border: 2.5px solid #1e1e3f; position: absolute; bottom: -3px; right: -3px; }
         .online { background: var(--online); box-shadow: 0 0 8px var(--online); }
         .offline { background: var(--offline); }
@@ -54,45 +56,59 @@
         .shiny-nick { background: linear-gradient(to right, #f1c40f, #ffeb3b, #f1c40f); -webkit-background-clip: text; color: transparent; animation: shine 3s infinite linear; font-weight: 800; }
         @keyframes shine { 0% { background-position: 0% 50%; } 100% { background-position: 200% 50%; } }
 
-        #admin-panel { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(10,10,25,0.98); z-index: 500; padding: 60px 20px; }
+        /* MODALS & PANELS */
+        #admin-panel, #create-modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(10,10,25,0.95); z-index: 500; align-items: center; justify-content: center; padding: 20px; backdrop-filter: blur(10px); }
         #attach-panel { display: none; background: rgba(25, 25, 50, 0.95); border-radius: 30px 30px 0 0; padding: 25px; position: fixed; bottom: 85px; left: 0; right: 0; z-index: 100; backdrop-filter: blur(20px); border-top: 1px solid rgba(255,255,255,0.1); padding-bottom: env(safe-area-inset-bottom); }
         
-        /* Исправленная панель ввода */
-        .input-area { 
-            position: fixed; 
-            bottom: 0; 
-            left: 0; 
-            right: 0; 
-            padding: 15px; 
-            padding-bottom: calc(env(safe-area-inset-bottom) + 15px); 
-            display: flex; 
-            align-items: center; 
-            gap: 12px; 
-            background: #13132b; 
-            z-index: 110; 
-        }
+        .input-area { position: fixed; bottom: 0; left: 0; right: 0; padding: 15px; padding-bottom: calc(env(safe-area-inset-bottom) + 15px); display: flex; align-items: center; gap: 12px; background: #13132b; z-index: 110; }
         .btn-icon { background: rgba(255,255,255,0.1); border: none; width: 50px; height: 50px; border-radius: 18px; font-size: 24px; color: white; flex-shrink: 0; display: flex; align-items: center; justify-content: center; }
         .btn-send { background: var(--p); }
         #msg-inp { margin: 0; flex: 1; height: 50px; border-radius: 18px; background: rgba(255,255,255,0.08); padding: 0 15px; }
+
+        /* FAB - Floating Action Button */
+        .fab-add { 
+            position: fixed; bottom: 30px; right: 25px; 
+            width: 60px; height: 60px; 
+            border-radius: 50%; 
+            background: linear-gradient(135deg, #6c5ce7, #a29bfe); 
+            color: white; font-size: 32px; border: none; 
+            box-shadow: 0 10px 25px rgba(108, 92, 231, 0.5); 
+            z-index: 200; display: none; 
+            align-items: center; justify-content: center; 
+            cursor: pointer; 
+            transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        .fab-add:active { transform: scale(0.9); }
     </style>
 </head>
 <body onclick="unlockAudio()">
 
     <audio id="notify-sound" src="Keylimba_260124162943.mp3" preload="auto" playsinline></audio>
 
-    <div id="admin-panel">
-        <h2 style="text-align:center; color: var(--gold); margin-bottom: 30px;">👑 АДМИН-ЦЕНТР</h2>
-        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:20px;">
-            <div class="glass-card" onclick="toggleShinyNickDB()" style="max-width:none; margin:0;"><span style="font-size:35px; display:block">✨</span> Ник</div>
-            <div class="glass-card" onclick="alert('Логи шпиона активны')" style="max-width:none; margin:0;"><span style="font-size:35px; display:block">👁️</span> Шпион</div>
+    <div id="create-modal">
+        <div class="glass-card" style="position: relative;">
+            <button onclick="document.getElementById('create-modal').style.display='none'" style="position:absolute; top:15px; right:15px; background:none; border:none; color:white; font-size:20px;">✕</button>
+            <h2 style="margin-bottom:20px;">Новый чат</h2>
+            <input type="text" id="new-chat-name" placeholder="Название чата (например: Друзья)">
+            <button class="btn-p" onclick="createNewChat()">СОЗДАТЬ</button>
         </div>
-        <button onclick="document.getElementById('admin-panel').style.display='none'" class="btn-p" style="margin-top:40px; background:var(--red)">ЗАКРЫТЬ</button>
+    </div>
+
+    <div id="admin-panel">
+        <div style="width:100%; max-width:400px; padding:20px;">
+            <h2 style="text-align:center; color: var(--gold); margin-bottom: 30px;">👑 АДМИН-ЦЕНТР</h2>
+            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:20px;">
+                <div class="glass-card" onclick="toggleShinyNickDB()" style="max-width:none; margin:0;"><span style="font-size:35px; display:block">✨</span> Ник</div>
+                <div class="glass-card" onclick="alert('Логи шпиона активны')" style="max-width:none; margin:0;"><span style="font-size:35px; display:block">👁️</span> Шпион</div>
+            </div>
+            <button onclick="document.getElementById('admin-panel').style.display='none'" class="btn-p" style="margin-top:40px; background:var(--red)">ЗАКРЫТЬ</button>
+        </div>
     </div>
 
     <div id="auth-screen">
         <div class="glass-card">
             <h1>GrigorovChat</h1>
-            <p style="opacity:0.5; margin-bottom:25px; font-size:11px">v1.2.6</p>
+            <p style="opacity:0.5; margin-bottom:25px; font-size:11px">v1.2.7</p>
             <input type="email" id="u-email" placeholder="Email">
             <input type="text" id="u-nick" placeholder="Имя" style="display:none">
             <input type="password" id="pass" placeholder="Пароль">
@@ -110,6 +126,7 @@
             </div>
         </header>
         <div id="user-list" style="overflow-y: auto; flex: 1;"></div>
+        <button id="fab-add" class="fab-add" onclick="openCreateModal()">+</button>
     </div>
 
     <div id="chat-screen">
@@ -137,18 +154,21 @@
     const client = new Client().setEndpoint('https://cloud.appwrite.io/v1').setProject('695824a900049124f435');
     const acc = new Account(client), db = new Databases(client), storage = new Storage(client);
     
-    const D_ID = '695825270032517f8888', C_MSGS = 'messages', C_USERS = 'users', B_ID = '696289e3001b875d11ad';
+    const D_ID = '695825270032517f8888', C_MSGS = 'messages', C_USERS = 'users', C_CHATS = 'chats', B_ID = '696289e3001b875d11ad';
     const FAMILY_ID = 'family_group', GRIGOROV_ID = 'grigorov_private_chat';
     const ADMIN_EMAIL = 'daniilgrigorov26@gmail.com';
     const ALLOWED_GRIGOROVS = ['Даниил', 'Александр', 'Анюта'];
 
-    let me = null, opponent = null, isFamily = false, isGrigorovGroup = false;
+    let me = null, opponent = null, currentChatId = null, isGroup = false;
     let allUsersData = {}, myUserDocId = null, audioUnlocked = false;
 
     async function init() {
         try {
             me = await acc.get();
-            if (me.email === ADMIN_EMAIL) document.getElementById('admin-btn').style.display = 'block';
+            if (me.email === ADMIN_EMAIL) {
+                document.getElementById('admin-btn').style.display = 'block';
+                document.getElementById('fab-add').style.display = 'flex'; // Показываем кнопку создания
+            }
             show('contacts-screen');
             await initialLoadUsers();
             
@@ -158,49 +178,73 @@
 
             client.subscribe(`databases.${D_ID}.collections.${C_MSGS}.documents`, res => {
                 const m = res.payload;
-                const isRel = (isFamily && m.receiver === FAMILY_ID) || (isGrigorovGroup && m.receiver === GRIGOROV_ID) || (!isFamily && !isGrigorovGroup && ((m.sender === me.email && m.receiver === opponent?.email) || (m.sender === opponent?.email && m.receiver === me.email)));
+                // Проверка: относится ли сообщение к открытому чату
+                const isRel = (isGroup && m.receiver === currentChatId) || (!isGroup && ((m.sender === me.email && m.receiver === opponent?.email) || (m.sender === opponent?.email && m.receiver === me.email)));
+                
                 if (document.getElementById('chat-screen').style.display === 'flex' && isRel) {
                     loadMessages(); if (m.sender !== me.email) markAsRead([m]);
                 }
-                if (m.sender !== me.email) {
-                    document.getElementById('notify-sound').play().catch(()=>{});
-                }
+                if (m.sender !== me.email) document.getElementById('notify-sound').play().catch(()=>{});
             });
 
-            client.subscribe(`databases.${D_ID}.collections.${C_USERS}.documents`, res => {
-                allUsersData[res.payload.email] = res.payload;
-                renderUserList();
-            });
+            // Обновляем список чатов если создали новый
+            if(me.email === ADMIN_EMAIL) {
+                client.subscribe(`databases.${D_ID}.collections.${C_CHATS}.documents`, () => renderUserList());
+            }
+
         } catch (e) { show('auth-screen'); }
     }
 
-    function unlockAudio() {
-        if (audioUnlocked) return;
-        const a = document.getElementById('notify-sound');
-        a.play().then(() => { a.pause(); a.currentTime = 0; audioUnlocked = true; }).catch(()=>{});
-    }
-
-    function renderUserList() {
+    async function renderUserList() {
         const list = document.getElementById('user-list'); list.innerHTML = "";
+        
+        // 1. Стандартные группы
         const groups = [
             { id: FAMILY_ID, name: 'Фэмели', type: 'FAMILY', icon: 'Ф', class: 'avatar-family' },
             { id: GRIGOROV_ID, name: 'Григоровы 👨‍👩‍👦', type: 'GRIGOROV', icon: 'Г', class: 'avatar-grigorov', vip: true }
         ];
+
+        // 2. Подгружаем созданные чаты (если коллекция существует)
+        try {
+            const customChats = await db.listDocuments(D_ID, C_CHATS);
+            customChats.documents.forEach(c => {
+                groups.push({ id: c.$id, name: c.name, type: 'CUSTOM', icon: c.name[0].toUpperCase(), class: 'avatar-new' });
+            });
+        } catch (err) { console.log('Коллекция chats пока не создана'); }
+
         groups.forEach(g => {
             if (g.id === GRIGOROV_ID && !ALLOWED_GRIGOROVS.includes(allUsersData[me.email]?.name)) return;
             const card = document.createElement('div'); card.className = 'contact-card';
-            card.onclick = () => openChat(g.id, g.name, g.type);
+            card.onclick = () => openChat(g.id, g.name, true);
             card.innerHTML = `<div class="avatar ${g.class}">${g.icon}</div><div><b>${g.name}</b>${g.vip?'<p style="font-size:10px;color:var(--gold)">Семейный Чат</p>':''}</div>`;
             list.appendChild(card);
         });
+
+        // 3. Пользователи
         Object.values(allUsersData).forEach(u => {
             if (u.email === me.email) return;
             let isOnline = u.last_seen && (new Date() - new Date(u.last_seen) < 15000);
             const card = document.createElement('div'); card.className = 'contact-card';
-            card.onclick = () => openChat(u.email, u.name, 'PRIVATE');
+            card.onclick = () => openChat(u.email, u.name, false);
             card.innerHTML = `<div class="avatar">${u.name[0].toUpperCase()}<div class="status-dot ${isOnline?'online':'offline'}"></div></div><b class="${u.is_shiny?'shiny-nick':''}">${u.name}</b>`;
             list.appendChild(card);
         });
+    }
+
+    async function createNewChat() {
+        const name = document.getElementById('new-chat-name').value.trim();
+        if(!name) return alert('Введите название!');
+        try {
+            await db.createDocument(D_ID, C_CHATS, ID.unique(), { 
+                name: name, 
+                admin_email: me.email 
+            });
+            document.getElementById('create-modal').style.display='none';
+            document.getElementById('new-chat-name').value = '';
+            renderUserList(); // Обновить список
+        } catch(e) { 
+            alert('Ошибка! Создайте коллекцию "chats" в Appwrite с полями name и admin_email.'); 
+        }
     }
 
     async function initialLoadUsers() {
@@ -209,8 +253,11 @@
         renderUserList();
     }
 
-    async function openChat(id, name, type) {
-        opponent = { email: id }; isFamily = (type === 'FAMILY'); isGrigorovGroup = (type === 'GRIGOROV');
+    async function openChat(id, name, group) {
+        currentChatId = id; 
+        if (!group) opponent = { email: id };
+        isGroup = group;
+
         document.getElementById('active-chat-name').innerText = name;
         show('chat-screen'); loadMessages();
     }
@@ -218,14 +265,21 @@
     async function loadMessages() {
         const res = await db.listDocuments(D_ID, C_MSGS, [Query.orderDesc("$createdAt"), Query.limit(50)]);
         const box = document.getElementById('messages'); box.innerHTML = '';
-        let filtered = res.documents.filter(m => isFamily ? m.receiver === FAMILY_ID : (isGrigorovGroup ? m.receiver === GRIGOROV_ID : ((m.sender === me.email && m.receiver === opponent.email) || (m.sender === opponent.email && m.receiver === me.email))));
+        
+        let filtered = res.documents.filter(m => {
+            if (isGroup) return m.receiver === currentChatId;
+            return (m.sender === me.email && m.receiver === opponent?.email) || (m.sender === opponent?.email && m.receiver === me.email);
+        });
+
         filtered.reverse().forEach(m => {
             const isMy = m.sender === me.email; const sData = allUsersData[m.sender];
             const d = document.createElement('div'); d.className = `msg ${isMy ? 'my' : ''}`;
             d.onclick = () => { if(isMy || me.email === ADMIN_EMAIL) if(confirm("Удалить?")) db.deleteDocument(D_ID, C_MSGS, m.$id); };
-            let author = ((isFamily || isGrigorovGroup) && !isMy) ? `<span class="msg-author ${sData?.is_shiny?'shiny-nick':''}">${sData?.name}</span>` : '';
+            
+            let author = (isGroup && !isMy) ? `<span class="msg-author ${sData?.is_shiny?'shiny-nick':''}">${sData?.name || 'Кто-то'}</span>` : '';
             let content = m.text.startsWith('IMG:') ? `<img src="${m.text.replace('IMG:', '')}">` : m.text;
-            d.innerHTML = `${author}${content}<div class="msg-info"><span>${isMy?(m.is_read?'':''):''}</span><span>${new Date(m.$createdAt).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}</span></div>`;
+            
+            d.innerHTML = `${author}${content}<div class="msg-info"><span>${new Date(m.$createdAt).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}</span></div>`;
             box.appendChild(d);
         });
         box.scrollTop = box.scrollHeight;
@@ -233,7 +287,7 @@
 
     async function sendMsg() {
         const inp = document.getElementById('msg-inp'); if(!inp.value.trim()) return;
-        let t = isFamily ? FAMILY_ID : (isGrigorovGroup ? GRIGOROV_ID : opponent.email);
+        let t = isGroup ? currentChatId : opponent.email;
         await db.createDocument(D_ID, C_MSGS, ID.unique(), { text: inp.value, sender: me.email, receiver: t, is_read: false });
         inp.value = "";
     }
@@ -242,7 +296,7 @@
         if(!el.files[0]) return;
         const f = await storage.createFile(B_ID, ID.unique(), el.files[0]);
         const url = `https://cloud.appwrite.io/v1/storage/buckets/${B_ID}/files/${f.$id}/view?project=${client.config.project}`;
-        let t = isFamily ? FAMILY_ID : (isGrigorovGroup ? GRIGOROV_ID : opponent.email);
+        let t = isGroup ? currentChatId : opponent.email;
         await db.createDocument(D_ID, C_MSGS, ID.unique(), { text: `IMG:${url}`, sender: me.email, receiver: t, is_read: false });
         toggleAttach();
     }
@@ -263,9 +317,11 @@
     function toggleMode() { document.getElementById('u-nick').style.display = 'block'; document.getElementById('toggle-text').innerText = "Войти"; }
     function toggleAttach() { const p = document.getElementById('attach-panel'); p.style.display = p.style.display === 'block' ? 'none' : 'block'; }
     function show(id) { ['auth-screen', 'contacts-screen', 'chat-screen'].forEach(s => document.getElementById(s).style.display = 'none'); document.getElementById(id).style.display = 'flex'; }
-    function closeChat() { opponent = null; show('contacts-screen'); }
+    function closeChat() { opponent = null; currentChatId = null; show('contacts-screen'); }
     function logout() { acc.deleteSession('current'); location.reload(); }
-    function openAdmin() { document.getElementById('admin-panel').style.display = 'block'; }
+    function openAdmin() { document.getElementById('admin-panel').style.display = 'flex'; }
+    function openCreateModal() { document.getElementById('create-modal').style.display = 'flex'; }
+    function unlockAudio() { if (audioUnlocked) return; const a = document.getElementById('notify-sound'); a.play().then(() => { a.pause(); a.currentTime = 0; audioUnlocked = true; }).catch(()=>{}); }
 
     init();
 </script>
