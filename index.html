@@ -6,12 +6,11 @@
     
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="ГригоровЧат">
+    <meta name="apple-mobile-web-app-title" content="GrigorovChat">
     <link rel="apple-touch-icon" href="https://i127.fastpic.org/big/2026/0209/6d/fa33f92b6a5bdf0c853010d17ddb446d.png">
     
-    <title>GrigorovChat v1.2.7 Push</title>
+    <title>GrigorovChat v1.2.7</title>
     <script src="https://cdn.jsdelivr.net/npm/appwrite@13.0.1"></script>
-    <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignal.js" async></script>
 
     <style>
         :root { 
@@ -28,14 +27,22 @@
         input[type="text"], input[type="email"], input[type="password"] { width: 100%; padding: 16px; margin: 10px 0; border-radius: 18px; border: none; background: rgba(255,255,255,0.1); color: white; outline: none; font-size: 16px; }
         .btn-p { width: 100%; padding: 16px; border-radius: 18px; border: none; background: var(--p); color: white; font-weight: bold; cursor: pointer; transition: 0.2s; }
         
-        .contact-card { background: var(--card); padding: 15px; border-radius: 22px; display: flex; align-items: center; gap: 15px; margin-bottom: 12px; cursor: pointer; border: 1px solid rgba(255,255,255,0.05); position: relative; transition: background 0.2s; }
-        .contact-card:active { background: rgba(255,255,255,0.15); }
+        .contact-card { background: var(--card); padding: 15px; border-radius: 22px; display: flex; align-items: center; gap: 15px; margin-bottom: 12px; cursor: pointer; border: 1px solid rgba(255,255,255,0.05); position: relative; }
         
         .avatar { width: 50px; height: 50px; border-radius: 16px; background: var(--p); display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 22px; position: relative; flex-shrink: 0; }
         .avatar-family { background: linear-gradient(45deg, #6c5ce7, #a29bfe); border: 2px solid var(--gold); }
         .avatar-grigorov { background: linear-gradient(45deg, #ff4757, #ff6b81); border: 2px solid white; }
         
-        #messages { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; padding-bottom: 120px; -webkit-overflow-scrolling: touch; }
+        /* Цвета групп */
+        .color-picker { display: flex; justify-content: center; gap: 10px; margin: 15px 0; flex-wrap: wrap; }
+        .color-dot { width: 30px; height: 30px; border-radius: 50%; cursor: pointer; border: 3px solid transparent; }
+        .color-dot.selected { border-color: white; transform: scale(1.1); }
+
+        .status-dot { width: 14px; height: 14px; border-radius: 50%; border: 2.5px solid #1e1e3f; position: absolute; bottom: -3px; right: -3px; }
+        .online { background: var(--online); }
+        .offline { background: var(--offline); }
+
+        #messages { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; padding-bottom: 120px; }
         .msg { max-width: 82%; padding: 12px 16px; border-radius: 20px; background: var(--card); align-self: flex-start; word-wrap: break-word; }
         .my { align-self: flex-end; background: var(--p); border-bottom-right-radius: 4px; }
         .msg-author { font-size: 11px; color: var(--gold); font-weight: bold; display: block; margin-bottom: 5px; }
@@ -44,15 +51,19 @@
         .shiny-nick { background: linear-gradient(to right, #f1c40f, #ffeb3b, #f1c40f); -webkit-background-clip: text; color: transparent; animation: shine 3s infinite linear; font-weight: 800; }
         @keyframes shine { 0% { background-position: 0% 50%; } 100% { background-position: 200% 50%; } }
 
-        #admin-panel, #create-modal { display: none; position: fixed; inset: 0; background: rgba(10,10,25,0.95); z-index: 500; align-items: center; justify-content: center; padding: 20px; backdrop-filter: blur(10px); }
-        #attach-panel { display: none; background: rgba(25, 25, 50, 0.95); border-radius: 30px 30px 0 0; padding: 25px; position: fixed; bottom: 85px; left: 0; right: 0; z-index: 100; backdrop-filter: blur(20px); border-top: 1px solid rgba(255,255,255,0.1); padding-bottom: env(safe-area-inset-bottom); }
-        
-        .input-area { position: fixed; bottom: 0; left: 0; right: 0; padding: 15px; padding-bottom: calc(env(safe-area-inset-bottom) + 15px); display: flex; align-items: center; gap: 12px; background: #13132b; z-index: 110; }
-        .btn-icon { background: rgba(255,255,255,0.1); border: none; width: 50px; height: 50px; border-radius: 18px; font-size: 24px; color: white; flex-shrink: 0; display: flex; align-items: center; justify-content: center; }
-        .btn-send { background: var(--p); }
-        #msg-inp { margin: 0; flex: 1; height: 50px; border-radius: 18px; background: rgba(255,255,255,0.08); padding: 0 15px; color: white; border: none; outline: none; }
+        /* АДМИН ПАНЕЛЬ */
+        #admin-panel { 
+            display: none; position: fixed; inset: 0; background: rgba(8,8,25,0.98); 
+            z-index: 1000; padding: 30px; backdrop-filter: blur(15px); overflow-y: auto;
+        }
+        .admin-btn { background: rgba(255,255,255,0.05); padding: 20px; border-radius: 25px; text-align: center; border: 1px solid rgba(255,255,255,0.1); margin-bottom: 15px; }
 
-        .fab-add { position: fixed; bottom: 30px; right: 25px; width: 60px; height: 60px; border-radius: 50%; background: linear-gradient(135deg, #6c5ce7, #a29bfe); color: white; font-size: 32px; border: none; box-shadow: 0 10px 25px rgba(108, 92, 231, 0.5); z-index: 200; display: none; align-items: center; justify-content: center; cursor: pointer; }
+        #create-modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 500; align-items: center; justify-content: center; backdrop-filter: blur(10px); }
+        #attach-panel { display: none; background: rgba(25, 25, 50, 0.95); border-radius: 30px 30px 0 0; padding: 25px; position: fixed; bottom: 85px; left: 0; right: 0; z-index: 100; border-top: 1px solid rgba(255,255,255,0.1); }
+        
+        .input-area { position: fixed; bottom: 0; left: 0; right: 0; padding: 15px; padding-bottom: calc(env(safe-area-inset-bottom) + 15px); display: flex; gap: 12px; background: #13132b; }
+        .fab-add { position: fixed; bottom: 30px; right: 25px; width: 60px; height: 60px; border-radius: 50%; background: var(--p); color: white; font-size: 32px; border: none; z-index: 200; display: none; align-items: center; justify-content: center; }
+        #modal-users-list { max-height: 200px; overflow-y: auto; background: rgba(0,0,0,0.2); border-radius: 15px; padding: 10px; margin: 10px 0; }
     </style>
 </head>
 <body onclick="unlockAudio()">
@@ -60,47 +71,71 @@
     <audio id="notify-sound" src="Keylimba_260124162943.mp3" preload="auto"></audio>
 
     <div id="admin-panel">
-        <div class="glass-card" style="max-width: 400px; width: 100%;">
-            <h2 style="color: var(--gold); margin-bottom: 25px;">👑 АДМИН-ЦЕНТР</h2>
-            <button onclick="toggleShinyNickDB()" class="btn-p" style="margin-bottom:10px;">✨ Переключить Shiny</button>
-            <button onclick="clearAllMessages()" class="btn-p" style="margin-bottom:10px; background:var(--red)">🧹 Очистить чаты</button>
-            <button onclick="document.getElementById('admin-panel').style.display='none'" class="btn-p" style="background:#555">ЗАКРЫТЬ</button>
+        <h2 style="color: var(--gold); text-align: center; margin-bottom: 30px;">👑 PRO АДМИНКА</h2>
+        <div class="admin-btn">Пользователей: <b id="stat-users" style="color:var(--gold)">...</b></div>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+            <div class="admin-btn" onclick="toggleRegistration()">
+                <span id="reg-icon" style="font-size: 30px;">🔓</span>
+                <p id="reg-status">Регистрация</p>
+            </div>
+            <div class="admin-btn" onclick="toggleShinyNickDB()">
+                <span style="font-size: 30px;">✨</span>
+                <p>Ник</p>
+            </div>
+            <div class="admin-btn" onclick="clearAllMessages()" style="grid-column: span 2; background: rgba(255, 71, 87, 0.1);">
+                <span style="font-size: 30px;">🧹</span>
+                <p>Очистить чаты</p>
+            </div>
+        </div>
+        <button onclick="document.getElementById('admin-panel').style.display='none'" class="btn-p" style="margin-top: 30px; background: var(--red);">ЗАКРЫТЬ ПАНЕЛЬ</button>
+    </div>
+
+    <div id="create-modal">
+        <div class="glass-card">
+            <h2>Новый чат</h2>
+            <input type="text" id="new-chat-name" placeholder="Название">
+            <div class="color-picker" id="color-picker-box"></div>
+            <div id="modal-users-list"></div>
+            <button class="btn-p" onclick="createNewChat()">СОЗДАТЬ</button>
+            <p onclick="document.getElementById('create-modal').style.display='none'" style="margin-top:15px; opacity:0.5">Отмена</p>
         </div>
     </div>
 
     <div id="auth-screen">
         <div class="glass-card">
             <h1>GrigorovChat</h1>
+            <p style="opacity:0.5; font-size:11px">v1.2.7</p>
             <input type="email" id="u-email" placeholder="Email">
             <input type="text" id="u-nick" placeholder="Имя" style="display:none">
             <input type="password" id="pass" placeholder="Пароль">
             <button class="btn-p" onclick="handleAuth()">ВОЙТИ</button>
-            <p onclick="toggleMode()" id="toggle-text" style="margin-top:20px; cursor:pointer; opacity:0.6">Создать аккаунт</p>
+            <p onclick="toggleMode()" id="toggle-text" style="margin-top:20px; opacity:0.6">Создать аккаунт</p>
         </div>
     </div>
 
     <div id="contacts-screen">
         <header style="display:flex; justify-content:space-between; align-items:center; margin-bottom:25px;">
-            <h1 onclick="handleAdminClicks()" style="font-size:34px; font-weight:900;">Чаты</h1>
-            <button onclick="logout()" style="opacity:0.7; background:none; border:none; color:white;">Выход</button>
+            <h1 onclick="handleAdminClicks()" style="font-size:34px; font-weight:900; user-select:none;">Чаты</h1>
+            <button onclick="logout()" style="opacity:0.7; background:none; border:none; color:white; font-weight:bold">Выход</button>
         </header>
-        <div id="user-list" style="overflow-y: auto; flex: 1;"></div>
+        <div id="user-list"></div>
+        <button id="fab-add" class="fab-add" onclick="openCreateModal()">+</button>
     </div>
 
     <div id="chat-screen">
         <header style="margin-bottom:20px; display:flex; align-items:center; gap:15px">
-            <div onclick="closeChat()" style="cursor:pointer; background:rgba(255,255,255,0.1); width:45px; height:45px; border-radius:18px; display:flex; align-items:center; justify-content:center">←</div>
-            <b id="active-chat-name">Чат</b>
+            <div onclick="closeChat()" style="background:rgba(255,255,255,0.1); width:45px; height:45px; border-radius:18px; display:flex; align-items:center; justify-content:center">←</div>
+            <b id="active-chat-name" style="font-size:20px">Чат</b>
         </header>
         <div id="messages"></div>
         <div id="attach-panel">
             <input type="file" id="file-inp" accept="image/*" style="display:none" onchange="uploadPhoto(this)">
-            <button onclick="document.getElementById('file-inp').click()" class="btn-p">🖼️ Выбрать фото</button>
+            <button class="btn-p" onclick="document.getElementById('file-inp').click()">📸 Отправить фото</button>
         </div>
         <div class="input-area">
-            <button class="btn-icon" onclick="toggleAttach()">📎</button>
+            <button onclick="toggleAttach()" style="background:none; border:none; font-size:24px">📎</button>
             <input type="text" id="msg-inp" placeholder="Сообщение...">
-            <button class="btn-icon btn-send" onclick="sendMsg()">➤</button>
+            <button onclick="sendMsg()" class="btn-p" style="width:60px; padding:0">➤</button>
         </div>
     </div>
 
@@ -109,61 +144,120 @@
     const client = new Client().setEndpoint('https://cloud.appwrite.io/v1').setProject('695824a900049124f435');
     const acc = new Account(client), db = new Databases(client), storage = new Storage(client);
     
-    const D_ID = '695825270032517f8888', C_MSGS = 'messages', C_USERS = 'users', B_ID = '696289e3001b875d11ad';
+    const D_ID = '695825270032517f8888', C_MSGS = 'messages', C_USERS = 'users', C_CHATS = 'chats', C_SET = 'settings', B_ID = '696289e3001b875d11ad';
     const FAMILY_ID = 'family_group', GRIGOROV_ID = 'grigorov_private_chat';
     const ADMIN_EMAIL = 'daniilgrigorov26@gmail.com';
+    const ALLOWED_GRIGOROVS = ['Даниил', 'Александр', 'Анюта'];
+    const CHAT_COLORS = ['#6c5ce7', '#00b894', '#ff7675', '#0984e3', '#e17055', '#fdcb6e'];
 
     let me = null, opponent = null, currentChatId = null, isGroup = false;
-    let allUsersData = {}, adminCounter = 0;
-
-    // --- ИНИЦИАЛИЗАЦИЯ ONESIGNAL ---
-    window.OneSignal = window.OneSignal || [];
-    OneSignal.push(() => {
-        OneSignal.init({
-            appId: "3bbb0fe8-1512-4781-a14c-057aa3864e37",
-            allowLocalhostAsSecureOrigin: true,
-        });
-    });
+    let allUsersData = {}, myUserDocId = null, audioUnlocked = false, adminCounter = 0;
+    let selectedChatColor = CHAT_COLORS[0], regOpen = true;
 
     async function init() {
         try {
             me = await acc.get();
-            // Логин в OneSignal
-            OneSignal.push(() => { OneSignal.login(me.email); });
-            
+            if (me.email === ADMIN_EMAIL) document.getElementById('fab-add').style.display = 'flex';
             show('contacts-screen');
-            await initialLoad();
+            await loadUsers();
+
+            setInterval(async () => {
+                if(myUserDocId) await db.updateDocument(D_ID, C_USERS, myUserDocId, { last_seen: new Date().toISOString() }).catch(()=>{});
+            }, 10000);
+
             client.subscribe(`databases.${D_ID}.collections.${C_MSGS}.documents`, () => { if(currentChatId) loadMessages(); });
+            client.subscribe(`databases.${D_ID}.collections.${C_CHATS}.documents`, () => renderAll());
         } catch (e) { show('auth-screen'); }
     }
 
-    async function initialLoad() {
+    async function loadUsers() {
         const res = await db.listDocuments(D_ID, C_USERS);
-        res.documents.forEach(u => { allUsersData[u.email] = u; });
-        renderUserList();
+        res.documents.forEach(u => { allUsersData[u.email] = u; if (u.email === me.email) myUserDocId = u.$id; });
+        renderAll();
     }
 
-    function renderUserList() {
+    async function renderAll() {
         const list = document.getElementById('user-list'); list.innerHTML = "";
-        const groups = [
-            { id: FAMILY_ID, name: 'Фэмели', icon: 'Ф', class: 'avatar-family' },
-            { id: GRIGOROV_ID, name: 'Григоровы 👨‍👩‍👦', icon: 'Г', class: 'avatar-grigorov' }
+        
+        // Системные группы
+        const sys = [
+            { id: FAMILY_ID, name: 'Фэмели', class: 'avatar-family', icon: 'Ф' },
+            { id: GRIGOROV_ID, name: 'Григоровы 👨‍👩‍👦', class: 'avatar-grigorov', icon: 'Г' }
         ];
-
-        groups.forEach(g => {
+        sys.forEach(g => {
+            if (g.id === GRIGOROV_ID && !ALLOWED_GRIGOROVS.includes(allUsersData[me.email]?.name)) return;
             const card = document.createElement('div'); card.className = 'contact-card';
             card.onclick = () => openChat(g.id, g.name, true);
             card.innerHTML = `<div class="avatar ${g.class}">${g.icon}</div><b>${g.name}</b>`;
             list.appendChild(card);
         });
 
+        // Кастомные чаты
+        try {
+            const chats = await db.listDocuments(D_ID, C_CHATS);
+            chats.documents.forEach(c => {
+                if (c.admin_email === me.email || (c.members && c.members.includes(me.email))) {
+                    const card = document.createElement('div'); card.className = 'contact-card';
+                    card.onclick = () => openChat(c.$id, c.name, true);
+                    card.innerHTML = `<div class="avatar" style="background:${c.color || '#6c5ce7'}">${c.name[0]}</div><b>${c.name}</b>`;
+                    list.appendChild(card);
+                }
+            });
+        } catch(e) {}
+
+        // Личные
         Object.values(allUsersData).forEach(u => {
             if (u.email === me.email) return;
+            let isOn = u.last_seen && (new Date() - new Date(u.last_seen) < 20000);
             const card = document.createElement('div'); card.className = 'contact-card';
             card.onclick = () => openChat(u.email, u.name, false);
-            card.innerHTML = `<div class="avatar">${u.name[0]}</div><b class="${u.is_shiny?'shiny-nick':''}">${u.name}</b>`;
+            card.innerHTML = `<div class="avatar">${u.name[0]}<div class="status-dot ${isOn?'online':'offline'}"></div></div><b class="${u.is_shiny?'shiny-nick':''}">${u.name}</b>`;
             list.appendChild(card);
         });
+    }
+
+    // --- ЛОГИКА АДМИНКИ ---
+    function handleAdminClicks() {
+        if (me.email !== ADMIN_EMAIL) return;
+        adminCounter++;
+        if (adminCounter === 5) { adminCounter = 0; openAdmin(); }
+        setTimeout(() => { adminCounter = 0; }, 2000);
+    }
+
+    async function openAdmin() {
+        document.getElementById('admin-panel').style.display = 'block';
+        const res = await db.listDocuments(D_ID, C_USERS);
+        document.getElementById('stat-users').innerText = res.total;
+        try {
+            const s = await db.getDocument(D_ID, C_SET, 'global');
+            regOpen = s.registration_open;
+            updateRegUI();
+        } catch(e) {}
+    }
+
+    async function toggleRegistration() {
+        regOpen = !regOpen;
+        await db.updateDocument(D_ID, C_SET, 'global', { registration_open: regOpen });
+        updateRegUI();
+    }
+
+    function updateRegUI() {
+        document.getElementById('reg-status').innerText = regOpen ? "Открыта" : "Закрыта";
+        document.getElementById('reg-icon').innerText = regOpen ? "🔓" : "🔒";
+    }
+
+    async function clearAllMessages() {
+        if(!confirm("Удалить последние 100 сообщений в базе?")) return;
+        const res = await db.listDocuments(D_ID, C_MSGS, [Query.limit(100)]);
+        for(let d of res.documents) await db.deleteDocument(D_ID, C_MSGS, d.$id);
+        alert("Готово!");
+    }
+
+    // --- ОСТАЛЬНОЕ ---
+    async function openChat(id, name, group) {
+        currentChatId = id; isGroup = group; if(!group) opponent = {email: id};
+        document.getElementById('active-chat-name').innerText = name;
+        show('chat-screen'); loadMessages();
     }
 
     async function loadMessages() {
@@ -171,39 +265,66 @@
         const box = document.getElementById('messages'); box.innerHTML = '';
         res.documents.filter(m => isGroup ? m.receiver === currentChatId : (m.sender === me.email && m.receiver === opponent.email) || (m.sender === opponent.email && m.receiver === me.email))
         .reverse().forEach(m => {
-            const isMy = m.sender === me.email;
-            const content = m.text.startsWith('IMG:') ? `<img src="${m.text.replace('IMG:', '')}">` : m.text;
-            box.innerHTML += `<div class="msg ${isMy?'my':''}">${content}</div>`;
+            const isMy = m.sender === me.email; const sData = allUsersData[m.sender];
+            let author = (isGroup && !isMy) ? `<span class="msg-author ${sData?.is_shiny?'shiny-nick':''}">${sData?.name || 'Участник'}</span>` : '';
+            let content = m.text.startsWith('IMG:') ? `<img src="${m.text.replace('IMG:', '')}">` : m.text;
+            box.innerHTML += `<div class="msg ${isMy?'my':''}">${author}${content}</div>`;
         });
         box.scrollTop = box.scrollHeight;
     }
 
     async function sendMsg() {
         const inp = document.getElementById('msg-inp'); if(!inp.value.trim()) return;
-        await db.createDocument(D_ID, C_MSGS, ID.unique(), { text: inp.value, sender: me.email, receiver: isGroup ? currentChatId : opponent.email });
+        await db.createDocument(D_ID, C_MSGS, ID.unique(), { text: inp.value, sender: me.email, receiver: isGroup ? currentChatId : opponent.email, is_read: false });
         inp.value = "";
     }
 
     async function uploadPhoto(el) {
+        if(!el.files[0]) return;
         const f = await storage.createFile(B_ID, ID.unique(), el.files[0]);
         const url = `https://cloud.appwrite.io/v1/storage/buckets/${B_ID}/files/${f.$id}/view?project=${client.config.project}`;
-        await db.createDocument(D_ID, C_MSGS, ID.unique(), { text: `IMG:${url}`, sender: me.email, receiver: isGroup ? currentChatId : opponent.email });
+        await db.createDocument(D_ID, C_MSGS, ID.unique(), { text: `IMG:${url}`, sender: me.email, receiver: isGroup ? currentChatId : opponent.email, is_read: false });
         toggleAttach();
     }
 
-    function handleAdminClicks() {
-        if (me.email !== ADMIN_EMAIL) return;
-        adminCounter++; if (adminCounter === 5) { adminCounter = 0; document.getElementById('admin-panel').style.display='flex'; }
-        setTimeout(() => adminCounter = 0, 2000);
+    function openCreateModal() {
+        document.getElementById('create-modal').style.display = 'flex';
+        const cb = document.getElementById('color-picker-box'); cb.innerHTML = '';
+        CHAT_COLORS.forEach(c => {
+            const d = document.createElement('div'); d.className = 'color-dot' + (c === selectedChatColor ? ' selected' : '');
+            d.style.background = c; d.onclick = () => { selectedChatColor = c; openCreateModal(); };
+            cb.appendChild(d);
+        });
+        const ul = document.getElementById('modal-users-list'); ul.innerHTML = '';
+        Object.values(allUsersData).forEach(u => {
+            if(u.email !== me.email) ul.innerHTML += `<div style="padding:5px"><input type="checkbox" value="${u.email}" class="chat-mem"> ${u.name}</div>`;
+        });
+    }
+
+    async function createNewChat() {
+        const name = document.getElementById('new-chat-name').value;
+        const members = [me.email, ...Array.from(document.querySelectorAll('.chat-mem:checked')).map(i => i.value)];
+        await db.createDocument(D_ID, C_CHATS, ID.unique(), { name, admin_email: me.email, members, color: selectedChatColor });
+        document.getElementById('create-modal').style.display = 'none';
     }
 
     async function handleAuth() {
         const e = document.getElementById('u-email').value, p = document.getElementById('pass').value, n = document.getElementById('u-nick').value;
         if (document.getElementById('u-nick').style.display === 'block') {
+            try {
+                const s = await db.getDocument(D_ID, C_SET, 'global');
+                if(!s.registration_open) return alert("Регистрация закрыта!");
+            } catch(e) {}
             await acc.create(ID.unique(), e, p, n); await acc.createEmailSession(e, p);
-            await db.createDocument(D_ID, C_USERS, ID.unique(), { name: n, email: e });
+            await db.createDocument(D_ID, C_USERS, ID.unique(), { name: n, email: e, last_seen: new Date().toISOString() });
         } else await acc.createEmailSession(e, p);
         location.reload();
+    }
+
+    async function toggleShinyNickDB() {
+        const curr = allUsersData[me.email].is_shiny || false;
+        await db.updateDocument(D_ID, C_USERS, myUserDocId, { is_shiny: !curr });
+        alert("Shiny статус изменен!"); location.reload();
     }
 
     function toggleMode() { document.getElementById('u-nick').style.display = 'block'; document.getElementById('toggle-text').innerText = "Войти"; }
@@ -211,8 +332,7 @@
     function show(id) { ['auth-screen', 'contacts-screen', 'chat-screen'].forEach(s => document.getElementById(s).style.display = 'none'); document.getElementById(id).style.display = 'flex'; }
     function closeChat() { currentChatId = null; show('contacts-screen'); }
     function logout() { acc.deleteSession('current'); location.reload(); }
-    function unlockAudio() { document.getElementById('notify-sound').play().then(() => document.getElementById('notify-sound').pause()); }
-    async function openChat(id, name, group) { currentChatId = id; isGroup = group; if(!group) opponent = {email: id}; document.getElementById('active-chat-name').innerText = name; show('chat-screen'); loadMessages(); }
+    function unlockAudio() { document.getElementById('notify-sound').play().then(s => { document.getElementById('notify-sound').pause(); }); }
 
     init();
 </script>
