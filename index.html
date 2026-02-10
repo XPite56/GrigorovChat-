@@ -27,43 +27,45 @@
         input[type="text"], input[type="email"], input[type="password"] { width: 100%; padding: 16px; margin: 10px 0; border-radius: 18px; border: none; background: rgba(255,255,255,0.1); color: white; outline: none; font-size: 16px; }
         .btn-p { width: 100%; padding: 16px; border-radius: 18px; border: none; background: var(--p); color: white; font-weight: bold; cursor: pointer; transition: 0.2s; }
         
-        .contact-card { background: var(--card); padding: 15px; border-radius: 22px; display: flex; align-items: center; gap: 15px; margin-bottom: 12px; cursor: pointer; border: 1px solid rgba(255,255,255,0.05); position: relative; }
+        .contact-card { background: var(--card); padding: 15px; border-radius: 22px; display: flex; align-items: center; gap: 15px; margin-bottom: 12px; cursor: pointer; border: 1px solid rgba(255,255,255,0.05); position: relative; transition: background 0.2s; }
+        .contact-card:active { background: rgba(255,255,255,0.15); }
         
         .avatar { width: 50px; height: 50px; border-radius: 16px; background: var(--p); display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 22px; position: relative; flex-shrink: 0; }
         .avatar-family { background: linear-gradient(45deg, #6c5ce7, #a29bfe); border: 2px solid var(--gold); }
         .avatar-grigorov { background: linear-gradient(45deg, #ff4757, #ff6b81); border: 2px solid white; }
         
-        /* Цвета групп */
         .color-picker { display: flex; justify-content: center; gap: 10px; margin: 15px 0; flex-wrap: wrap; }
-        .color-dot { width: 30px; height: 30px; border-radius: 50%; cursor: pointer; border: 3px solid transparent; }
-        .color-dot.selected { border-color: white; transform: scale(1.1); }
+        .color-dot { width: 30px; height: 30px; border-radius: 50%; cursor: pointer; border: 3px solid transparent; transition: transform 0.2s; }
+        .color-dot.selected { border-color: white; transform: scale(1.15); box-shadow: 0 0 10px rgba(255,255,255,0.3); }
 
         .status-dot { width: 14px; height: 14px; border-radius: 50%; border: 2.5px solid #1e1e3f; position: absolute; bottom: -3px; right: -3px; }
-        .online { background: var(--online); }
+        .online { background: var(--online); box-shadow: 0 0 8px var(--online); }
         .offline { background: var(--offline); }
 
-        #messages { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; padding-bottom: 120px; }
+        #messages { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; padding-bottom: 120px; -webkit-overflow-scrolling: touch; }
         .msg { max-width: 82%; padding: 12px 16px; border-radius: 20px; background: var(--card); align-self: flex-start; word-wrap: break-word; }
         .my { align-self: flex-end; background: var(--p); border-bottom-right-radius: 4px; }
+        .msg-info { display: flex; justify-content: flex-end; align-items: center; gap: 6px; margin-top: 5px; opacity: 0.7; font-size: 10px; }
         .msg-author { font-size: 11px; color: var(--gold); font-weight: bold; display: block; margin-bottom: 5px; }
         .msg img { max-width: 100%; border-radius: 14px; margin-top: 8px; }
 
         .shiny-nick { background: linear-gradient(to right, #f1c40f, #ffeb3b, #f1c40f); -webkit-background-clip: text; color: transparent; animation: shine 3s infinite linear; font-weight: 800; }
         @keyframes shine { 0% { background-position: 0% 50%; } 100% { background-position: 200% 50%; } }
 
-        /* АДМИН ПАНЕЛЬ */
-        #admin-panel { 
-            display: none; position: fixed; inset: 0; background: rgba(8,8,25,0.98); 
-            z-index: 1000; padding: 30px; backdrop-filter: blur(15px); overflow-y: auto;
-        }
-        .admin-btn { background: rgba(255,255,255,0.05); padding: 20px; border-radius: 25px; text-align: center; border: 1px solid rgba(255,255,255,0.1); margin-bottom: 15px; }
-
-        #create-modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 500; align-items: center; justify-content: center; backdrop-filter: blur(10px); }
-        #attach-panel { display: none; background: rgba(25, 25, 50, 0.95); border-radius: 30px 30px 0 0; padding: 25px; position: fixed; bottom: 85px; left: 0; right: 0; z-index: 100; border-top: 1px solid rgba(255,255,255,0.1); }
+        /* MODALS */
+        #admin-panel, #create-modal { display: none; position: fixed; inset: 0; background: rgba(10,10,25,0.95); z-index: 500; align-items: center; justify-content: center; padding: 20px; backdrop-filter: blur(10px); }
+        #attach-panel { display: none; background: rgba(25, 25, 50, 0.95); border-radius: 30px 30px 0 0; padding: 25px; position: fixed; bottom: 85px; left: 0; right: 0; z-index: 100; backdrop-filter: blur(20px); border-top: 1px solid rgba(255,255,255,0.1); padding-bottom: env(safe-area-inset-bottom); }
         
-        .input-area { position: fixed; bottom: 0; left: 0; right: 0; padding: 15px; padding-bottom: calc(env(safe-area-inset-bottom) + 15px); display: flex; gap: 12px; background: #13132b; }
-        .fab-add { position: fixed; bottom: 30px; right: 25px; width: 60px; height: 60px; border-radius: 50%; background: var(--p); color: white; font-size: 32px; border: none; z-index: 200; display: none; align-items: center; justify-content: center; }
-        #modal-users-list { max-height: 200px; overflow-y: auto; background: rgba(0,0,0,0.2); border-radius: 15px; padding: 10px; margin: 10px 0; }
+        /* ВЕРНУЛ СТАРЫЙ INPUT AREA */
+        .input-area { position: fixed; bottom: 0; left: 0; right: 0; padding: 15px; padding-bottom: calc(env(safe-area-inset-bottom) + 15px); display: flex; align-items: center; gap: 12px; background: #13132b; z-index: 110; }
+        .btn-icon { background: rgba(255,255,255,0.1); border: none; width: 50px; height: 50px; border-radius: 18px; font-size: 24px; color: white; flex-shrink: 0; display: flex; align-items: center; justify-content: center; }
+        .btn-send { background: var(--p); }
+        #msg-inp { margin: 0; flex: 1; height: 50px; border-radius: 18px; background: rgba(255,255,255,0.08); padding: 0 15px; color: white; border: none; outline: none; }
+
+        .fab-add { position: fixed; bottom: 30px; right: 25px; width: 60px; height: 60px; border-radius: 50%; background: linear-gradient(135deg, #6c5ce7, #a29bfe); color: white; font-size: 32px; border: none; box-shadow: 0 10px 25px rgba(108, 92, 231, 0.5); z-index: 200; display: none; align-items: center; justify-content: center; cursor: pointer; }
+
+        #modal-users-list { max-height: 200px; overflow-y: auto; text-align: left; margin: 15px 0; background: rgba(0,0,0,0.2); border-radius: 15px; padding: 10px; }
+        .user-checkbox-item { display: flex; align-items: center; gap: 10px; padding: 10px; border-bottom: 1px solid rgba(255,255,255,0.05); }
     </style>
 </head>
 <body onclick="unlockAudio()">
@@ -71,45 +73,39 @@
     <audio id="notify-sound" src="Keylimba_260124162943.mp3" preload="auto"></audio>
 
     <div id="admin-panel">
-        <h2 style="color: var(--gold); text-align: center; margin-bottom: 30px;">👑 АДМИНКА</h2>
-        <div class="admin-btn">Пользователей: <b id="stat-users" style="color:var(--gold)">...</b></div>
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
-            <div class="admin-btn" onclick="toggleRegistration()">
-                <span id="reg-icon" style="font-size: 30px;">🔓</span>
-                <p id="reg-status">Регистрация</p>
+        <div class="glass-card" style="max-width: 400px; width: 100%;">
+            <h2 style="color: var(--gold); margin-bottom: 25px;">👑 АДМИН-ЦЕНТР</h2>
+            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:15px; margin-bottom: 20px;">
+                <div class="glass-card" onclick="toggleShinyNickDB()" style="margin:0; padding:15px;"><span style="font-size:30px;">✨</span><p>Ник</p></div>
+                <div class="glass-card" onclick="toggleRegistration()" style="margin:0; padding:15px;"><span id="reg-icon" style="font-size:30px;">🔓</span><p id="reg-label">Вход</p></div>
+                <div class="glass-card" onclick="clearAllMessages()" style="margin:0; padding:15px; grid-column: span 2; border-color: var(--red);"><span style="font-size:30px;">🧹</span><p>Очистить чаты</p></div>
             </div>
-            <div class="admin-btn" onclick="toggleShinyNickDB()">
-                <span style="font-size: 30px;">✨</span>
-                <p>Ник</p>
-            </div>
-            <div class="admin-btn" onclick="clearAllMessages()" style="grid-column: span 2; background: rgba(255, 71, 87, 0.1);">
-                <span style="font-size: 30px;">🧹</span>
-                <p>Очистить чаты</p>
-            </div>
+            <button onclick="document.getElementById('admin-panel').style.display='none'" class="btn-p" style="background:var(--red)">ЗАКРЫТЬ</button>
         </div>
-        <button onclick="document.getElementById('admin-panel').style.display='none'" class="btn-p" style="margin-top: 30px; background: var(--red);">ЗАКРЫТЬ ПАНЕЛЬ</button>
     </div>
 
     <div id="create-modal">
-        <div class="glass-card">
-            <h2>Новый чат</h2>
-            <input type="text" id="new-chat-name" placeholder="Название">
+        <div class="glass-card" style="position: relative; max-width: 360px;">
+            <button onclick="document.getElementById('create-modal').style.display='none'" style="position:absolute; top:15px; right:15px; background:none; border:none; color:white; font-size:20px;">✕</button>
+            <h2 style="margin-bottom:10px;">Новый чат</h2>
+            <input type="text" id="new-chat-name" placeholder="Название беседы">
+            <p style="text-align:left; font-size:12px; color:#aaa; margin: 10px 0 5px 5px;">Цвет иконки:</p>
             <div class="color-picker" id="color-picker-box"></div>
+            <p style="text-align:left; font-size:12px; color:#aaa; margin-left:5px;">Выберите участников:</p>
             <div id="modal-users-list"></div>
             <button class="btn-p" onclick="createNewChat()">СОЗДАТЬ</button>
-            <p onclick="document.getElementById('create-modal').style.display='none'" style="margin-top:15px; opacity:0.5">Отмена</p>
         </div>
     </div>
 
     <div id="auth-screen">
         <div class="glass-card">
             <h1>GrigorovChat</h1>
-            <p style="opacity:0.5; font-size:11px">v1.2.7</p>
+            <p style="opacity:0.5; margin-bottom:25px; font-size:11px">v1.2.7</p>
             <input type="email" id="u-email" placeholder="Email">
             <input type="text" id="u-nick" placeholder="Имя" style="display:none">
             <input type="password" id="pass" placeholder="Пароль">
             <button class="btn-p" onclick="handleAuth()">ВОЙТИ</button>
-            <p onclick="toggleMode()" id="toggle-text" style="margin-top:20px; opacity:0.6">Создать аккаунт</p>
+            <p onclick="toggleMode()" id="toggle-text" style="margin-top:20px; cursor:pointer; opacity:0.6">Создать аккаунт</p>
         </div>
     </div>
 
@@ -118,24 +114,27 @@
             <h1 onclick="handleAdminClicks()" style="font-size:34px; font-weight:900; user-select:none;">Чаты</h1>
             <button onclick="logout()" style="opacity:0.7; background:none; border:none; color:white; font-weight:bold">Выход</button>
         </header>
-        <div id="user-list"></div>
+        <div id="user-list" style="overflow-y: auto; flex: 1;"></div>
         <button id="fab-add" class="fab-add" onclick="openCreateModal()">+</button>
     </div>
 
     <div id="chat-screen">
         <header style="margin-bottom:20px; display:flex; align-items:center; gap:15px">
-            <div onclick="closeChat()" style="background:rgba(255,255,255,0.1); width:45px; height:45px; border-radius:18px; display:flex; align-items:center; justify-content:center">←</div>
+            <div onclick="closeChat()" style="cursor:pointer; background:rgba(255,255,255,0.1); width:45px; height:45px; border-radius:18px; display:flex; align-items:center; justify-content:center">←</div>
             <b id="active-chat-name" style="font-size:20px">Чат</b>
         </header>
         <div id="messages"></div>
         <div id="attach-panel">
-            <input type="file" id="file-inp" accept="image/*" style="display:none" onchange="uploadPhoto(this)">
-            <button class="btn-p" onclick="document.getElementById('file-inp').click()">📸 Отправить фото</button>
+            <label style="text-align:center; cursor:pointer; display:block">
+                <input type="file" id="file-inp" accept="image/*" style="display:none" onchange="uploadPhoto(this)">
+                <div style="width:70px; height:70px; background:var(--p); border-radius:24px; display:flex; align-items:center; justify-content:center; font-size:32px; margin:0 auto 10px auto">🖼️</div>
+                <span>Фото</span>
+            </label>
         </div>
         <div class="input-area">
-            <button onclick="toggleAttach()" style="background:none; border:none; font-size:24px">📎</button>
+            <button class="btn-icon" onclick="toggleAttach()">📎</button>
             <input type="text" id="msg-inp" placeholder="Сообщение...">
-            <button onclick="sendMsg()" class="btn-p" style="width:60px; padding:0">➤</button>
+            <button class="btn-icon btn-send" onclick="sendMsg()">➤</button>
         </div>
     </div>
 
@@ -151,115 +150,83 @@
     const CHAT_COLORS = ['#6c5ce7', '#00b894', '#ff7675', '#0984e3', '#e17055', '#fdcb6e'];
 
     let me = null, opponent = null, currentChatId = null, isGroup = false;
-    let allUsersData = {}, myUserDocId = null, audioUnlocked = false, adminCounter = 0;
-    let selectedChatColor = CHAT_COLORS[0], regOpen = true;
+    let allUsersData = {}, myUserDocId = null, adminCounter = 0, regOpen = true;
+    let selectedChatColor = CHAT_COLORS[0];
 
     async function init() {
         try {
             me = await acc.get();
             if (me.email === ADMIN_EMAIL) document.getElementById('fab-add').style.display = 'flex';
             show('contacts-screen');
-            await loadUsers();
-
-            setInterval(async () => {
-                if(myUserDocId) await db.updateDocument(D_ID, C_USERS, myUserDocId, { last_seen: new Date().toISOString() }).catch(()=>{});
-            }, 10000);
-
+            await initialLoad();
             client.subscribe(`databases.${D_ID}.collections.${C_MSGS}.documents`, () => { if(currentChatId) loadMessages(); });
-            client.subscribe(`databases.${D_ID}.collections.${C_CHATS}.documents`, () => renderAll());
+            client.subscribe(`databases.${D_ID}.collections.${C_CHATS}.documents`, () => renderUserList());
         } catch (e) { show('auth-screen'); }
     }
 
-    async function loadUsers() {
+    async function initialLoad() {
         const res = await db.listDocuments(D_ID, C_USERS);
         res.documents.forEach(u => { allUsersData[u.email] = u; if (u.email === me.email) myUserDocId = u.$id; });
-        renderAll();
+        renderUserList();
     }
 
-    async function renderAll() {
+    async function renderUserList() {
         const list = document.getElementById('user-list'); list.innerHTML = "";
-        
-        // Системные группы
-        const sys = [
-            { id: FAMILY_ID, name: 'Фэмели', class: 'avatar-family', icon: 'Ф' },
-            { id: GRIGOROV_ID, name: 'Григоровы 👨‍👩‍👦', class: 'avatar-grigorov', icon: 'Г' }
+        const groups = [
+            { id: FAMILY_ID, name: 'Фэмели', icon: 'Ф', class: 'avatar-family' },
+            { id: GRIGOROV_ID, name: 'Григоровы 👨‍👩‍👦', icon: 'Г', class: 'avatar-grigorov', vip: true }
         ];
-        sys.forEach(g => {
-            if (g.id === GRIGOROV_ID && !ALLOWED_GRIGOROVS.includes(allUsersData[me.email]?.name)) return;
-            const card = document.createElement('div'); card.className = 'contact-card';
-            card.onclick = () => openChat(g.id, g.name, true);
-            card.innerHTML = `<div class="avatar ${g.class}">${g.icon}</div><b>${g.name}</b>`;
-            list.appendChild(card);
-        });
 
-        // Кастомные чаты
         try {
-            const chats = await db.listDocuments(D_ID, C_CHATS);
-            chats.documents.forEach(c => {
+            const custom = await db.listDocuments(D_ID, C_CHATS);
+            custom.documents.forEach(c => {
                 if (c.admin_email === me.email || (c.members && c.members.includes(me.email))) {
-                    const card = document.createElement('div'); card.className = 'contact-card';
-                    card.onclick = () => openChat(c.$id, c.name, true);
-                    card.innerHTML = `<div class="avatar" style="background:${c.color || '#6c5ce7'}">${c.name[0]}</div><b>${c.name}</b>`;
-                    list.appendChild(card);
+                    groups.push({ id: c.$id, name: c.name, icon: c.name[0], color: c.color });
                 }
             });
         } catch(e) {}
 
-        // Личные
+        groups.forEach(g => {
+            if (g.id === GRIGOROV_ID && !ALLOWED_GRIGOROVS.includes(allUsersData[me.email]?.name)) return;
+            const card = document.createElement('div'); card.className = 'contact-card';
+            card.onclick = () => openChat(g.id, g.name, true);
+            const style = g.color ? `background:${g.color}` : '';
+            card.innerHTML = `<div class="avatar ${g.class||''}" style="${style}">${g.icon}</div><div><b>${g.name}</b>${g.vip?'<p style="font-size:10px;color:var(--gold)">Семейный Чат</p>':''}</div>`;
+            list.appendChild(card);
+        });
+
         Object.values(allUsersData).forEach(u => {
             if (u.email === me.email) return;
-            let isOn = u.last_seen && (new Date() - new Date(u.last_seen) < 20000);
             const card = document.createElement('div'); card.className = 'contact-card';
             card.onclick = () => openChat(u.email, u.name, false);
-            card.innerHTML = `<div class="avatar">${u.name[0]}<div class="status-dot ${isOn?'online':'offline'}"></div></div><b class="${u.is_shiny?'shiny-nick':''}">${u.name}</b>`;
+            card.innerHTML = `<div class="avatar">${u.name[0]}</div><b class="${u.is_shiny?'shiny-nick':''}">${u.name}</b>`;
             list.appendChild(card);
         });
     }
 
-    // --- ЛОГИКА АДМИНКИ ---
+    // --- АДМИНКА (5 ТАПОВ ПО "ЧАТЫ") ---
     function handleAdminClicks() {
         if (me.email !== ADMIN_EMAIL) return;
         adminCounter++;
-        if (adminCounter === 5) { adminCounter = 0; openAdmin(); }
+        if (adminCounter === 5) { adminCounter = 0; document.getElementById('admin-panel').style.display='flex'; }
         setTimeout(() => { adminCounter = 0; }, 2000);
-    }
-
-    async function openAdmin() {
-        document.getElementById('admin-panel').style.display = 'block';
-        const res = await db.listDocuments(D_ID, C_USERS);
-        document.getElementById('stat-users').innerText = res.total;
-        try {
-            const s = await db.getDocument(D_ID, C_SET, 'global');
-            regOpen = s.registration_open;
-            updateRegUI();
-        } catch(e) {}
     }
 
     async function toggleRegistration() {
         regOpen = !regOpen;
         await db.updateDocument(D_ID, C_SET, 'global', { registration_open: regOpen });
-        updateRegUI();
-    }
-
-    function updateRegUI() {
-        document.getElementById('reg-status').innerText = regOpen ? "Открыта" : "Закрыта";
         document.getElementById('reg-icon').innerText = regOpen ? "🔓" : "🔒";
+        alert(regOpen ? "Регистрация открыта" : "Регистрация закрыта");
     }
 
     async function clearAllMessages() {
-        if(!confirm("Удалить последние 100 сообщений в базе?")) return;
+        if(!confirm("Удалить 100 сообщений?")) return;
         const res = await db.listDocuments(D_ID, C_MSGS, [Query.limit(100)]);
         for(let d of res.documents) await db.deleteDocument(D_ID, C_MSGS, d.$id);
-        alert("Готово!");
+        alert("Очищено!");
     }
 
-    // --- ОСТАЛЬНОЕ ---
-    async function openChat(id, name, group) {
-        currentChatId = id; isGroup = group; if(!group) opponent = {email: id};
-        document.getElementById('active-chat-name').innerText = name;
-        show('chat-screen'); loadMessages();
-    }
-
+    // --- ОСТАЛЬНАЯ ЛОГИКА ---
     async function loadMessages() {
         const res = await db.listDocuments(D_ID, C_MSGS, [Query.orderDesc("$createdAt"), Query.limit(50)]);
         const box = document.getElementById('messages'); box.innerHTML = '';
@@ -275,20 +242,19 @@
 
     async function sendMsg() {
         const inp = document.getElementById('msg-inp'); if(!inp.value.trim()) return;
-        await db.createDocument(D_ID, C_MSGS, ID.unique(), { text: inp.value, sender: me.email, receiver: isGroup ? currentChatId : opponent.email, is_read: false });
+        await db.createDocument(D_ID, C_MSGS, ID.unique(), { text: inp.value, sender: me.email, receiver: isGroup ? currentChatId : opponent.email });
         inp.value = "";
     }
 
     async function uploadPhoto(el) {
-        if(!el.files[0]) return;
         const f = await storage.createFile(B_ID, ID.unique(), el.files[0]);
         const url = `https://cloud.appwrite.io/v1/storage/buckets/${B_ID}/files/${f.$id}/view?project=${client.config.project}`;
-        await db.createDocument(D_ID, C_MSGS, ID.unique(), { text: `IMG:${url}`, sender: me.email, receiver: isGroup ? currentChatId : opponent.email, is_read: false });
+        await db.createDocument(D_ID, C_MSGS, ID.unique(), { text: `IMG:${url}`, sender: me.email, receiver: isGroup ? currentChatId : opponent.email });
         toggleAttach();
     }
 
     function openCreateModal() {
-        document.getElementById('create-modal').style.display = 'flex';
+        document.getElementById('create-modal').style.display='flex';
         const cb = document.getElementById('color-picker-box'); cb.innerHTML = '';
         CHAT_COLORS.forEach(c => {
             const d = document.createElement('div'); d.className = 'color-dot' + (c === selectedChatColor ? ' selected' : '');
@@ -297,7 +263,7 @@
         });
         const ul = document.getElementById('modal-users-list'); ul.innerHTML = '';
         Object.values(allUsersData).forEach(u => {
-            if(u.email !== me.email) ul.innerHTML += `<div style="padding:5px"><input type="checkbox" value="${u.email}" class="chat-mem"> ${u.name}</div>`;
+            if(u.email !== me.email) ul.innerHTML += `<div class="user-checkbox-item"><input type="checkbox" value="${u.email}" class="chat-mem"> ${u.name}</div>`;
         });
     }
 
@@ -311,10 +277,6 @@
     async function handleAuth() {
         const e = document.getElementById('u-email').value, p = document.getElementById('pass').value, n = document.getElementById('u-nick').value;
         if (document.getElementById('u-nick').style.display === 'block') {
-            try {
-                const s = await db.getDocument(D_ID, C_SET, 'global');
-                if(!s.registration_open) return alert("Регистрация закрыта!");
-            } catch(e) {}
             await acc.create(ID.unique(), e, p, n); await acc.createEmailSession(e, p);
             await db.createDocument(D_ID, C_USERS, ID.unique(), { name: n, email: e, last_seen: new Date().toISOString() });
         } else await acc.createEmailSession(e, p);
@@ -324,7 +286,7 @@
     async function toggleShinyNickDB() {
         const curr = allUsersData[me.email].is_shiny || false;
         await db.updateDocument(D_ID, C_USERS, myUserDocId, { is_shiny: !curr });
-        alert("Shiny статус изменен!"); location.reload();
+        alert("Статус обновлен!"); location.reload();
     }
 
     function toggleMode() { document.getElementById('u-nick').style.display = 'block'; document.getElementById('toggle-text').innerText = "Войти"; }
@@ -333,6 +295,7 @@
     function closeChat() { currentChatId = null; show('contacts-screen'); }
     function logout() { acc.deleteSession('current'); location.reload(); }
     function unlockAudio() { document.getElementById('notify-sound').play().then(s => { document.getElementById('notify-sound').pause(); }); }
+    async function openChat(id, name, group) { currentChatId = id; isGroup = group; if(!group) opponent = {email: id}; document.getElementById('active-chat-name').innerText = name; show('chat-screen'); loadMessages(); }
 
     init();
 </script>
