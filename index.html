@@ -11,7 +11,9 @@
     
     <title>GrigorovChat v1.2.8</title>
     <script src="https://cdn.jsdelivr.net/npm/appwrite@13.0.1"></script>
-    <script src="https://cdn.webpushr.com/app.min.js"></script> <style>
+    <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignal.js" async></script>
+
+    <style>
         :root { 
             --p: #6c5ce7; --bg: #13132b; --card: rgba(255, 255, 255, 0.08); 
             --gold: #f1c40f; --red: #ff4757; --online: #2ecc71; --offline: #95a5a6; 
@@ -66,7 +68,7 @@
         .input-area { position: fixed; bottom: 0; left: 0; right: 0; padding: 15px; padding-bottom: calc(env(safe-area-inset-bottom) + 15px); display: flex; align-items: center; gap: 12px; background: #13132b; z-index: 110; }
         .btn-icon { background: rgba(255,255,255,0.1); border: none; width: 50px; height: 50px; border-radius: 18px; font-size: 24px; color: white; flex-shrink: 0; display: flex; align-items: center; justify-content: center; }
         .btn-send { background: var(--p); }
-        #msg-inp { margin: 0; flex: 1; height: 50px; border-radius: 18px; background: rgba(255,255,255,0.08); padding: 0 15px; }
+        #msg-inp { margin: 0; flex: 1; height: 50px; border-radius: 18px; background: rgba(255,255,255,0.08); padding: 0 15px; color:white; border:none; outline:none; }
 
         /* FAB */
         .fab-add { 
@@ -116,7 +118,7 @@
 
     <div id="admin-panel">
         <div style="width:100%; max-width:400px; padding:20px;">
-            <h2 style="text-align:center; color: var(--gold); margin-bottom: 30px;">👑 АДМИН-ПАНЕЛЬ</h2>
+            <h2 style="text-align:center; color: var(--gold); margin-bottom: 30px;">👑 АДМИН-ЦЕНТР</h2>
             <div style="display:grid; grid-template-columns: 1fr 1fr; gap:20px;">
                 <div class="glass-card" onclick="toggleShinyNickDB()" style="max-width:none; margin:0;"><span style="font-size:35px; display:block">✨</span> Ник</div>
                 <div class="glass-card" onclick="alert('Логи шпиона активны')" style="max-width:none; margin:0;"><span style="font-size:35px; display:block">👁️</span> Шпион</div>
@@ -186,16 +188,28 @@
     let allUsersData = {}, myUserDocId = null, audioUnlocked = false;
     let selectedChatColor = CHAT_COLORS[0];
 
+    // --- ИНИЦИАЛИЗАЦИЯ ONESIGNAL ---
+    window.OneSignal = window.OneSignal || [];
+    OneSignal.push(() => {
+        OneSignal.init({
+            appId: "3bbb0fe8-1512-4781-a14c-057aa3864e37",
+            allowLocalhostAsSecureOrigin: true,
+        });
+    });
+
     async function init() {
         try {
             me = await acc.get();
+
+            // ВХОД В ONESIGNAL (Привязываем к Email)
+            OneSignal.push(() => OneSignal.login(me.email));
+
             if (me.email === ADMIN_EMAIL) {
                 document.getElementById('admin-btn').style.display = 'block';
                 document.getElementById('fab-add').style.display = 'flex';
             }
             show('contacts-screen');
             await initialLoadUsers(); // Сначала грузим пользователей
-            // renderUserList() внутри initialLoadUsers сам загрузит и чаты
 
             // Обновляем "был в сети"
             setInterval(async () => {
@@ -212,7 +226,7 @@
                 if (m.sender !== me.email) document.getElementById('notify-sound').play().catch(()=>{});
             });
 
-            // Слушаем новые чаты (ИСПРАВЛЕНИЕ ДУБЛИРОВАНИЯ: Рендер только здесь)
+            // Слушаем новые чаты
             client.subscribe(`databases.${D_ID}.collections.${C_CHATS}.documents`, () => {
                 renderUserList(); 
             });
@@ -245,7 +259,7 @@
                     });
                 }
             });
-        } catch (err) { console.log('Ошибка загрузки чатов (проверь коллекцию)', err); }
+        } catch (err) { console.log('Ошибка загрузки чатов', err); }
 
         // Рендерим группы
         groups.forEach(g => {
@@ -254,7 +268,6 @@
             const card = document.createElement('div'); card.className = 'contact-card';
             card.onclick = () => openChat(g.id, g.name, true);
             
-            // Если есть кастомный цвет, применяем его, иначе используем класс
             const bgStyle = g.color ? `background: ${g.color};` : '';
             const classList = g.color ? 'avatar' : `avatar ${g.class}`;
 
@@ -280,10 +293,9 @@
     function openCreateModal() {
         document.getElementById('create-modal').style.display = 'flex';
         
-        // Рендер цветов
         const colorBox = document.getElementById('color-picker-box');
         colorBox.innerHTML = '';
-        selectedChatColor = CHAT_COLORS[0]; // Сброс на первый
+        selectedChatColor = CHAT_COLORS[0]; 
         CHAT_COLORS.forEach(c => {
             const dot = document.createElement('div');
             dot.className = 'color-dot' + (c === selectedChatColor ? ' selected' : '');
@@ -296,7 +308,6 @@
             colorBox.appendChild(dot);
         });
 
-        // Рендер пользователей с чекбоксами
         const box = document.getElementById('modal-users-list');
         box.innerHTML = '';
         Object.values(allUsersData).forEach(u => {
@@ -321,16 +332,11 @@
                 name: name, 
                 admin_email: me.email,
                 members: members,
-                color: selectedChatColor // Сохраняем выбранный цвет
+                color: selectedChatColor 
             });
-            
-            // Просто закрываем, НЕ вызываем renderUserList вручную (сработает subscribe)
             document.getElementById('create-modal').style.display='none';
             document.getElementById('new-chat-name').value = '';
-            
-        } catch(e) { 
-            alert('Ошибка! Убедитесь, что в Appwrite в коллекции chats есть атрибут "color" и "members". ' + e.message); 
-        }
+        } catch(e) { alert('Ошибка! ' + e.message); }
     }
 
     // --- СТАНДАРТНЫЕ ФУНКЦИИ ---
