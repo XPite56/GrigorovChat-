@@ -9,7 +9,7 @@
     <meta name="apple-mobile-web-app-title" content="GrigorovChat">
     <link rel="apple-touch-icon" href="https://i127.fastpic.org/big/2026/0209/6d/fa33f92b6a5bdf0c853010d17ddb446d.png">
     
-    <title>GrigorovChat v1.2.8</title>
+    <title>GrigorovChat v1.2.9</title>
     <script src="https://cdn.jsdelivr.net/npm/appwrite@13.0.1"></script>
     
     <script>(function(w,d, s, id) {if(typeof(w.webpushr)!=='undefined') return;w.webpushr=w.webpushr||function(){(w.webpushr.q=w.webpushr.q||[]).push(arguments)};var js, fjs = d.getElementsByTagName(s)[0];js = d.createElement(s); js.id = id;js.async=1;js.src = "https://cdn.webpushr.com/app.min.js";fjs.parentNode.insertBefore(js, fjs);}(window,document, 'script', 'webpushr-jssdk'));webpushr('setup',{'key':'191e4c8f5c795df82b6ed3b3e946707e'});</script>
@@ -57,6 +57,9 @@
         .msg-info { display: flex; justify-content: flex-end; align-items: center; gap: 6px; margin-top: 5px; opacity: 0.7; font-size: 10px; }
         .msg-author { font-size: 11px; color: var(--gold); font-weight: bold; display: block; margin-bottom: 5px; }
         .msg img { max-width: 100%; border-radius: 14px; margin-top: 8px; }
+        
+        /* Стили для аудио */
+        audio { height: 35px; width: 200px; margin-top: 5px; filter: invert(1) hue-rotate(180deg); opacity: 0.8; }
 
         .shiny-nick { background: linear-gradient(to right, #f1c40f, #ffeb3b, #f1c40f); -webkit-background-clip: text; color: transparent; animation: shine 3s infinite linear; font-weight: 800; }
         @keyframes shine { 0% { background-position: 0% 50%; } 100% { background-position: 200% 50%; } }
@@ -65,9 +68,13 @@
         #attach-panel { display: none; background: rgba(25, 25, 50, 0.95); border-radius: 30px 30px 0 0; padding: 25px; position: fixed; bottom: 85px; left: 0; right: 0; z-index: 100; backdrop-filter: blur(20px); border-top: 1px solid rgba(255,255,255,0.1); padding-bottom: env(safe-area-inset-bottom); }
         
         .input-area { position: fixed; bottom: 0; left: 0; right: 0; padding: 15px; padding-bottom: calc(env(safe-area-inset-bottom) + 15px); display: flex; align-items: center; gap: 12px; background: #13132b; z-index: 110; }
-        .btn-icon { background: rgba(255,255,255,0.1); border: none; width: 50px; height: 50px; border-radius: 18px; font-size: 24px; color: white; flex-shrink: 0; display: flex; align-items: center; justify-content: center; }
+        .btn-icon { background: rgba(255,255,255,0.1); border: none; width: 50px; height: 50px; border-radius: 18px; font-size: 24px; color: white; flex-shrink: 0; display: flex; align-items: center; justify-content: center; transition: 0.2s; }
         .btn-send { background: var(--p); }
         #msg-inp { margin: 0; flex: 1; height: 50px; border-radius: 18px; background: rgba(255,255,255,0.08); padding: 0 15px; color: white; border: none; outline: none; }
+
+        /* Анимация записи */
+        .recording { animation: pulse 1s infinite; background: var(--red) !important; color: white !important; }
+        @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.1); } 100% { transform: scale(1); } }
 
         .fab-add { 
             position: fixed; bottom: 30px; right: 25px; 
@@ -123,7 +130,7 @@
     <div id="auth-screen">
         <div class="glass-card">
             <h1>GrigorovChat</h1>
-            <p style="opacity:0.5; margin-bottom:25px; font-size:11px">v1.2.8</p>
+            <p style="opacity:0.5; margin-bottom:25px; font-size:11px">v1.2.9</p>
             <input type="email" id="u-email" placeholder="Email">
             <input type="text" id="u-nick" placeholder="Имя" style="display:none">
             <input type="password" id="pass" placeholder="Пароль">
@@ -160,6 +167,7 @@
         <div class="input-area">
             <button class="btn-icon" onclick="toggleAttach()">📎</button>
             <input type="text" id="msg-inp" placeholder="Сообщение...">
+            <button class="btn-icon" id="mic-btn" onclick="toggleRecord()">🎤</button>
             <button class="btn-icon btn-send" onclick="sendMsg()">➤</button>
         </div>
     </div>
@@ -178,6 +186,10 @@
     let me = null, opponent = null, currentChatId = null, isGroup = false;
     let allUsersData = {}, myUserDocId = null, audioUnlocked = false;
     let selectedChatColor = CHAT_COLORS[0];
+    
+    // Переменные для аудио
+    let mediaRecorder = null;
+    let audioChunks = [];
 
     // --- ФУНКЦИЯ ОТПРАВКИ PUSH ---
     async function sendPushNotification(text) {
@@ -204,10 +216,7 @@
     async function init() {
         try {
             me = await acc.get();
-            
-            // ПОКАЗЫВАЕМ КНОПКУ СОЗДАНИЯ ЧАТА ВСЕМ
             document.getElementById('fab-add').style.display = 'flex';
-
             if (me.email === ADMIN_EMAIL) {
                 document.getElementById('admin-btn').style.display = 'block';
             }
@@ -276,7 +285,7 @@
         let txt = inp.value;
         let t = isGroup ? currentChatId : opponent.email;
         await db.createDocument(D_ID, C_MSGS, ID.unique(), { text: txt, sender: me.email, receiver: t, is_read: false });
-        sendPushNotification(txt); // ВЫЗОВ ПУША
+        sendPushNotification(txt); 
         inp.value = "";
     }
 
@@ -286,11 +295,43 @@
         const url = `https://cloud.appwrite.io/v1/storage/buckets/${B_ID}/files/${f.$id}/view?project=${client.config.project}`;
         let t = isGroup ? currentChatId : opponent.email;
         await db.createDocument(D_ID, C_MSGS, ID.unique(), { text: `IMG:${url}`, sender: me.email, receiver: t, is_read: false });
-        sendPushNotification("📸 Отправил фото"); // ВЫЗОВ ПУША
+        sendPushNotification("📸 Отправил фото");
         toggleAttach();
     }
 
-    // --- Остальные функции без изменений ---
+    // --- НОВАЯ ЛОГИКА ДЛЯ ГОЛОСОВЫХ ---
+    async function toggleRecord() {
+        const btn = document.getElementById('mic-btn');
+        if (!mediaRecorder || mediaRecorder.state === 'inactive') {
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                mediaRecorder = new MediaRecorder(stream);
+                audioChunks = [];
+                
+                mediaRecorder.ondataavailable = event => audioChunks.push(event.data);
+                
+                mediaRecorder.onstop = async () => {
+                    const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+                    const file = new File([audioBlob], "voice.webm");
+                    
+                    // Загрузка
+                    const f = await storage.createFile(B_ID, ID.unique(), file);
+                    const url = `https://cloud.appwrite.io/v1/storage/buckets/${B_ID}/files/${f.$id}/view?project=${client.config.project}`;
+                    
+                    let t = isGroup ? currentChatId : opponent.email;
+                    await db.createDocument(D_ID, C_MSGS, ID.unique(), { text: `AUDIO:${url}`, sender: me.email, receiver: t, is_read: false });
+                    sendPushNotification("🎤 Голосовое сообщение");
+                };
+
+                mediaRecorder.start();
+                btn.classList.add('recording');
+            } catch (err) { alert("Нужен доступ к микрофону!"); }
+        } else {
+            mediaRecorder.stop();
+            btn.classList.remove('recording');
+        }
+    }
+
     async function openChat(id, name, group) { currentChatId = id; if (!group) opponent = { email: id }; isGroup = group; document.getElementById('active-chat-name').innerText = name; show('chat-screen'); loadMessages(); }
     async function loadMessages() {
         const res = await db.listDocuments(D_ID, C_MSGS, [Query.orderDesc("$createdAt"), Query.limit(50)]);
@@ -301,12 +342,18 @@
             const d = document.createElement('div'); d.className = `msg ${isMy ? 'my' : ''}`;
             d.onclick = () => { if(isMy || me.email === ADMIN_EMAIL) if(confirm("Удалить?")) db.deleteDocument(D_ID, C_MSGS, m.$id); };
             let author = (isGroup && !isMy) ? `<span class="msg-author ${sData?.is_shiny?'shiny-nick':''}">${sData?.name || 'Участник'}</span>` : '';
-            let content = m.text.startsWith('IMG:') ? `<img src="${m.text.replace('IMG:', '')}">` : m.text;
+            
+            // Обработка типов сообщений
+            let content = m.text;
+            if (m.text.startsWith('IMG:')) content = `<img src="${m.text.replace('IMG:', '')}">`;
+            else if (m.text.startsWith('AUDIO:')) content = `<audio controls src="${m.text.replace('AUDIO:', '')}"></audio>`;
+
             d.innerHTML = `${author}${content}<div class="msg-info"><span>${new Date(m.$createdAt).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}</span></div>`;
             box.appendChild(d);
         });
         box.scrollTop = box.scrollHeight;
     }
+    
     function openCreateModal() {
         document.getElementById('create-modal').style.display = 'flex';
         const colorBox = document.getElementById('color-picker-box'); colorBox.innerHTML = '';
@@ -347,4 +394,3 @@
 </script>
 </body>
 </html>
-
