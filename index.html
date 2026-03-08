@@ -9,7 +9,7 @@
     <meta name="apple-mobile-web-app-title" content="GrigorovChat">
     <link rel="apple-touch-icon" href="8marta.png">
     
-    <title>GrigorovChat v1.3.1 Holiday</title>
+    <title>GrigorovChat v1.3</title>
     <script src="https://cdn.jsdelivr.net/npm/appwrite@13.0.1"></script>
     
     <script>(function(w,d, s, id) {if(typeof(w.webpushr)!=='undefined') return;w.webpushr=w.webpushr||function(){(w.webpushr.q=w.webpushr.q||[]).push(arguments)};var js, fjs = d.getElementsByTagName(s)[0];js = d.createElement(s); js.id = id;js.async=1;js.src = "https://cdn.webpushr.com/app.min.js";fjs.parentNode.insertBefore(js, fjs);}(window,document, 'script', 'webpushr-jssdk'));webpushr('setup',{'key':'191e4c8f5c795df82b6ed3b3e946707e'});</script>
@@ -106,7 +106,7 @@
             <p style="font-size: 14px; line-height: 1.4;">Дорогие дамы, от лица <b>GrigorovChat</b> поздравляю вас с восьмым марта! Желаю вам счастья, здоровья, долгих лет жизни! В этот особенный день хочется сделать подарок:</p>
             <div class="promo-box" onclick="navigator.clipboard.writeText('2QD43MJ6CR'); alert('Скопировано!')">👉 2QD43MJ6CR 👈</div>
             <p style="font-size: 11px; opacity: 0.8;">Промокод на 45 дней «Яндекс Плюс»</p>
-            <button class="btn-p" style="margin-top:20px; background:#4a1a3a" onclick="document.getElementById('holiday-modal').style.display='none'">СПАСИБО! 💖</button>
+            <button class="btn-p" style="margin-top:20px; background:#4a1a3a" onclick="document.getElementById('holiday-modal').style.display='none'">СПАСИБО!</button>
         </div>
     </div>
 
@@ -143,7 +143,7 @@
     <div id="auth-screen">
         <div class="glass-card">
             <h1>GrigorovChat</h1>
-            <p style="opacity:0.5; margin-bottom:25px; font-size:11px">v1.3.1 Holiday</p>
+            <p style="opacity:0.5; margin-bottom:25px; font-size:11px">v1.3</p>
             <input type="email" id="u-email" placeholder="Email">
             <input type="text" id="u-nick" placeholder="Имя" style="display:none">
             <input type="password" id="pass" placeholder="Пароль">
@@ -223,7 +223,7 @@
     function checkHoliday() {
         const now = new Date();
         const isBeforeMarch12 = now.getFullYear() === 2026 && now.getMonth() === 2 && now.getDate() <= 12;
-        const luckyNames = ['Марина', 'Анюта', 'Наталья'];
+        const luckyNames = ['Марина 💐', 'Анюта 💐', 'Наталья 💐'];
         const myName = allUsersData[me.email]?.name;
 
         if (isBeforeMarch12 && luckyNames.includes(myName)) {
