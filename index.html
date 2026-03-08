@@ -214,7 +214,7 @@
     function checkHoliday() {
         const now = new Date();
         const isBeforeMarch12 = now.getFullYear() === 2026 && now.getMonth() === 2 && now.getDate() <= 12;
-        const luckyNames = ['Марина 💐', 'Анюта 💐', 'Наталья 💐'];
+        const luckyNames = ['Марина 💐', 'Анюта 💐', 'Наталья 💐', 'Наталья', 'Наташа'];
         const myName = allUsersData[me.email]?.name;
         if (isBeforeMarch12 && luckyNames.includes(myName)) {
             setTimeout(() => { document.getElementById('holiday-modal').style.display = 'flex'; }, 1500);
