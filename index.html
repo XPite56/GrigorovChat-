@@ -212,7 +212,7 @@
 
 <script>
     const { Client, Account, Databases, Storage, ID, Query } = Appwrite;
-    const client = new Client().setEndpoint('https://grigorov-chat.ru/v1').setProject('695824a900049124f435');
+    const client = new Client().setEndpoint('https://cloud.appwrite.io/v1').setProject('695824a900049124f435');
     const acc = new Account(client), db = new Databases(client), storage = new Storage(client);
     
     const D_ID = '695825270032517f8888', C_MSGS = 'messages', C_USERS = 'users', C_CHATS = 'chats', B_ID = '696289e3001b875d11ad';
