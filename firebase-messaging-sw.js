@@ -2,17 +2,18 @@ importScripts('https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js')
 importScripts('https://www.gstatic.com/firebasejs/9.0.0/firebase-messaging-compat.js');
 
 firebase.initializeApp({
-  apiKey: "БЕРЕМ_ИЗ_ПАРАМЕТРОВ_WEB_APP_В_FIREBASE", // См. ниже как найти
+  apiKey: "AIzaSyC1HbmuQBtg1CNxyUIGbPJjPebEXf-Kav8",
   authDomain: "grigorovchat-mess.firebaseapp.com",
   projectId: "grigorovchat-mess",
-  storageBucket: "grigorovchat-mess.appspot.com",
-  messagingSenderId: "1020535754956", // Это начало твоего client_id
-  appId: "БЕРЕМ_ИЗ_ПАРАМЕТРОВ_WEB_APP_В_FIREBASE"
+  storageBucket: "grigorovchat-mess.firebasestorage.app",
+  messagingSenderId: "239359861054",
+  appId: "1:239359861054:web:ef6ea0283b88bc9782cc6f"
 });
 
 const messaging = firebase.messaging();
 
 messaging.onBackgroundMessage((payload) => {
+  console.log('Сообщение в фоне:', payload);
   const notificationTitle = payload.notification.title;
   const notificationOptions = {
     body: payload.notification.body,
